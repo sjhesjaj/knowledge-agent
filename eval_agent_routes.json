@@ -1,0 +1,17 @@
+[
+  {"question":"你好","expected_action":"direct"},
+  {"question":"谢谢你的帮助","expected_action":"direct"},
+  {"question":"公司年假有多少天？","expected_action":"search_knowledge_base"},
+  {"question":"报销超过两千元谁审批？","expected_action":"search_knowledge_base"},
+  {"question":"比较年假和调休制度","expected_action":"search_knowledge_base"},
+  {"question":"知识库里有什么内容？","expected_action":"list_knowledge_sources"},
+  {"question":"列出当前资料来源","expected_action":"list_knowledge_sources"},
+  {"question":"有哪些章节？","expected_action":"list_knowledge_sources"},
+  {"question":"总结一下员工手册","expected_action":"summarize_knowledge_base"},
+  {"question":"请概括知识库","expected_action":"summarize_knowledge_base"},
+  {"question":"帮我介绍整份资料","expected_action":"summarize_knowledge_base"},
+  {"question":"离职需要交接什么？","expected_action":"search_knowledge_base"},
+  {"question":"远程办公怎么申请？","expected_action":"search_knowledge_base"},
+  {"question":"公司电脑可以安装游戏吗？","expected_action":"search_knowledge_base"},
+  {"question":"绩效多久评一次？","expected_action":"search_knowledge_base"}
+]

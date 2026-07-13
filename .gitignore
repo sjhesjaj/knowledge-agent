@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+*.pyc
+.streamlit/
+data/
+.cache/
+.*_test.py
+.??*.py
+.validate_datasets.py
+RESUME_NOTES.md

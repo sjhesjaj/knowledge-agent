@@ -1,0 +1,22 @@
+[
+  {"question":"公司年终奖发几个月工资？","answerable":false,"category":"薪酬缺失"},
+  {"question":"公司提供员工宿舍吗？","answerable":false,"category":"福利缺失"},
+  {"question":"食堂早餐几点开始供应？","answerable":false,"category":"设施缺失"},
+  {"question":"每年有几次晋升机会？","answerable":false,"category":"晋升缺失"},
+  {"question":"公司股票期权如何授予？","answerable":false,"category":"激励缺失"},
+  {"question":"婚假可以休多少天？","answerable":false,"category":"假期缺失"},
+  {"question":"产假期间工资如何计算？","answerable":false,"category":"假期缺失"},
+  {"question":"员工体检安排在几月份？","answerable":false,"category":"福利缺失"},
+  {"question":"停车费每月补贴多少钱？","answerable":false,"category":"补贴缺失"},
+  {"question":"公司班车有哪些线路？","answerable":false,"category":"交通缺失"},
+  {"question":"技术职级一共有多少级？","answerable":false,"category":"职级缺失"},
+  {"question":"周末加班支付几倍工资？","answerable":false,"category":"加班细节缺失"},
+  {"question":"试用期工资是正式工资的百分之多少？","answerable":false,"category":"薪酬缺失"},
+  {"question":"公司医保报销比例是多少？","answerable":false,"category":"福利缺失"},
+  {"question":"推荐候选人入职有多少奖金？","answerable":false,"category":"招聘缺失"},
+  {"question":"办公楼晚上几点关闭？","answerable":false,"category":"设施缺失"},
+  {"question":"客户投诉需要多久处理完？","answerable":false,"category":"业务缺失"},
+  {"question":"工位可以养宠物吗？","answerable":false,"category":"办公缺失"},
+  {"question":"公司提供哪些节日礼品？","answerable":false,"category":"福利缺失"},
+  {"question":"员工购房有无息贷款吗？","answerable":false,"category":"福利缺失"}
+]
