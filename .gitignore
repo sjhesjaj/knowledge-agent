@@ -12,3 +12,5 @@ tmp/
 .??*.py
 .validate_datasets.py
 RESUME_NOTES.md
+output/
+tools/create_resume_project1_pdf.py
