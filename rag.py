@@ -19,6 +19,7 @@ OLLAMA_URL = "http://localhost:11434"
 CHAT_MODEL = "qwen3:4b"
 EMBED_MODEL = "nomic-embed-text"
 CACHE_FILE = Path(".cache/embeddings.json")
+REFUSAL_MARKERS = ("无法确定", "没有相关", "未提及", "资料不足", "无法回答")
 
 
 @dataclass
@@ -462,8 +463,8 @@ def answer_structured(question: str, results: list[tuple[Chunk, float]], history
         result = json.loads(content)["answer"].strip()
     except (json.JSONDecodeError, KeyError, TypeError):
         return answer(question, results, history)
-    refusal_markers = ("无法确定", "没有相关", "未提及", "资料不足", "无法回答")
-    if results and any(marker in result for marker in refusal_markers):
+    if results and is_refusal(result):
+        original_refusal = result
         top_chunk = results[0][0]
         retry_messages = [
             {
@@ -485,10 +486,26 @@ def answer_structured(question: str, results: list[tuple[Chunk, float]], history
         )
         retry.raise_for_status()
         try:
-            result = json.loads(retry.json()["message"]["content"])["answer"].strip()
+            retry_result = json.loads(retry.json()["message"]["content"])["answer"].strip()
+            # 小模型偶发只复述问题。重试结果必须仍是明确拒答，或给出带来源标记的答案；
+            # 否则保留首轮正确拒答，避免证据复查反而制造无依据回答。
+            result = retry_result if is_valid_evidence_retry(retry_result, question) else original_refusal
         except (json.JSONDecodeError, KeyError, TypeError):
-            pass
+            result = original_refusal
     return result
+
+
+def is_refusal(text: str) -> bool:
+    return any(marker in text for marker in REFUSAL_MARKERS)
+
+
+def is_valid_evidence_retry(answer_text: str, question: str) -> bool:
+    if is_refusal(answer_text):
+        return True
+    normalize = lambda value: re.sub(r"[\s，。！？；：,.!?;:]", "", value).lower()
+    if not answer_text.strip() or normalize(answer_text) == normalize(question):
+        return False
+    return bool(re.search(r"\[来源\s*1\]", answer_text))
 
 
 def build_answer_messages(question: str, results: list[tuple[Chunk, float]], history: list[dict]) -> list[dict]:
