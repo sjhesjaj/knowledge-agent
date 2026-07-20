@@ -4,6 +4,10 @@ __pycache__/
 .streamlit/
 data/
 .cache/
+frontend/node_modules/
+frontend/dist/
+.pnpm-store/
+tmp/
 .*_test.py
 .??*.py
 .validate_datasets.py

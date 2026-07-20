@@ -1,0 +1,401 @@
+<script setup>
+import { computed, nextTick, onMounted, ref } from 'vue'
+import DOMPurify from 'dompurify'
+import { marked } from 'marked'
+import ConversationList from './components/ConversationList.vue'
+import { api, getActiveConversationId, setActiveConversationId } from './api'
+
+marked.setOptions({ breaks: true, gfm: true })
+
+const messages = ref([])
+const conversations = ref([])
+const activeConversationId = ref('')
+const question = ref('')
+const files = ref([])
+const status = ref({ ollama_connected: false, chunk_count: 0 })
+const busy = ref(false)
+const uploadBusy = ref(false)
+const historyLoading = ref(false)
+const notice = ref('')
+const streamStatus = ref('')
+const messageList = ref(null)
+let historyRequestSequence = 0
+let scrollScheduled = false
+let localMessageSequence = 0
+
+const interactionLocked = computed(() => busy.value || uploadBusy.value || historyLoading.value)
+const activeTitle = computed(() => (
+  conversations.value.find((item) => item.id === activeConversationId.value)?.title || '企业制度问答'
+))
+
+function renderMarkdown(content = '') {
+  return DOMPurify.sanitize(marked.parse(content), {
+    USE_PROFILES: { html: true },
+    FORBID_TAGS: ['img', 'style'],
+    FORBID_ATTR: ['style'],
+  })
+}
+
+function normalizeMessages(items = []) {
+  return items.map((item) => ({
+    id: item.id,
+    role: item.role,
+    content: item.content || '',
+    sources: item.sources || [],
+    trace: item.trace || null,
+    createdAt: item.created_at,
+  }))
+}
+
+function nextLocalMessageId(role) {
+  localMessageSequence += 1
+  return `local-${role}-${localMessageSequence}`
+}
+
+function scheduleScroll() {
+  if (scrollScheduled) return
+  scrollScheduled = true
+  requestAnimationFrame(async () => {
+    await nextTick()
+    if (messageList.value) messageList.value.scrollTop = messageList.value.scrollHeight
+    scrollScheduled = false
+  })
+}
+
+function formatDuration(value) {
+  const seconds = Number(value)
+  return Number.isFinite(seconds) ? `${seconds.toFixed(2)}s` : ''
+}
+
+async function refreshStatus() {
+  try {
+    status.value = await api.health()
+  } catch (error) {
+    notice.value = error.message
+  }
+}
+
+async function refreshConversationList() {
+  try {
+    const result = await api.listConversations()
+    conversations.value = result.items || []
+  } catch (error) {
+    notice.value = error.message
+  }
+}
+
+async function initializeConversations() {
+  const sequence = ++historyRequestSequence
+  historyLoading.value = true
+  try {
+    const result = await api.listConversations()
+    if (sequence !== historyRequestSequence) return
+    conversations.value = result.items || []
+
+    const savedId = getActiveConversationId()
+    const target = conversations.value.find((item) => item.id === savedId) || conversations.value[0]
+    if (!target) {
+      activeConversationId.value = ''
+      setActiveConversationId('')
+      messages.value = []
+      return
+    }
+
+    activeConversationId.value = target.id
+    setActiveConversationId(target.id)
+    const history = await api.conversationMessages(target.id)
+    if (sequence !== historyRequestSequence || activeConversationId.value !== target.id) return
+    messages.value = normalizeMessages(history.items)
+    scheduleScroll()
+  } catch (error) {
+    if (sequence === historyRequestSequence) notice.value = error.message
+  } finally {
+    if (sequence === historyRequestSequence) historyLoading.value = false
+  }
+}
+
+async function selectConversation(conversationId) {
+  if (!conversationId || interactionLocked.value) return
+
+  const sequence = ++historyRequestSequence
+  historyLoading.value = true
+  notice.value = ''
+  activeConversationId.value = conversationId
+  setActiveConversationId(conversationId)
+  messages.value = []
+
+  try {
+    const result = await api.conversationMessages(conversationId)
+    if (sequence !== historyRequestSequence || activeConversationId.value !== conversationId) return
+    messages.value = normalizeMessages(result.items)
+    scheduleScroll()
+  } catch (error) {
+    if (sequence !== historyRequestSequence) return
+    notice.value = error.message
+    activeConversationId.value = ''
+    setActiveConversationId('')
+    await refreshConversationList()
+  } finally {
+    if (sequence === historyRequestSequence) historyLoading.value = false
+  }
+}
+
+function activateConversation(item) {
+  conversations.value = [item, ...conversations.value.filter((entry) => entry.id !== item.id)]
+  activeConversationId.value = item.id
+  setActiveConversationId(item.id)
+  messages.value = []
+}
+
+async function createConversation() {
+  if (interactionLocked.value) return
+  const sequence = ++historyRequestSequence
+  historyLoading.value = true
+  notice.value = ''
+  try {
+    const item = await api.createConversation()
+    if (sequence !== historyRequestSequence) return
+    activateConversation(item)
+    notice.value = '已开始新对话，知识库保持不变'
+  } catch (error) {
+    if (sequence === historyRequestSequence) notice.value = error.message
+  } finally {
+    if (sequence === historyRequestSequence) historyLoading.value = false
+  }
+}
+
+async function ensureActiveConversation(title) {
+  if (activeConversationId.value) return activeConversationId.value
+  const item = await api.createConversation(title.slice(0, 60) || '新对话')
+  activateConversation(item)
+  return item.id
+}
+
+async function removeConversation(conversationId) {
+  if (!conversationId || interactionLocked.value) return
+  const item = conversations.value.find((entry) => entry.id === conversationId)
+  if (!globalThis.confirm(`确定删除“${item?.title || '这条对话'}”吗？`)) return
+
+  const sequence = ++historyRequestSequence
+  historyLoading.value = true
+  notice.value = ''
+  try {
+    await api.deleteConversation(conversationId)
+    if (sequence !== historyRequestSequence) return
+    conversations.value = conversations.value.filter((entry) => entry.id !== conversationId)
+
+    if (activeConversationId.value !== conversationId) return
+    messages.value = []
+    const nextConversation = conversations.value[0]
+    if (!nextConversation) {
+      activeConversationId.value = ''
+      setActiveConversationId('')
+      return
+    }
+
+    activeConversationId.value = nextConversation.id
+    setActiveConversationId(nextConversation.id)
+    const result = await api.conversationMessages(nextConversation.id)
+    if (sequence !== historyRequestSequence || activeConversationId.value !== nextConversation.id) return
+    messages.value = normalizeMessages(result.items)
+    scheduleScroll()
+  } catch (error) {
+    if (sequence === historyRequestSequence) notice.value = error.message
+  } finally {
+    if (sequence === historyRequestSequence) historyLoading.value = false
+  }
+}
+
+function resetConversations() {
+  historyRequestSequence += 1
+  historyLoading.value = false
+  conversations.value = []
+  activeConversationId.value = ''
+  setActiveConversationId('')
+  messages.value = []
+}
+
+function choose(event) {
+  files.value = [...event.target.files]
+  event.target.value = ''
+}
+
+async function upload() {
+  if (!files.value.length || interactionLocked.value) return
+  uploadBusy.value = true
+  notice.value = ''
+  try {
+    const result = await api.upload(files.value)
+    status.value.chunk_count = result.chunks
+    files.value = []
+    resetConversations()
+    notice.value = `已导入 ${result.files.length} 个文件，生成 ${result.chunks} 个知识片段`
+  } catch (error) {
+    notice.value = error.message
+  } finally {
+    uploadBusy.value = false
+  }
+}
+
+async function send() {
+  const content = question.value.trim()
+  if (!content || interactionLocked.value) return
+
+  busy.value = true
+  notice.value = ''
+  let answerIndex = -1
+  try {
+    const conversationId = await ensureActiveConversation(content)
+    messages.value.push({ id: nextLocalMessageId('user'), role: 'user', content })
+    answerIndex = messages.value.push({ id: nextLocalMessageId('assistant'), role: 'assistant', content: '', sources: [], trace: null }) - 1
+    question.value = ''
+    streamStatus.value = '正在连接 Agent'
+    scheduleScroll()
+
+    await api.chatStream(content, conversationId, (event, data) => {
+      const answer = messages.value[answerIndex]
+      if (!answer) return
+      if (event === 'status') streamStatus.value = data.message
+      if (event === 'delta') answer.content += data.content
+      if (event === 'sources') answer.sources = data.sources
+      if (event === 'done') {
+        answer.trace = data.trace
+        streamStatus.value = ''
+      }
+      scheduleScroll()
+    })
+    await refreshConversationList()
+  } catch (error) {
+    if (answerIndex < 0) {
+      notice.value = error.message
+    } else {
+      const answer = messages.value[answerIndex]
+      answer.error = true
+      answer.errorMessage = answer.content ? `响应中断：${error.message}` : `请求失败：${error.message}`
+    }
+  } finally {
+    busy.value = false
+    streamStatus.value = ''
+    scheduleScroll()
+  }
+}
+
+async function clearKnowledge() {
+  if (interactionLocked.value) return
+  uploadBusy.value = true
+  try {
+    await api.clear()
+    resetConversations()
+    files.value = []
+    status.value.chunk_count = 0
+    notice.value = '知识库已清空'
+  } catch (error) {
+    notice.value = error.message
+  } finally {
+    uploadBusy.value = false
+  }
+}
+
+function handleComposerKeydown(event) {
+  if (event.isComposing || event.key !== 'Enter' || event.shiftKey) return
+  event.preventDefault()
+  send()
+}
+
+onMounted(() => Promise.allSettled([refreshStatus(), initializeConversations()]))
+</script>
+
+<template>
+  <main class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">K</span>
+        <div><strong>Knowledge Agent</strong><small>企业知识助手</small></div>
+      </div>
+
+      <ConversationList
+        :items="conversations"
+        :active-id="activeConversationId"
+        :disabled="interactionLocked"
+        :loading="historyLoading"
+        @create="createConversation"
+        @select="selectConversation"
+        @remove="removeConversation"
+      />
+
+      <section class="panel status-panel">
+        <div class="section-title">
+          <span>系统状态</span>
+          <span class="status-dot" :class="{ online: status.ollama_connected }"></span>
+        </div>
+        <p class="muted">{{ status.ollama_connected ? 'Ollama 已连接' : 'Ollama 未连接' }}</p>
+        <p class="metric"><strong>{{ status.chunk_count }}</strong><span>知识片段</span></p>
+      </section>
+
+      <section class="panel upload-panel">
+        <div class="section-title">导入知识</div>
+        <label class="dropzone">
+          <input type="file" multiple accept=".pdf,.txt,.md" :disabled="interactionLocked" @change="choose">
+          <span class="upload-icon">↑</span>
+          <strong>选择 PDF / TXT / MD</strong>
+          <small>{{ files.length ? `已选择 ${files.length} 个文件` : '支持多文件上传' }}</small>
+        </label>
+        <button class="primary" :disabled="!files.length || interactionLocked || !status.ollama_connected" @click="upload">
+          {{ uploadBusy ? '正在建立索引…' : '建立知识库' }}
+        </button>
+      </section>
+      <button class="ghost danger" :disabled="!status.chunk_count || interactionLocked" @click="clearKnowledge">清空知识库</button>
+    </aside>
+
+    <section class="chat">
+      <header>
+        <div><h1>{{ activeTitle }}</h1><p>混合检索 · Agent 工具调用 · 可追溯引用</p></div>
+        <div class="header-actions">
+          <button :disabled="interactionLocked" @click="createConversation">新对话</button>
+          <span class="badge">Local RAG</span>
+        </div>
+      </header>
+      <div v-if="notice" class="notice">{{ notice }}</div>
+
+      <div ref="messageList" class="messages" :aria-busy="historyLoading">
+        <div v-if="historyLoading" class="history-loading"><i></i><span>正在恢复会话…</span></div>
+        <div v-else-if="!messages.length" class="empty">
+          <div class="orb">✦</div>
+          <h2>从企业知识中获得可靠答案</h2>
+          <p>上传资料后，可以查询制度、比较规则、列出来源或总结知识库。</p>
+          <div class="suggestions">
+            <button v-for="item in ['年假如何申请？', '比较年假和调休制度', '列出知识库资料来源']" :key="item" @click="question = item">{{ item }}</button>
+          </div>
+        </div>
+
+        <article v-for="message in messages" :key="message.id" class="message" :class="message.role">
+          <div class="avatar">{{ message.role === 'user' ? '你' : 'AI' }}</div>
+          <div class="message-body" :class="{ error: message.error }">
+            <div v-if="message.role === 'assistant'" class="markdown" v-html="renderMarkdown(message.content)"></div>
+            <p v-else>{{ message.content }}</p>
+            <span v-if="message.role === 'assistant' && !message.content && busy" class="cursor"></span>
+            <p v-if="message.errorMessage" class="stream-error">{{ message.errorMessage }}</p>
+            <details v-if="message.sources?.length">
+              <summary>查看 {{ message.sources.length }} 条检索依据</summary>
+              <div v-for="source in message.sources" :key="source.rank" class="source">
+                <strong>{{ source.rank }}. {{ source.heading }}</strong>
+                <small>{{ source.source }} · 片段 {{ source.chunk_index }} · {{ source.score }}</small>
+                <p>{{ source.content }}</p>
+              </div>
+            </details>
+            <small v-if="message.trace" class="trace">{{ message.trace.tool }} · {{ formatDuration(message.trace.total_seconds) }}</small>
+          </div>
+        </article>
+      </div>
+
+      <footer>
+        <div v-if="streamStatus" class="stream-status" role="status" aria-live="polite"><i></i>{{ streamStatus }}</div>
+        <div class="composer">
+          <textarea v-model="question" rows="1" :disabled="!status.chunk_count || interactionLocked" placeholder="输入企业制度问题…" @keydown="handleComposerKeydown"></textarea>
+          <button :disabled="!question.trim() || interactionLocked || !status.chunk_count" @click="send">{{ busy ? '回答中' : '发送' }}</button>
+        </div>
+        <small>回答仅基于已导入资料，请核对引用来源。</small>
+      </footer>
+    </section>
+  </main>
+</template>

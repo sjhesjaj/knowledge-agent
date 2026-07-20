@@ -85,6 +85,13 @@ def split_text(text: str, source: str, size: int = 220, overlap: int = 40) -> li
     return chunks
 
 
+def reindex_chunks(chunks: list[Chunk]) -> list[Chunk]:
+    """Assign stable, globally unique positions after merging multiple files."""
+    for index, chunk in enumerate(chunks, start=1):
+        chunk.index = index
+    return chunks
+
+
 def embed(text: str) -> list[float]:
     return embed_many([text])[0]
 
@@ -348,6 +355,16 @@ def decompose_question(question: str) -> list[str]:
         for part in re.split(r"[？?；;]+", question)
         if part.strip(" ，,。")
     ]
+    if len(parts) > 1:
+        # “需要谁审批”一类省略主语的追问必须继承前一问上下文，
+        # 否则会只按“审批”召回转正、报销等无关制度。
+        contextualized = [parts[0]]
+        for part in parts[1:]:
+            if re.match(r"^(需要|由谁|谁|如何|怎么|是否|能否)", part):
+                contextualized.append(f"{parts[0]}；{part}")
+            else:
+                contextualized.append(part)
+        parts = contextualized
     if len(parts) == 1:
         text = re.sub(r"^(请|帮我)?(比较|对比)", "", parts[0]).strip()
         match = re.match(r"(.+?)(?:和|与|及)(.+?)(?:有什么区别|的区别|区别|制度)?$", text)
@@ -498,36 +515,109 @@ def build_answer_messages(question: str, results: list[tuple[Chunk, float]], his
 
 
 def answer_stream(question: str, results: list[tuple[Chunk, float]], history: list[dict]):
-    """以Ollama NDJSON流接收答案，并隐藏模型内部思考区。"""
+    """流式解析结构化 JSON，只向调用方输出最终答案字段。"""
     messages = build_answer_messages(question, results, history)
-    response = requests.post(
+    schema = {
+        "type": "object",
+        "required": ["answer"],
+        "properties": {"answer": {"type": "string"}},
+    }
+    with requests.post(
         f"{OLLAMA_URL}/api/chat",
-        json={"model": CHAT_MODEL, "messages": messages, "stream": True, "think": False},
-        timeout=180,
+        json={
+            "model": CHAT_MODEL,
+            "messages": messages,
+            "stream": True,
+            "think": False,
+            "format": schema,
+            "options": {"temperature": 0},
+        },
+        timeout=(10, 180),
         stream=True,
-    )
-    response.raise_for_status()
-    buffer = ""
-    answer_started = False
-    for line in response.iter_lines():
-        if not line:
-            continue
-        payload = json.loads(line)
-        content = payload.get("message", {}).get("content", "")
-        if not content:
-            continue
-        if answer_started:
-            yield content
-            continue
-        buffer += content
-        if "</think>" in buffer:
-            answer_started = True
-            visible = buffer.rsplit("</think>", 1)[-1]
+    ) as response:
+        response.raise_for_status()
+        full_json = ""
+        prefix_buffer = ""
+        answer_started = False
+        answer_finished = False
+        escaping = False
+        unicode_digits: str | None = None
+        pending_high_surrogate: int | None = None
+        streamed_answer: list[str] = []
+        stream_done = False
+
+        for line in response.iter_lines(decode_unicode=True):
+            if not line:
+                continue
+            payload = json.loads(line)
+            if payload.get("error"):
+                raise RuntimeError(f"Ollama 流式生成失败：{payload['error']}")
+            if payload.get("done"):
+                stream_done = True
+            content = payload.get("message", {}).get("content", "")
+            if not content:
+                continue
+            full_json += content
+
+            if not answer_started:
+                prefix_buffer += content
+                match = re.search(r'"answer"\s*:\s*"', prefix_buffer)
+                if not match:
+                    continue
+                answer_started = True
+                content = prefix_buffer[match.end():]
+                prefix_buffer = ""
+
+            visible: list[str] = []
+            for char in content:
+                if answer_finished:
+                    break
+                if unicode_digits is not None:
+                    unicode_digits += char
+                    if len(unicode_digits) == 4:
+                        codepoint = int(unicode_digits, 16)
+                        unicode_digits = None
+                        escaping = False
+                        if 0xD800 <= codepoint <= 0xDBFF:
+                            pending_high_surrogate = codepoint
+                        elif 0xDC00 <= codepoint <= 0xDFFF and pending_high_surrogate is not None:
+                            combined = 0x10000 + ((pending_high_surrogate - 0xD800) << 10) + (codepoint - 0xDC00)
+                            visible.append(chr(combined))
+                            pending_high_surrogate = None
+                        else:
+                            if pending_high_surrogate is not None:
+                                raise RuntimeError("结构化答案包含无效 Unicode 转义")
+                            visible.append(chr(codepoint))
+                    continue
+                if escaping:
+                    if char == "u":
+                        unicode_digits = ""
+                        continue
+                    escapes = {'"': '"', "\\": "\\", "/": "/", "b": "\b", "f": "\f", "n": "\n", "r": "\r", "t": "\t"}
+                    if char not in escapes:
+                        raise RuntimeError("结构化答案包含无效转义")
+                    visible.append(escapes[char])
+                    escaping = False
+                    continue
+                if char == "\\":
+                    escaping = True
+                elif char == '"':
+                    answer_finished = True
+                else:
+                    visible.append(char)
+
             if visible:
-                yield visible
-            buffer = ""
-    # 对不返回think标签的模型，在流结束后输出完整内容。
-    if not answer_started and buffer:
-        cleaned = re.sub(r"<think>.*?</think>", "", buffer, flags=re.DOTALL).strip()
-        if cleaned:
-            yield cleaned
+                delta = "".join(visible)
+                streamed_answer.append(delta)
+                yield delta
+
+        if not stream_done:
+            raise RuntimeError("Ollama 流式响应意外中断")
+        if not answer_started or not answer_finished:
+            raise RuntimeError("Ollama 未返回完整的结构化答案")
+        try:
+            parsed_answer = json.loads(full_json)["answer"]
+        except (json.JSONDecodeError, KeyError, TypeError) as exc:
+            raise RuntimeError("Ollama 返回了无效的结构化答案") from exc
+        if "".join(streamed_answer) != parsed_answer:
+            raise RuntimeError("流式答案校验失败")
