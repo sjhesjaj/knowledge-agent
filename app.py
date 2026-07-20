@@ -3,7 +3,15 @@ from time import perf_counter
 import streamlit as st
 
 from agent import decide_action, list_sources, summarize_knowledge_base
-from rag import answer_structured, build_index, check_ollama, read_file, retrieve_fast, split_text
+from rag import (
+    answer_structured,
+    build_index,
+    check_ollama,
+    read_file,
+    reindex_chunks,
+    retrieve_fast,
+    split_text,
+)
 
 
 st.set_page_config(page_title="企业知识库 Agent", page_icon="📚", layout="wide")
@@ -33,7 +41,7 @@ with st.sidebar:
                 for file in files:
                     all_chunks.extend(split_text(read_file(file.name, file.getvalue()), file.name))
                 st.write(f"已切分为 {len(all_chunks)} 个文本块")
-                st.session_state.chunks = build_index(all_chunks, index_stats)
+                st.session_state.chunks = build_index(reindex_chunks(all_chunks), index_stats)
                 status.update(label="知识库建立完成", state="complete")
             st.success(
                 f"建立耗时 {index_stats['index_seconds']:.3f} 秒｜"

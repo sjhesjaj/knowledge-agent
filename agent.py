@@ -59,7 +59,7 @@ def decide_action(question: str, history: list[dict]) -> dict:
     if any(word in normalized for word in ("总结员工手册", "总结知识库", "概括员工手册", "概括知识库", "总结一下员工手册", "介绍整份资料", "概括整份资料")):
         return {"type": "tool", "tool": "summarize_knowledge_base", "arguments": {}, "seconds": perf_counter() - started}
     policy_words = (
-        "公司", "员工", "制度", "流程", "工资", "请假", "绩效", "培训", "离职", "报销",
+        "公司", "员工", "制度", "流程", "工资", "请假", "年假", "事假", "调休", "绩效", "培训", "离职", "报销",
         "办公", "账号", "资料", "设备", "出差", "转正", "加班", "考勤", "远程", "到岗",
     )
     if any(word in normalized for word in policy_words):

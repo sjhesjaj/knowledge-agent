@@ -1,0 +1,328 @@
+from __future__ import annotations
+
+import json
+from threading import Lock
+from time import perf_counter
+
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi.concurrency import run_in_threadpool
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, Field
+
+from agent import decide_action, list_sources, summarize_knowledge_base
+from rag import (
+    Chunk,
+    answer_stream,
+    answer_structured,
+    build_index,
+    check_ollama,
+    read_file,
+    reindex_chunks,
+    retrieve_fast,
+    split_text,
+)
+from storage import SQLiteStorage
+
+
+app = FastAPI(title="Enterprise Knowledge Agent API", version="1.2.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+storage = SQLiteStorage()
+chunks: list[Chunk] = storage.load_chunks()
+state_lock = Lock()
+knowledge_mutation_lock = Lock()
+conversation_locks: dict[str, Lock] = {}
+knowledge_version = 0
+
+
+class ChatRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=2000)
+    session_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+    client_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+
+
+class ConversationCreate(BaseModel):
+    title: str = Field(default="新对话", max_length=60)
+    client_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+
+
+def serialize_source(chunk: Chunk, score: float, rank: int) -> dict:
+    heading = next(
+        (line.removeprefix("## ") for line in chunk.text.splitlines() if line.startswith("## ")),
+        "未命名章节",
+    )
+    return {
+        "rank": rank,
+        "source": chunk.source,
+        "heading": heading,
+        "chunk_index": chunk.index,
+        "score": round(score, 4),
+        "content": chunk.text,
+    }
+
+
+def sse_event(event: str, data: dict) -> str:
+    return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+
+
+def state_snapshot(
+    conversation_id: str,
+    client_id: str,
+) -> tuple[list[Chunk], list[dict[str, str]], int]:
+    with state_lock:
+        local_chunks = list(chunks)
+        local_version = knowledge_version
+        if not local_chunks:
+            return local_chunks, [], local_version
+        try:
+            storage.ensure_conversation(conversation_id, client_id)
+        except PermissionError as exc:
+            raise HTTPException(404, "会话不存在或无权访问") from exc
+        history = storage.get_recent_context(conversation_id, client_id, limit=4)
+    return local_chunks, history, local_version
+
+
+def commit_exchange(
+    snapshot_version: int,
+    payload: ChatRequest,
+    reply: str,
+    sources: list[dict],
+    trace: dict,
+) -> None:
+    """Persist an answer only if it was generated from the current knowledge base."""
+    with state_lock:
+        if snapshot_version != knowledge_version:
+            raise HTTPException(409, "知识库已更新，本次回答未保存，请重新提问")
+        storage.commit_exchange(
+            payload.session_id,
+            payload.client_id,
+            payload.question,
+            reply,
+            sources,
+            trace,
+        )
+
+
+def acquire_conversation(conversation_id: str) -> Lock:
+    with state_lock:
+        conversation_lock = conversation_locks.setdefault(conversation_id, Lock())
+    if not conversation_lock.acquire(blocking=False):
+        raise HTTPException(409, "该会话正在生成回答，请稍后重试")
+    return conversation_lock
+
+
+@app.get("/api/health")
+def health() -> dict:
+    ok, detail = check_ollama()
+    with state_lock:
+        chunk_count = len(chunks)
+    return {
+        "status": "ok",
+        "ollama_connected": ok,
+        "ollama_detail": detail,
+        "chunk_count": chunk_count,
+    }
+
+
+@app.get("/api/conversations")
+def list_conversations(
+    client_id: str = Query(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$"),
+) -> dict:
+    return {"items": storage.list_conversations(client_id)}
+
+
+@app.post("/api/conversations", status_code=201)
+def create_conversation(payload: ConversationCreate) -> dict:
+    return storage.create_conversation(payload.client_id, payload.title)
+
+
+@app.get("/api/conversations/{conversation_id}/messages")
+def conversation_messages(
+    conversation_id: str,
+    client_id: str = Query(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$"),
+) -> dict:
+    try:
+        return {"items": storage.get_messages(conversation_id, client_id)}
+    except KeyError as exc:
+        raise HTTPException(404, "会话不存在") from exc
+
+
+@app.delete("/api/conversations/{conversation_id}")
+def delete_conversation(
+    conversation_id: str,
+    client_id: str = Query(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$"),
+) -> dict:
+    conversation_lock = acquire_conversation(conversation_id)
+    try:
+        if not storage.delete_conversation(conversation_id, client_id):
+            raise HTTPException(404, "会话不存在")
+        return {"status": "deleted"}
+    finally:
+        conversation_lock.release()
+
+
+@app.post("/api/knowledge/upload")
+async def upload_knowledge(files: list[UploadFile] = File(...)) -> dict:
+    global knowledge_version
+    if not knowledge_mutation_lock.acquire(blocking=False):
+        raise HTTPException(409, "知识库正在更新，请稍后重试")
+    try:
+        parsed: list[Chunk] = []
+        names: list[str] = []
+        for file in files:
+            name = file.filename or "document"
+            if name.lower().rsplit(".", 1)[-1] not in {"pdf", "txt", "md"}:
+                raise HTTPException(400, f"不支持的文件类型：{name}")
+            raw = await file.read()
+            text = await run_in_threadpool(read_file, name, raw)
+            parsed.extend(split_text(text, name))
+            names.append(name)
+        if not parsed:
+            raise HTTPException(400, "文件中没有可索引的文本")
+
+        # split_text 会为每个文件从 1 编号；合并后改为全局唯一编号。
+        reindex_chunks(parsed)
+
+        stats: dict = {}
+        indexed_chunks = await run_in_threadpool(build_index, parsed, stats)
+        with state_lock:
+            storage.replace_knowledge(indexed_chunks)
+            chunks[:] = indexed_chunks
+            knowledge_version += 1
+        return {"files": names, **stats}
+    finally:
+        knowledge_mutation_lock.release()
+
+
+@app.delete("/api/knowledge")
+def clear_knowledge() -> dict:
+    global knowledge_version
+    if not knowledge_mutation_lock.acquire(blocking=False):
+        raise HTTPException(409, "知识库正在更新，请稍后重试")
+    try:
+        with state_lock:
+            storage.clear_knowledge()
+            chunks.clear()
+            knowledge_version += 1
+        return {"status": "cleared"}
+    finally:
+        knowledge_mutation_lock.release()
+
+
+@app.post("/api/chat")
+def chat(payload: ChatRequest) -> dict:
+    conversation_lock = acquire_conversation(payload.session_id)
+    try:
+        local_chunks, local_history, snapshot_version = state_snapshot(
+            payload.session_id,
+            payload.client_id,
+        )
+        if not local_chunks:
+            raise HTTPException(409, "请先上传文档并建立知识库")
+
+        started = perf_counter()
+        decision = decide_action(payload.question, local_history)
+        tool_name = decision.get("tool", "direct")
+        results: list[tuple[Chunk, float]] = []
+        trace = {"agent_seconds": decision["seconds"], "tool": tool_name}
+
+        if decision["type"] == "direct":
+            reply = decision["content"]
+        elif tool_name == "list_knowledge_sources":
+            reply = list_sources(local_chunks)
+        elif tool_name == "summarize_knowledge_base":
+            reply = summarize_knowledge_base(local_chunks)
+        else:
+            query = decision.get("arguments", {}).get("query") or payload.question
+            results = retrieve_fast(query, local_chunks, trace=trace)
+            answer_started = perf_counter()
+            reply = answer_structured(payload.question, results, local_history)
+            trace["answer_seconds"] = perf_counter() - answer_started
+
+        trace["total_seconds"] = perf_counter() - started
+        sources = [serialize_source(c, s, i) for i, (c, s) in enumerate(results, 1)]
+        commit_exchange(snapshot_version, payload, reply, sources, trace)
+        return {"answer": reply, "trace": trace, "sources": sources}
+    finally:
+        conversation_lock.release()
+
+
+@app.post("/api/chat/stream")
+def chat_stream(payload: ChatRequest) -> StreamingResponse:
+    conversation_lock = acquire_conversation(payload.session_id)
+    try:
+        local_chunks, local_history, snapshot_version = state_snapshot(
+            payload.session_id,
+            payload.client_id,
+        )
+        if not local_chunks:
+            raise HTTPException(409, "请先上传文档并建立知识库")
+    except Exception:
+        conversation_lock.release()
+        raise
+
+    def generate():
+        started = perf_counter()
+        reply_parts: list[str] = []
+        results: list[tuple[Chunk, float]] = []
+        sources: list[dict] = []
+        try:
+            yield sse_event("status", {"phase": "routing", "message": "Agent 正在判断问题类型"})
+            decision = decide_action(payload.question, local_history)
+            tool_name = decision.get("tool", "direct")
+            trace = {"agent_seconds": decision["seconds"], "tool": tool_name}
+
+            if decision["type"] == "direct":
+                reply_parts.append(decision["content"])
+                yield sse_event("delta", {"content": decision["content"]})
+            elif tool_name == "list_knowledge_sources":
+                reply = list_sources(local_chunks)
+                reply_parts.append(reply)
+                yield sse_event("delta", {"content": reply})
+            elif tool_name == "summarize_knowledge_base":
+                yield sse_event("status", {"phase": "generating", "message": "正在总结知识库"})
+                reply = summarize_knowledge_base(local_chunks)
+                reply_parts.append(reply)
+                yield sse_event("delta", {"content": reply})
+            else:
+                yield sse_event("status", {"phase": "retrieving", "message": "正在检索并重排相关证据"})
+                query = decision.get("arguments", {}).get("query") or payload.question
+                results = retrieve_fast(query, local_chunks, trace=trace)
+                sources = [serialize_source(c, s, i) for i, (c, s) in enumerate(results, 1)]
+                yield sse_event("sources", {"sources": sources})
+                yield sse_event("status", {"phase": "generating", "message": "正在基于证据生成答案"})
+                answer_started = perf_counter()
+                for part in answer_stream(payload.question, results, local_history):
+                    reply_parts.append(part)
+                    yield sse_event("delta", {"content": part})
+                trace["answer_seconds"] = perf_counter() - answer_started
+
+            reply = "".join(reply_parts).strip()
+            if not reply:
+                raise RuntimeError("模型未返回可显示的答案")
+            trace["total_seconds"] = perf_counter() - started
+            commit_exchange(snapshot_version, payload, reply, sources, trace)
+            yield sse_event("done", {"trace": trace})
+        except Exception as exc:
+            yield sse_event(
+                "error",
+                {"code": "AGENT_STREAM_ERROR", "message": f"Agent 运行失败：{exc}"},
+            )
+        finally:
+            conversation_lock.release()
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+        },
+    )

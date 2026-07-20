@@ -1,186 +1,194 @@
-# 企业知识库 Agent
+# 企业知识库 RAG Agent
 
-一个完全本地运行的中文企业知识库 Agent。系统能够读取 PDF、TXT 和 Markdown，使用 BM25 与向量检索召回资料，通过 Qwen3 重排序、回答并标注来源；Agent 可自主选择搜索、列出来源或总结知识库工具。
+一个基于本地大模型的企业知识问答系统。项目采用 Vue 3 + FastAPI 前后端分离架构，支持多格式文档导入、混合检索、Agent 工具路由、SSE 流式回答、引用溯源、多会话管理与 SQLite 持久化。
 
-## 功能截图
+系统默认使用 Ollama 运行 Qwen3 4B 和 nomic-embed-text，不依赖付费模型 API。原有 Streamlit 页面仍保留，可作为轻量原型入口。
 
-### 本地模型连接与知识库导入
+## 页面预览
 
-![本地模型连接与知识库导入](docs/images/01-home.png)
+### 会话管理与知识库状态
 
-### 单问题、多问题拆分与无依据拒答
+![Vue 会话管理页面](docs/images/06-vue-conversations.png)
 
-![单问题、多问题拆分与无依据拒答](docs/images/02-multi-query-and-refusal.png)
+### 流式回答与检索依据
 
-### Agent 运行轨迹与性能统计
+![Vue 流式回答与检索依据](docs/images/05-vue-chat-evidence.png)
 
-![Agent 运行轨迹与性能统计](docs/images/03-agent-trace.png)
+## 核心能力
 
-### 检索来源与重排结果
-
-![检索来源与重排结果](docs/images/04-retrieval-evidence.png)
-
-## 项目亮点
-
-- 本地运行：Ollama + Qwen3，不依赖付费 API
-- Agent Tool Calling：搜索、来源列表、知识库总结
-- 混合检索：Jieba + BM25 + Embedding + RRF
-- Qwen3 Reranker：对困难候选进行最终排序
-- 复合问题分解：支持一次询问多个制度
-- 比较型查询：支持“比较年假和调休制度”
-- 证据引用：展示文件、章节、片段和排名
-- 防幻觉：无答案拒答、证据复查与失败降级
-- 性能优化：批量 Embedding、向量缓存、总结缓存、高置信快速路径
-- 可观测性：展示 Agent 决策、检索路径及各阶段耗时
-- 自动评测：检索、Agent 路由和无答案测试集
+- 文档处理：导入 PDF、TXT、Markdown，按标题和重叠窗口切分文本。
+- 混合检索：Jieba + BM25 + Embedding + RRF；高置信问题走 BM25 快速路径。
+- 语义重排：Qwen3 对候选片段重排，复合问题为每个子问题选择证据。
+- Agent 路由：支持直接回复、知识检索、来源列表和知识库总结工具。
+- 可信回答：结构化输出、引用标记、无依据拒答和证据复查失败保护。
+- 流式交互：SSE 分阶段返回路由、检索、来源、文本增量和运行轨迹。
+- 会话管理：新建、切换、恢复和删除会话，浏览器匿名客户端逻辑隔离。
+- 持久化：SQLite 保存知识块、向量、会话、消息、引用和运行轨迹。
+- 并发一致性：同一会话生成锁、知识库原子替换和知识版本校验。
+- 自动化验证：25 项单元/接口测试，以及检索、路由和拒答评测集。
 
 ## 系统架构
 
 ```mermaid
-flowchart TD
-    U[用户问题] --> A{Agent 路由}
-    A -->|普通对话| D[直接回答]
-    A -->|列出资料| L[list_knowledge_sources]
-    A -->|总结资料| S[summarize_knowledge_base]
+flowchart LR
+    U[用户] --> V[Vue 3 / Vite]
+    V -->|REST / SSE| F[FastAPI]
+    F --> A{Agent 路由}
+    A -->|直接回复| D[Direct]
+    A -->|来源 / 总结| T[Agent Tools]
     A -->|制度查询| Q{查询类型}
-    Q -->|高置信单问题| B[BM25 快速路径]
-    Q -->|高置信多问题| BM[多路 BM25]
-    Q -->|困难问题| H[向量 + BM25 + RRF]
+    Q -->|高置信| B[BM25 Fast Path]
+    Q -->|困难 / 复合问题| H[Embedding + BM25 + RRF]
     H --> R[Qwen3 Reranker]
-    B --> C[证据片段]
-    BM --> C
-    R --> C
-    C --> G[结构化答案生成]
-    G --> V{证据校验}
-    V -->|有依据| O[答案 + 引用]
-    V -->|无依据| N[明确拒答]
+    B --> E[证据片段]
+    R --> E
+    E --> G[Qwen3 结构化生成]
+    G --> V
+
+    P[PDF / TXT / MD] --> S[解析与切分]
+    S --> I[Embedding 与缓存]
+    I --> DB[(SQLite)]
+    DB --> F
 ```
 
 ## 技术栈
 
-- Python 3.12
-- Streamlit
-- Ollama
-- Qwen3 4B
-- nomic-embed-text
-- Jieba
-- pypdf
+| 模块 | 技术 |
+|---|---|
+| 前端 | Vue 3、Vite、Fetch、SSE、Marked、DOMPurify |
+| API | FastAPI、Pydantic、Uvicorn |
+| RAG | Jieba、BM25、Embedding、RRF、Qwen3 Reranker |
+| 模型 | Ollama、Qwen3 4B、nomic-embed-text |
+| 存储 | SQLite、Embedding 文件缓存 |
+| 测试 | unittest、FastAPI TestClient |
 
 ## 快速开始
 
-### 1. 下载模型
+### 1. 准备模型
 
 ```powershell
 ollama pull qwen3:4b
 ollama pull nomic-embed-text
 ```
 
-### 2. 创建环境
+### 2. 安装后端依赖
 
 ```powershell
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-### 3. 启动
+### 3. 启动 FastAPI
+
+```powershell
+.\start_api.ps1
+```
+
+API 文档：http://127.0.0.1:8000/docs
+
+### 4. 启动 Vue 前端
+
+另开一个 PowerShell：
+
+```powershell
+cd frontend
+npm install
+npm run dev
+```
+
+页面地址：http://127.0.0.1:5173
+
+详细使用说明见 [FRONTEND.md](FRONTEND.md)。如需运行原有 Streamlit 版本：
 
 ```powershell
 .\start.ps1
 ```
 
-或：
+## 上下文与持久化
 
-```powershell
-.\.venv\Scripts\python.exe -m streamlit run app.py
-```
+- SQLite 按 `client_id + conversation_id` 保存全部聊天记录。
+- 每次推理只加载当前会话最近 4 条消息，避免上下文无限增长。
+- 文档默认按约 220 字切块，并保留约 40 字重叠。
+- 检索通常召回 8 个候选，最终向模型提供最相关的 4 个片段。
+- FastAPI 重启时从 `data/knowledge_agent.db` 恢复知识块、向量和会话。
+- 上传新知识库时原子替换旧索引，并清除不再兼容的历史会话。
 
-浏览器访问 `http://localhost:8501`，上传 `sample_company_rules.md` 后建立知识库。
+## API
 
-## Agent 工具
-
-| 工具 | 用途 |
-|---|---|
-| `search_knowledge_base` | 查询企业制度、流程和事实 |
-| `list_knowledge_sources` | 列出文件与章节 |
-| `summarize_knowledge_base` | 总结整份知识库 |
-
-## 检索策略
-
-1. 明确且 BM25 领先时走快速路径；
-2. 比较型问题拆成多个子查询；
-3. 困难问题使用向量与 BM25 召回，通过 RRF 融合；
-4. Qwen3 对候选做语义重排序；
-5. 最终答案仅基于选中证据生成。
+| 方法 | 地址 | 用途 |
+|---|---|---|
+| GET | `/api/health` | 模型连接与知识库状态 |
+| POST | `/api/knowledge/upload` | 上传并构建知识库 |
+| DELETE | `/api/knowledge` | 清空知识库与历史会话 |
+| POST | `/api/chat` | 非流式问答 |
+| POST | `/api/chat/stream` | SSE 流式问答 |
+| GET/POST | `/api/conversations` | 查询或新建会话 |
+| GET | `/api/conversations/{id}/messages` | 恢复会话消息 |
+| DELETE | `/api/conversations/{id}` | 删除会话 |
 
 ## 评测结果
 
-数据集为自建中文员工制度资料：20 个章节、80 条有答案检索题、20 条无答案题、15 条 Agent 路由题。
+自建模拟员工制度数据包含 20 个知识块、80 条有答案检索题、20 条无答案题和 15 条 Agent 路由题。
 
-| 基础召回器 | Recall@1 | Recall@3 | MRR |
+| 检索方法 | Recall@1 | Recall@3 | MRR |
 |---|---:|---:|---:|
 | 纯向量 | 38.8% | 58.8% | 0.529 |
 | 纯 BM25 | 91.3% | 97.5% | 0.946 |
 | RRF 融合 | 65.0% | 85.0% | 0.763 |
 
-其他结果：
-
 - Agent Tool Selection Accuracy：100%（15/15）
 - 无答案拒答准确率：100%（20/20）
-- 无答案平均耗时：7.97 秒
-- 无答案最大耗时：9.77 秒
-- 同一文档第二次建立索引：约 0.002 秒
-- 典型单问题优化后：约 3.8 秒
-- 四意图复合问题优化后：约 10.7 秒
+- 无答案平均耗时：11.48 秒；最大耗时：24.07 秒
+- 自动化测试：25/25 通过
 
-> 以上结果来自自建模拟数据，仅用于项目回归与方案比较，不代表通用生产性能。
+评测环境、分组结果、回归问题和复现命令见 [EVALUATION.md](EVALUATION.md)。这些结果来自本地模拟资料，仅用于项目回归与方案比较，不代表通用生产性能。
 
-## 运行测试
+## 运行验证
 
 ```powershell
-# 基础检索
-.\.venv\Scripts\python.exe evaluate.py
+# 安装测试依赖
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
 
-# 扩展检索
-.\.venv\Scripts\python.exe evaluate.py eval_cases_extended.json
+# 单元与接口测试
+.\.venv\Scripts\python.exe -m unittest discover -v
 
-# Agent 路由
-.\.venv\Scripts\python.exe evaluate_routes.py
-
-# 无答案拒答（较慢）
-.\.venv\Scripts\python.exe evaluate_no_answer.py
-
-# 全部测试
+# 完整离线/本地模型评测
 .\run_tests.ps1
+
+# 前端生产构建
+cd frontend
+pnpm run build
 ```
 
 ## 项目结构
 
 ```text
 knowledge-agent/
-├── app.py                    # Streamlit 页面与交互
-├── agent.py                  # Tool Calling、路由、来源与总结工具
-├── rag.py                    # 切分、Embedding、BM25、RRF、重排与回答
-├── evaluate.py               # 检索评测
-├── evaluate_routes.py        # Agent 路由评测
-├── evaluate_no_answer.py     # 无答案拒答评测
-├── eval_*.json               # 测试数据
-├── sample_company_rules.md   # 演示员工手册
-├── start.ps1                 # Windows 启动脚本
-└── requirements.txt
+├── api.py                    # FastAPI、SSE、会话与知识库接口
+├── storage.py                # SQLite 持久化与事务
+├── agent.py                  # Agent 路由和工具
+├── rag.py                    # 切分、检索、重排与生成
+├── app.py                    # 保留的 Streamlit 原型
+├── frontend/                 # Vue 3 + Vite 前端
+├── tests/                    # 自动化测试
+├── eval_*.json               # 检索、路由与拒答评测集
+├── evaluate*.py              # 评测脚本
+├── sample_company_rules.md   # 演示知识库
+└── data/                     # 本地 SQLite 数据（Git 忽略）
 ```
 
-## 已知限制
+## 当前边界
 
-- 当前 Embedding 模型在中文制度检索上弱于 BM25；
-- Qwen3 4B 偶发错误拒答，已通过证据复查降低风险；
-- 扫描版 PDF 尚未接入 OCR；
-- 当前知识库保存在单机内存与本地缓存，不支持多租户；
-- 测试数据是模拟资料，生产使用需重新构建领域测试集。
+- 适合本地演示和单 Uvicorn Worker；进程内锁尚未扩展到多实例部署。
+- `client_id` 只用于演示级逻辑隔离，不等同于登录认证和服务端鉴权。
+- 上传会整体替换知识库，尚未实现单文档增量新增、更新和删除。
+- 当前检索会扫描内存中的全部知识块，大规模数据应迁移到专用向量数据库。
+- 扫描版 PDF 尚未接入 OCR，上传文件也需要进一步增加大小和安全限制。
 
 ## 后续方向
 
-- 中文 Embedding 与 Cross-Encoder 对照实验
-- FastAPI 与 React 前后端分离
-- SQLite 会话与用户隔离
-- OCR、文档权限和审计日志
-- Docker 化部署
+- 文档 Hash 去重、增量索引和文档级权限
+- Qdrant / pgvector 与元数据过滤
+- 历史摘要 + 最近消息的长对话记忆
+- Docker Compose、CI、结构化日志和请求追踪
+- OCR、上传任务队列和索引进度
