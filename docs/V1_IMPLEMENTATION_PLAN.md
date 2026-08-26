@@ -96,13 +96,17 @@ This proves the conversion boundary without changing behavior.
 
 ### M2 - Controlled Router / Planner
 
-Define route labels and a table-driven planner for:
+Define route labels and a table-driven planner for every supported combination
+of the three read-only tools:
 
+- `direct` (no tool);
 - `wiki_only`;
 - `document_only`;
 - `system_only`;
+- `wiki_document`;
+- `wiki_system`;
 - `document_system`;
-- `wiki_document`.
+- `wiki_document_system`.
 
 Use deterministic rules for freshness, exact citation, and user-state signals;
 use one bounded LLM classification fallback only for ambiguous requests. The
