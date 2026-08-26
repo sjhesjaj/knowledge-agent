@@ -17,6 +17,7 @@ from .contracts import (
 )
 from .document_adapter import document_search
 from .planner import Plan, RequestSignals, Route, ToolName, plan_request
+from .system_provider import SYSTEM_AUTHORITY, SystemOperation, system_query
 from .wiki_adapter import WIKI_AUTHORITY, load_wiki_pages, wiki_query
 from .wiki_schema import WikiClaim, WikiPage, validate_collection
 
@@ -25,12 +26,14 @@ __all__ = [
     "AUTHORITY_MIN",
     "CONFIDENCE_MAX",
     "CONFIDENCE_MIN",
+    "SYSTEM_AUTHORITY",
     "WIKI_AUTHORITY",
     "Evidence",
     "Plan",
     "RequestSignals",
     "Route",
     "SourceType",
+    "SystemOperation",
     "ToolName",
     "ToolResult",
     "ToolStatus",
@@ -39,6 +42,7 @@ __all__ = [
     "document_search",
     "load_wiki_pages",
     "plan_request",
+    "system_query",
     "validate_collection",
     "wiki_query",
 ]
