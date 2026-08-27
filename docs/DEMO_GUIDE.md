@@ -9,8 +9,9 @@
 
 | 检查项 | 命令 | 期望 |
 |---|---|---|
-| Python 环境 | `.\.venv\Scripts\python.exe --version` | Python 3.12.x |
-| 后端测试 | `.\.venv\Scripts\python.exe -m unittest discover` | `OK`，394 项 |
+| Python 环境 | `.\.venv\Scripts\python.exe --version` | Python 3.12 或更高 |
+| **测试依赖** | `.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt` | 必须先装，否则接口测试无法导入 |
+| 后端测试 | `.\.venv\Scripts\python.exe -m unittest discover` | `OK`，397 项 |
 | 前端构建 | `cd frontend; npm run build` | `✓ built` |
 | Wiki 页面 | `.\.venv\Scripts\python.exe -c "from orchestration import load_wiki_pages; print(len(load_wiki_pages()))"` | `4` |
 | 演示 fixture | `.\.venv\Scripts\python.exe -m json.tool wiki_pages\sample_company_wiki.json > $null` | 无输出即通过 |
@@ -168,6 +169,9 @@ Wiki 页面是仓库内已编译好的样例页面。
 
 | 现象 | 排查 |
 |---|---|
+| `unittest discover` 报 3 个 `ImportError: ... requires the httpx2 package` | 没装 `requirements-dev.txt`。接口测试依赖 `httpx`，它不在 `requirements.txt` 里 |
+| `py -m venv .venv` 建出的不是 3.12 | `py` 取的是机器上最新的 Python。实测 3.14 可正常运行；若要固定版本用 `py -3.12 -m venv .venv` |
+| `pip install` 报 `No such file or directory ... .dll` | 仓库路径太深触发 Windows 长路径限制。换一个短路径（如 `C:\kd`）重新 clone |
 | 输入框灰掉 | 未打开「三通道模式」且知识片段为 0。打开开关，或先上传 `sample_company_rules.md` |
 | 涉及原文的问题回「当前没有可用的文档知识库。」 | 没上传样例文档，或上传后知识片段仍为 0 |
 | Wiki 问题回「当前没有可用的 Wiki 页面。」 | `wiki_pages/sample_company_wiki.json` 缺失或非法，用第 1 节的命令检查 |

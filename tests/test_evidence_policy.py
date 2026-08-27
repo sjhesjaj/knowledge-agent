@@ -506,6 +506,41 @@ class FreshnessTests(unittest.TestCase):
             evaluate_evidence(plan, results).outcome, PolicyOutcome.READY
         )
 
+    def test_freshness_with_document_and_system_passes(self):
+        # The document adapter never populates version/observed_at, so before
+        # this rule accepted a live System channel, every "what does the rule
+        # say, and what is it now" question refused.
+        plan = make_plan(DOCUMENT, SYSTEM, requires_freshness=True)
+        results = {
+            DOCUMENT: ok_result(DOCUMENT, document_evidence()),
+            SYSTEM: ok_result(SYSTEM, system_evidence()),
+        }
+        decision = evaluate_evidence(plan, results)
+        self.assertEqual(decision.outcome, PolicyOutcome.READY)
+        self.assertNotIn(REASON_FRESHNESS_UNSUPPORTED, decision.reason_codes)
+
+    def test_freshness_with_all_three_channels_passes(self):
+        plan = make_plan(WIKI, DOCUMENT, SYSTEM, requires_freshness=True)
+        results = {
+            WIKI: ok_result(WIKI),
+            DOCUMENT: ok_result(DOCUMENT, document_evidence()),
+            SYSTEM: ok_result(SYSTEM, system_evidence()),
+        }
+        self.assertEqual(
+            evaluate_evidence(plan, results).outcome, PolicyOutcome.READY
+        )
+
+    def test_freshness_still_refuses_when_no_channel_can_attest(self):
+        # System present but missing observed_at cannot attest currency either.
+        plan = make_plan(DOCUMENT, SYSTEM, requires_freshness=True)
+        results = {
+            DOCUMENT: ok_result(DOCUMENT, document_evidence()),
+            SYSTEM: ok_result(SYSTEM, system_evidence(observed_at=None)),
+        }
+        decision = evaluate_evidence(plan, results)
+        self.assertEqual(decision.outcome, PolicyOutcome.REFUSE)
+        self.assertIn(REASON_FRESHNESS_UNSUPPORTED, decision.reason_codes)
+
     def test_freshness_with_wiki_and_document_passes(self):
         plan = make_plan(WIKI, DOCUMENT, requires_freshness=True)
         results = {

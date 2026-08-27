@@ -662,17 +662,23 @@ def evaluate_evidence(
             reasons.add(REASON_SYSTEM_MISSING_AUTHORITY_SCOPE)
 
     if plan.signals.requires_freshness:
-        if ToolName.DOCUMENT_SEARCH in plan.steps:
-            traceable = any(
-                (item.version and item.version.strip())
-                or (item.observed_at and item.observed_at.strip())
-                for item in document_evidence
-            )
-            if not traceable:
-                reasons.add(REASON_FRESHNESS_UNSUPPORTED)
-        elif ToolName.SYSTEM_QUERY not in plan.steps:
-            # Wiki alone cannot show the underlying document is current: a page
-            # version describes the compiled page, not its source.
+        # Freshness is satisfied by *any* channel that can attest currency: a
+        # document carrying a version or observation time, or a live system
+        # record carrying observed_at. Requiring the document to attest it even
+        # when a live channel is present refused every "what does the rule say,
+        # and what is it now" question - the exact case the three-channel design
+        # exists to answer.
+        traceable_document = any(
+            (item.version and item.version.strip())
+            or (item.observed_at and item.observed_at.strip())
+            for item in document_evidence
+        )
+        live_system = any(
+            item.observed_at and item.observed_at.strip() for item in system_evidence
+        )
+        # Wiki alone still cannot show the underlying document is current: a page
+        # version describes the compiled page, not its source.
+        if not traceable_document and not live_system:
             reasons.add(REASON_FRESHNESS_UNSUPPORTED)
 
     # --- exact source ------------------------------------------------------
