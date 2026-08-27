@@ -25,6 +25,13 @@ from .evidence_policy import (
     ToolFailure,
     evaluate_evidence,
 )
+from .executor import (
+    ExecutionBundle,
+    ExecutionContext,
+    SystemRequest,
+    ToolExecutionError,
+    execute_plan,
+)
 from .planner import Plan, RequestSignals, Route, ToolName, plan_request
 from .system_provider import SYSTEM_AUTHORITY, SystemOperation, system_query
 from .wiki_adapter import WIKI_AUTHORITY, load_wiki_pages, wiki_query
@@ -38,6 +45,8 @@ __all__ = [
     "SYSTEM_AUTHORITY",
     "WIKI_AUTHORITY",
     "Evidence",
+    "ExecutionBundle",
+    "ExecutionContext",
     "FactAssertion",
     "FactResolution",
     "FactScope",
@@ -48,6 +57,8 @@ __all__ = [
     "Route",
     "SourceType",
     "SystemOperation",
+    "SystemRequest",
+    "ToolExecutionError",
     "ToolFailure",
     "ToolName",
     "ToolResult",
@@ -56,6 +67,7 @@ __all__ = [
     "WikiPage",
     "document_search",
     "evaluate_evidence",
+    "execute_plan",
     "load_wiki_pages",
     "plan_request",
     "system_query",
