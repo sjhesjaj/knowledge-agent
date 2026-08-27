@@ -3,12 +3,16 @@ from __future__ import annotations
 import json
 from threading import Lock
 from time import perf_counter
+from typing import Literal
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
+
+import chat_orchestration
+from chat_orchestration import MODE_LEGACY, MODE_ORCHESTRATED
 
 from agent import decide_action, list_sources, summarize_knowledge_base
 from rag import (
@@ -46,6 +50,8 @@ class ChatRequest(BaseModel):
     question: str = Field(min_length=1, max_length=2000)
     session_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
     client_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9_-]+$")
+    # Opt-in. Existing clients omit it and keep today's behavior exactly.
+    mode: Literal["legacy", "orchestrated"] = MODE_LEGACY
 
 
 class ConversationCreate(BaseModel):
@@ -75,11 +81,23 @@ def sse_event(event: str, data: dict) -> str:
 def state_snapshot(
     conversation_id: str,
     client_id: str,
+    *,
+    require_chunks: bool = True,
 ) -> tuple[list[Chunk], list[dict[str, str]], int]:
+    """Snapshot state for one request.
+
+    `require_chunks=True` is the legacy path and keeps its error priority: with
+    an empty knowledge base it returns early, before any ownership check, and
+    the caller raises 409.
+
+    `require_chunks=False` is used by the orchestrated mode, where a Wiki-only
+    or inventory-only question does not depend on any document upload. It always
+    validates ownership, reads history, and captures the version.
+    """
     with state_lock:
         local_chunks = list(chunks)
         local_version = knowledge_version
-        if not local_chunks:
+        if require_chunks and not local_chunks:
             return local_chunks, [], local_version
         try:
             storage.ensure_conversation(conversation_id, client_id)
@@ -220,6 +238,9 @@ def clear_knowledge() -> dict:
 def chat(payload: ChatRequest) -> dict:
     conversation_lock = acquire_conversation(payload.session_id)
     try:
+        if payload.mode == MODE_ORCHESTRATED:
+            return orchestrated_chat(payload)
+
         local_chunks, local_history, snapshot_version = state_snapshot(
             payload.session_id,
             payload.client_id,
@@ -254,10 +275,100 @@ def chat(payload: ChatRequest) -> dict:
         conversation_lock.release()
 
 
+def orchestrated_chat(payload: ChatRequest) -> dict:
+    """The M1-M6A chain behind /api/chat. The caller holds the conversation lock."""
+    local_chunks, local_history, snapshot_version = state_snapshot(
+        payload.session_id,
+        payload.client_id,
+        require_chunks=False,
+    )
+    started = perf_counter()
+    prepared = chat_orchestration.prepare(payload.question, local_chunks)
+    trace = chat_orchestration.build_trace(prepared)
+
+    if prepared.needs_generation:
+        answer_started = perf_counter()
+        reply = answer_structured(
+            payload.question, prepared.results_for_answer, local_history
+        )
+        trace["answer_seconds"] = perf_counter() - answer_started
+    else:
+        reply = prepared.fixed_answer
+
+    trace["total_seconds"] = perf_counter() - started
+    commit_exchange(snapshot_version, payload, reply, prepared.sources, trace)
+    return {
+        "answer": reply,
+        "trace": trace,
+        "sources": prepared.sources,
+        "route": prepared.route,
+        "steps": prepared.steps,
+    }
+
+
+def orchestrated_stream(payload: ChatRequest, conversation_lock: Lock):
+    """SSE for the orchestrated chain. Owns releasing the conversation lock."""
+    local_chunks, local_history, snapshot_version = state_snapshot(
+        payload.session_id,
+        payload.client_id,
+        require_chunks=False,
+    )
+
+    def generate():
+        started = perf_counter()
+        try:
+            yield sse_event("status", {"phase": "routing", "message": "Agent 正在规划信息通道"})
+            prepared = chat_orchestration.prepare(payload.question, local_chunks)
+            trace = chat_orchestration.build_trace(prepared)
+            yield sse_event("sources", {"sources": prepared.sources})
+
+            if prepared.needs_generation:
+                yield sse_event(
+                    "status", {"phase": "generating", "message": "正在基于证据生成答案"}
+                )
+                answer_started = perf_counter()
+                reply_parts: list[str] = []
+                for part in answer_stream(
+                    payload.question, prepared.results_for_answer, local_history
+                ):
+                    reply_parts.append(part)
+                    yield sse_event("delta", {"content": part})
+                trace["answer_seconds"] = perf_counter() - answer_started
+                reply = "".join(reply_parts).strip()
+                if not reply:
+                    raise RuntimeError("模型未返回可显示的答案")
+            else:
+                reply = prepared.fixed_answer
+                yield sse_event("delta", {"content": reply})
+
+            trace["total_seconds"] = perf_counter() - started
+            commit_exchange(snapshot_version, payload, reply, prepared.sources, trace)
+            yield sse_event("done", {"trace": trace})
+        except Exception:
+            # Fixed payload: str(exc) is never interpolated, nothing is
+            # persisted, and no done event is emitted.
+            yield sse_event("error", chat_orchestration.STREAM_ERROR_EVENT)
+        finally:
+            conversation_lock.release()
+
+    return generate
+
+
 @app.post("/api/chat/stream")
 def chat_stream(payload: ChatRequest) -> StreamingResponse:
     conversation_lock = acquire_conversation(payload.session_id)
     try:
+        if payload.mode == MODE_ORCHESTRATED:
+            generate = orchestrated_stream(payload, conversation_lock)
+            return StreamingResponse(
+                generate(),
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache, no-transform",
+                    "X-Accel-Buffering": "no",
+                },
+            )
+
         local_chunks, local_history, snapshot_version = state_snapshot(
             payload.session_id,
             payload.client_id,

@@ -1,0 +1,107 @@
+{
+  "schema_version": "1.0",
+  "pages": [
+    {
+      "page_id": "wiki-leave",
+      "title": "请假与年假",
+      "summary": "正式员工的带薪年假天数随司龄增加；实习生不享有带薪年假，但每月可申请事假；请假按时长分级审批。",
+      "aliases": ["年假", "带薪年假", "事假", "请假审批"],
+      "version": "1.0",
+      "claims": [
+        {
+          "claim_id": "wiki-leave-annual",
+          "text": "正式员工入职满一年后，每年享有 5 天带薪年假；工作满三年后增加至 8 天。",
+          "source": "sample_company_rules.md",
+          "locator": "section:请假制度"
+        },
+        {
+          "claim_id": "wiki-leave-intern",
+          "text": "实习生不享有带薪年假，但每月可申请 1 天事假。",
+          "source": "sample_company_rules.md",
+          "locator": "section:请假制度"
+        },
+        {
+          "claim_id": "wiki-leave-approval",
+          "text": "请假应提前在系统提交申请，1 天以内由直属主管审批，超过 1 天还需部门负责人审批。",
+          "source": "sample_company_rules.md",
+          "locator": "section:请假制度"
+        }
+      ]
+    },
+    {
+      "page_id": "wiki-remote-work",
+      "title": "远程办公",
+      "summary": "远程办公需要提前申请并获得主管批准，部分岗位不适用该政策。",
+      "aliases": ["远程", "居家办公", "remote work"],
+      "version": "1.0",
+      "claims": [
+        {
+          "claim_id": "wiki-remote-quota",
+          "text": "员工每周最多申请 2 天远程办公。",
+          "source": "sample_company_rules.md",
+          "locator": "section:远程办公"
+        },
+        {
+          "claim_id": "wiki-remote-approval",
+          "text": "远程办公须至少提前一个工作日获得直属主管批准。",
+          "source": "sample_company_rules.md",
+          "locator": "section:远程办公"
+        },
+        {
+          "claim_id": "wiki-remote-excluded",
+          "text": "涉及客户现场支持、机房值守的岗位不适用远程办公政策。",
+          "source": "sample_company_rules.md",
+          "locator": "section:远程办公"
+        }
+      ]
+    },
+    {
+      "page_id": "wiki-information-security",
+      "title": "信息安全",
+      "summary": "内部资料的外发范围受限，敏感文件对外发送前需要审批并加密。",
+      "aliases": ["数据安全", "公共网盘", "保密", "外发"],
+      "version": "1.0",
+      "claims": [
+        {
+          "claim_id": "wiki-security-upload",
+          "text": "内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务。",
+          "source": "sample_company_rules.md",
+          "locator": "section:信息安全"
+        },
+        {
+          "claim_id": "wiki-security-external-send",
+          "text": "敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具。",
+          "source": "sample_company_rules.md",
+          "locator": "section:信息安全"
+        }
+      ]
+    },
+    {
+      "page_id": "wiki-account-access",
+      "title": "账号与权限",
+      "summary": "系统账号不得共享，权限随岗位调整变更，高权限账号需要定期复核。",
+      "aliases": ["账号", "权限", "密码"],
+      "version": "1.0",
+      "claims": [
+        {
+          "claim_id": "wiki-account-sharing",
+          "text": "系统账号仅限本人使用，不得共享密码或验证码。",
+          "source": "sample_company_rules.md",
+          "locator": "section:账号与权限"
+        },
+        {
+          "claim_id": "wiki-account-review",
+          "text": "高权限账号每 90 天复核一次。",
+          "source": "sample_company_rules.md",
+          "locator": "section:账号与权限"
+        },
+        {
+          "claim_id": "wiki-account-incident",
+          "text": "发现账号异常应立即联系信息安全团队。",
+          "source": "sample_company_rules.md",
+          "locator": "section:账号与权限"
+        }
+      ]
+    }
+  ]
+}

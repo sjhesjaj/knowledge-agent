@@ -23,10 +23,33 @@ let historyRequestSequence = 0
 let scrollScheduled = false
 let localMessageSequence = 0
 
+const orchestrated = ref(false)
+
 const interactionLocked = computed(() => busy.value || uploadBusy.value || historyLoading.value)
 const activeTitle = computed(() => (
   conversations.value.find((item) => item.id === activeConversationId.value)?.title || '企业制度问答'
 ))
+// Wiki and inventory questions do not need an uploaded document, so the
+// composer must not stay locked behind an empty knowledge base in this mode.
+const canAsk = computed(() => orchestrated.value || status.value.chunk_count > 0)
+
+const EVIDENCE_LABELS = { wiki: 'Wiki', document: '原文', system: '实时状态' }
+const STEP_LABELS = { wiki_query: 'Wiki', document_search: '原文检索', system_query: '实时查询' }
+const ROUTE_LABELS = {
+  direct: '直接回答',
+  wiki_only: 'Wiki',
+  document_only: '原文',
+  system_only: '实时状态',
+  wiki_document: 'Wiki + 原文',
+  wiki_system: 'Wiki + 实时状态',
+  document_system: '原文 + 实时状态',
+  wiki_document_system: 'Wiki + 原文 + 实时状态',
+}
+
+const evidenceLabel = (type) => EVIDENCE_LABELS[type] || type
+const stepLabel = (step) => STEP_LABELS[step] || step
+const routeLabel = (route) => ROUTE_LABELS[route] || route
+const hasValue = (value) => value !== null && value !== undefined
 
 function renderMarkdown(content = '') {
   return DOMPurify.sanitize(marked.parse(content), {
@@ -263,7 +286,7 @@ async function send() {
         streamStatus.value = ''
       }
       scheduleScroll()
-    })
+    }, undefined, orchestrated.value ? 'orchestrated' : 'legacy')
     await refreshConversationList()
   } catch (error) {
     if (answerIndex < 0) {
@@ -351,6 +374,10 @@ onMounted(() => Promise.allSettled([refreshStatus(), initializeConversations()])
       <header>
         <div><h1>{{ activeTitle }}</h1><p>混合检索 · Agent 工具调用 · 可追溯引用</p></div>
         <div class="header-actions">
+          <label class="mode-toggle" :class="{ on: orchestrated }">
+            <input v-model="orchestrated" type="checkbox" :disabled="interactionLocked">
+            <span>三通道模式</span>
+          </label>
           <button :disabled="interactionLocked" @click="createConversation">新对话</button>
           <span class="badge">Local RAG</span>
         </div>
@@ -375,15 +402,26 @@ onMounted(() => Promise.allSettled([refreshStatus(), initializeConversations()])
             <p v-else>{{ message.content }}</p>
             <span v-if="message.role === 'assistant' && !message.content && busy" class="cursor"></span>
             <p v-if="message.errorMessage" class="stream-error">{{ message.errorMessage }}</p>
+            <div v-if="message.trace?.route" class="evidence-path">
+              <span class="route">{{ routeLabel(message.trace.route) }}</span>
+              <span v-for="step in message.trace.steps" :key="step" class="step">{{ stepLabel(step) }}</span>
+            </div>
             <details v-if="message.sources?.length">
               <summary>查看 {{ message.sources.length }} 条检索依据</summary>
               <div v-for="source in message.sources" :key="source.rank" class="source">
-                <strong>{{ source.rank }}. {{ source.heading }}</strong>
-                <small>{{ source.source }} · 片段 {{ source.chunk_index }} · {{ source.score }}</small>
+                <strong>
+                  <span v-if="source.type" class="evidence-tag" :class="source.type">{{ evidenceLabel(source.type) }}</span>
+                  {{ source.rank }}. {{ source.heading || source.locator || source.source }}
+                </strong>
+                <small>
+                  {{ source.source }}
+                  <template v-if="hasValue(source.chunk_index)"> · 片段 {{ source.chunk_index }}</template>
+                  <template v-if="hasValue(source.score)"> · {{ source.score }}</template>
+                </small>
                 <p>{{ source.content }}</p>
               </div>
             </details>
-            <small v-if="message.trace" class="trace">{{ message.trace.tool }} · {{ formatDuration(message.trace.total_seconds) }}</small>
+            <small v-if="message.trace" class="trace">{{ message.trace.tool || routeLabel(message.trace.route) }} · {{ formatDuration(message.trace.total_seconds) }}</small>
           </div>
         </article>
       </div>
@@ -391,8 +429,8 @@ onMounted(() => Promise.allSettled([refreshStatus(), initializeConversations()])
       <footer>
         <div v-if="streamStatus" class="stream-status" role="status" aria-live="polite"><i></i>{{ streamStatus }}</div>
         <div class="composer">
-          <textarea v-model="question" rows="1" :disabled="!status.chunk_count || interactionLocked" placeholder="输入企业制度问题…" @keydown="handleComposerKeydown"></textarea>
-          <button :disabled="!question.trim() || interactionLocked || !status.chunk_count" @click="send">{{ busy ? '回答中' : '发送' }}</button>
+          <textarea v-model="question" rows="1" :disabled="!canAsk || interactionLocked" :placeholder="orchestrated ? '输入问题，可查询制度或库存…' : '输入企业制度问题…'" @keydown="handleComposerKeydown"></textarea>
+          <button :disabled="!question.trim() || interactionLocked || !canAsk" @click="send">{{ busy ? '回答中' : '发送' }}</button>
         </div>
         <small>回答仅基于已导入资料，请核对引用来源。</small>
       </footer>

@@ -54,11 +54,13 @@ function withClient(path) {
   return `${path}${separator}client_id=${encodeURIComponent(getClientId())}`
 }
 
-function chatPayload(question, conversationId) {
+function chatPayload(question, conversationId, mode) {
   return {
     question,
     session_id: conversationId,
     client_id: getClientId(),
+    // Omitted by older callers, so the backend keeps its legacy behavior.
+    mode: mode === 'orchestrated' ? 'orchestrated' : 'legacy',
   }
 }
 
@@ -91,19 +93,19 @@ export const api = {
     return request(withClient(`/api/conversations/${encodeURIComponent(conversationId)}`), { method: 'DELETE' })
   },
 
-  chat(question, conversationId) {
+  chat(question, conversationId, mode) {
     return request('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(chatPayload(question, conversationId)),
+      body: JSON.stringify(chatPayload(question, conversationId, mode)),
     })
   },
 
-  async chatStream(question, conversationId, onEvent, signal) {
+  async chatStream(question, conversationId, onEvent, signal, mode) {
     const response = await fetch('/api/chat/stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify(chatPayload(question, conversationId)),
+      body: JSON.stringify(chatPayload(question, conversationId, mode)),
       signal,
     })
     if (!response.ok) {
