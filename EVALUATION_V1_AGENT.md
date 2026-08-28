@@ -557,7 +557,182 @@ Planner 为纯字符串匹配，两次运行的代码路径一致，差异来自
 
 ---
 
-## 14. 复现命令
+## 14. Blind Holdout V2（M8A 修复后的未见评测）
+
+**这是本仓库唯一一份"修复后 + 未见"的评测结果。** 五套数据必须严格区分：
+
+| # | 数据集 | 作者 | 是否见过实现／结果 | 可否代表泛化 |
+|---|---|---|---|---|
+| 1 | Dev | 主 Agent（已读 planner） | 是 | 否 |
+| 2 | Validation V1 | 同一主 Agent | 是 | 否 |
+| 3 | Blind Audit V1（pre-fix） | 独立 Agent | 编写时未见，**现已计分并用于缺陷分析** | 仅修复前基线 |
+| 4 | Blind Audit V1（post-fix diagnostic） | 同上 | **修复正是针对它写的** | 否 |
+| 5 | **Blind Holdout V2** | 另一独立 Agent | **未见实现、未见任何历史题、未见任何产品结果** | **是** |
+
+引用泛化能力时**只能用 V2**。95.0%（Dev/Validation）、22.5%/54.2%（Audit V1 pre-fix）、
+85.0%/82.5%（Audit V1 post-fix）都**不是** V2，不得混用。
+
+### 14.1 冻结信息
+
+```
+c7ad0231567fd98630cdb39e48306803a8b0aa749920bbc48b3e3cf116649efb  eval_orchestrated_routes_blind_v2.json  (39708 bytes)
+7ae1c0af4f82e0179ad377a6d433605da6e673d2e1d0ed5a689bcf3fd1bc9d89  eval_answerability_blind_v2.json        (23762 bytes)
+```
+
+- 冻结 commit：`65b402c203fe389742b6bf87b81bf32cba081e73`
+- 产品代码 commit：`df3b4c9f3143c803a991ac0afc6f734b74a25139`（计分期间零修改）
+- 清单：`evaluation_runs/blind-v2-freeze-manifest.json`（冻结时 `product_scoring_started: false`）
+
+### 14.2 独立性门禁（计分前完成，11 项全过）
+
+对比 6 份历史数据集 + M8A 回归测试表（AST 静态提取，未导入执行），共 **441 条**参考问题，
+外加 V2 两份之间的交叉检查。
+
+| 比较 | 最高相似度 | ≥0.85 | ≥0.80 | entity-swap | 内部模板 >2× |
+|---|---:|---:|---:|---:|---:|
+| Route V2 vs 全部参考 | 0.727 | 0（限 0） | 0（限 4） | 0 | 0 |
+| Answerability V2 vs 全部参考 | 0.759 | 0（限 0） | 0（限 2） | 0 | 0 |
+| Route V2 × Answerability V2 | 0.759 | 0（限 0） | 0（限 4） | 0 | — |
+
+> V2 的**第一版**在同一门禁上失败：13 题超阈值，含 2 条逐字重复（`哈喽`、`婚假可以休几天？`）
+> 与 2 条撞上 M8A 回归测试表。已退回作者重写 14 个 ID 后重测通过。本节数字来自重写版。
+
+### 14.3 Route V2 结果（确定性，单次计分）
+
+| 指标 | 值 | 门禁 | 结果 |
+|---|---:|---|---|
+| Overall Accuracy | **71.2%**（57/80） | ≥90% | FAIL |
+| Macro Accuracy | **71.2%** | ≥90% | FAIL |
+| Steps Exact Match | 71.2% | — | — |
+| Boundary Accuracy | **66.7%**（30/45） | ≥85% | FAIL |
+| Freshness Signal | 97.5% | — | — |
+| Exact-citation Signal | 80.0% | — | — |
+
+| route | 准确率 | 门禁 ≥80% |
+|---|---:|---|
+| `direct` | 80.0% | PASS |
+| `wiki_only` | 80.0% | PASS |
+| `document_only` | 100.0% | PASS |
+| `system_only` | 80.0% | PASS |
+| `wiki_document` | **40.0%** | FAIL |
+| `wiki_system` | 70.0% | FAIL |
+| `document_system` | **50.0%** | FAIL |
+| `wiki_document_system` | 70.0% | FAIL |
+
+混淆矩阵（行=人工预期，列=实际）：
+
+| 预期 \ 实际 | direct | wiki_only | doc_only | sys_only | wiki_doc | wiki_sys | doc_sys | wds |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `direct` | **8** | 0 | 2 | 0 | 0 | 0 | 0 | 0 |
+| `wiki_only` | 0 | **8** | 1 | 0 | 1 | 0 | 0 | 0 |
+| `document_only` | 0 | 0 | **10** | 0 | 0 | 0 | 0 | 0 |
+| `system_only` | 0 | 0 | 2 | **8** | 0 | 0 | 0 | 0 |
+| `wiki_document` | 0 | 4 | 2 | 0 | **4** | 0 | 0 | 0 |
+| `wiki_system` | 0 | 0 | 0 | 0 | 0 | **7** | 3 | 0 |
+| `document_system` | 0 | 0 | 0 | 5 | 0 | 0 | **5** | 0 |
+| `wiki_document_system` | 0 | 0 | 0 | 0 | 0 | 2 | 1 | **7** |
+
+实际路由分布：`document_only` 17、`system_only` 13、`wiki_only` 12、`document_system` 9、
+`wiki_system` 9、`direct` 8、`wiki_document_system` 7、`wiki_document` 5。
+分布均衡，**没有再出现 V1 那种 62/80 塌陷到兜底路由的情况**。
+
+### 14.4 Answerability V2 结果（三轮，真实本地链路）
+
+三轮逐题判定完全一致，per-run 指标相同：
+
+| 指标 | Run 1 | Run 2 | Run 3 | 均值 | 门禁 | 结果 |
+|---|---:|---:|---:|---:|---|---|
+| Pass rate | 80.0% | 80.0% | 80.0% | **80.0%** | — | — |
+| Answer Success Rate | 85.0% | 85.0% | 85.0% | **85.0%** | ≥90% | FAIL |
+| False Refusal Rate | 0.0% | 0.0% | 0.0% | **0.0%** | ≤10% | PASS |
+| Unanswerable Refusal Rate | 91.7% | 91.7% | 91.7% | **91.7%** | ≥90% | PASS |
+| Refusal Mechanism Match | 91.7% | 91.7% | 91.7% | 91.7% | — | — |
+| Boundary Message Accuracy | 50.0% | 50.0% | 50.0% | **50.0%** | ≥90% | FAIL |
+| Citation Presence Rate | 95.2% | 95.2% | 95.2% | 95.2% | — | — |
+| Citation Index Validity | 100.0% | 100.0% | 100.0% | **100.0%** | ≥95% | PASS |
+| Required Source Coverage | 90.0% | 90.0% | 90.0% | 90.0% | — | — |
+| Expected Fact Hit Rate | 90.0% | 90.0% | 90.0% | **90.0%** | ≥90% | PASS |
+| Route Accuracy | 82.5% | 82.5% | 82.5% | 82.5% | — | — |
+
+耗时 P50 / P95 / 最大：3.77s / 11.79s / 13.42s。
+
+**稳定性（严格口径）**
+
+- **stable pass（3/3 通过）：32 条**
+- **unstable（1/3 或 2/3）：0 条**
+- **stable fail（0/3 通过）：8 条**
+- **decision consistency：40/40 = 100%** —— 这是"三轮判定是否一致"，**不是正确率**。
+  8 条稳定失败在三轮里都失败，一致性 100% 不代表它们通过。
+
+### 14.5 全部失败题
+
+**Route V2（23 条）**，按原因归类：
+
+| 原因 | 条数 | 说明与例子 |
+|---|---:|---|
+| **精确性改写未识别为原文诉求** | 11 | `要精确的`／`准确说法`／`准确表述`／`准确天数`／`一字不差的`／`别搞错`／`必须精确`／`原样条文` 都不在 exact 表，document 通道丢失。`route_v2_063/064/067/068/070` 退化为 `system_only`，`042/045/047/048/073` 退化为 wiki 侧 |
+| **概览动词缺口** | 5 | `总览`（050、075）、`概括`（018）、`来龙去脉`（052）、`从头到尾`（041）、`讲清楚`（055）不在概览表 |
+| **社交词表缺口** | 2 | `回头聊`／`先忙去了`／`明天再说` 未覆盖，`route_v2_005/006` 未判为 direct |
+| **业务对象需旁证词** | 2 | `库存还有货吗`（035）无实时动词；`apr-3001 的审批走完了没`（038）审批单号未识别 |
+| **政策名词跨子句仍夺路** | 3 | `远程办公那套规定`／`请假制度的来龙去脉` 中 `规定`／`制度` 使 wiki 丢失并强制 document（051/052/055） |
+| **否定窗口只向前看** | 1 | `具体条款先别给我`（015）：否定词在标记**之后**，未被捕获 |
+
+**Answerability V2（8 条，三轮一致）**：
+
+| ID | 预期→实际 | 原因归类 | 要点 |
+|---|---|---|---|
+| `answer_v2_006` | answer→answer | generation miss + citation mismatch | 模型**原样复述了问题**，未作答、无引用 |
+| `answer_v2_018` | answer→answer | route marker gap + retrieval miss | `几小时内必须上报、报给谁` 无 exact 标记，document 通道丢失，只答了库存 |
+| `answer_v2_019` | answer→answer | route marker gap + retrieval miss | `原样给我` 未识别，document 通道丢失（事实恰好由 wiki 覆盖） |
+| `answer_v2_028` | generation_refuse→answer | generation miss | **编造**「加班费按 1 倍计算」并附 `[来源1]`。语料从未规定倍数 |
+| `answer_v2_034` | boundary→policy_refuse | route marker gap | `现在这边货还够吗` 指代型主语 |
+| `answer_v2_035` | boundary→generation_refuse | route marker gap | `库存这边帮我看一眼` —— `看一眼` 不是实时动词 |
+| `answer_v2_038` | boundary→policy_refuse | route marker gap | `ord-1001` 订单号未识别为业务对象 |
+| `answer_v2_040` | boundary→generation_refuse | route marker gap | `subject-001` 主体 ID 未识别 |
+
+`answer_v2_028` 与 Audit V1 的 `answer_holdout_024` 是**同一条编造**（加班费倍数），
+在两份互不相关的数据集上独立复现，可判定为稳定的生成层缺陷而非偶发。
+
+### 14.6 与旧数据的口径差异
+
+| 数据集 | Route | Answerability |
+|---|---:|---:|
+| Dev / Validation V1（构造偏差） | 95.0% | 97.5% |
+| Blind Audit V1（pre-fix） | 22.5% | 54.2% |
+| Blind Audit V1（post-fix，已见） | 85.0% | 82.5% |
+| **Blind Holdout V2（未见）** | **71.2%** | **80.0%** |
+
+Route 上 85.0% → 71.2% 的 **13.8 个百分点**差距，量化了 M8A 修复中"对已见审计集特化"的部分：
+在完全未见的自然表达上，泛化收益低于在审计集上观察到的数值。
+Answerability 差距较小（82.5% → 80.0%），因为其失败更多来自生成层而非路由词表。
+
+### 14.7 是否适合写入简历
+
+**适合，但只能引用 V2，且必须带语料规模限定。** 门禁未全过（Route 4/8 类未达 80%，
+Answerability 2 项未达标），因此不能声称"达标"或"生产就绪"。
+
+可以写：
+
+- 「设计三层评测体系并引入跨集合相似度门禁（字符 SequenceMatcher、bigram Jaccard、
+  实体遮蔽模板签名）；独立盲测集第一版因 13 题超阈值（含 2 条逐字重复）被门禁拦回重写，
+  重写版最高相似度 0.73/0.76、≥0.80 为 0 后方才冻结计分。」
+- 「在冻结的独立盲测集上（80 条路由 + 40 条可回答性，作者未见实现、未见历史题、
+  未见任何产品结果）：路由准确率 71.2%，可回答性三轮通过率 80.0%，
+  三轮判定一致率 100%（32 条三轮均通过、8 条三轮均失败、0 条翻转），
+  误拒率 0%，引用编号合法率 100%。」
+- 「同一修复在已见审计集上为 85.0%，在未见盲测集上为 71.2%，据此量化评测集特化程度。」
+- 「定位并复现跨数据集的稳定生成层缺陷（同一条加班费倍数编造在两份独立数据集上重现）。」
+
+不可以写：
+
+- ❌ 用 95.0% / 22.5% / 85.0% 冒充 V2。
+- ❌ 称任何门禁"达标"或"通过"。
+- ❌ 把 decision consistency 100% 说成准确率或稳定性 100%。
+- ❌ 省略语料规模：1 份 20 块模拟手册、4 个 Wiki 页面、3 条库存记录、本地 `qwen3:4b`。
+
+---
+
+## 15. 复现命令
 
 ```powershell
 .\.venv\Scripts\python.exe -m py_compile `
