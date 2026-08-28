@@ -1,0 +1,226 @@
+﻿
+==============================================================================
+route_v2  (80 questions vs 441 reference questions)
+==============================================================================
+  0.727  seq=0.727 jac=0.500 masked=0.727  route_v2_002  vs  m8a_regression_tests/test_router_generalization[1]
+          V2: 嗨，好久不见
+          RF: 哈喽，好久不见
+  0.714  seq=0.714 jac=0.368 masked=0.556  route_v2_039  vs  route_validation_v1/route_system_only_h004
+          V2: sku a100 今天还剩几件
+          RF: SKU-A100库存现在还有几件？
+  0.706  seq=0.706 jac=0.391 masked=0.706  route_v2_021  vs  answerability_dev/answer_document_003
+          V2: 报销最晚要在费用发生后几天内提交
+          RF: 报销申请应该在费用发生后多少天内提交？
+  0.683  seq=0.683 jac=0.500 masked=0.606  route_v2_033  vs  route_dev/route_system_only_002
+          V2: 客户催发货，帮我查一下 SKU_C300 目前有多少
+          RF: 帮我查一下 SKU-C300 目前的库存数量
+  0.667  seq=0.667 jac=0.182 masked=0.625  route_v2_036  vs  answerability_validation_v1/boundary_missing_sku_h001
+          V2: 查下目前的库存
+          RF: 查一下现在的库存
+  0.647  seq=0.647 jac=0.347 masked=0.510  route_v2_078  vs  route_audit_v1/route_holdout_077
+          V2: 信息安全概览、公共网盘那条的原样条文、SKU-A100 实时库存，三样都要
+          RF: 先概括下信息安全，再给我公共网盘那条的原文，最后 sku-a100 当前库存多少件
+  0.645  seq=0.645 jac=0.318 masked=0.645  route_v2_001  vs  route_audit_v1/route_holdout_008
+          V2: 早上好，我刚到工位坐下，先跟你打个招呼
+          RF: 晚上好，刚开完会，先跟你打个招呼
+  0.645  seq=0.645 jac=0.450 masked=0.593  route_v2_038  vs  answerability_audit_v1/answer_holdout_035
+          V2: apr-3001 的审批走完了没
+          RF: apr-3001 的审批现在卡在谁那儿？
+  0.619  seq=0.619 jac=0.379 masked=0.516  route_v2_051  vs  route_dev/route_system_only_001
+          V2: 远程办公那套规定给我过一遍，SKU-A100 现在还剩多少？
+          RF: SKU-A100 的库存现在还剩多少？
+  0.607  seq=0.607 jac=0.263 masked=0.150  route_v2_034  vs  m8a_regression_tests/test_router_generalization[77]
+          V2: 这一单要配两个品，麻烦把 SKU-A100 跟 SKU_B200 当前的存量都核一下
+          RF: 查一下 SKU-A100 和 SKU-B200 的库存
+  0.606  seq=0.606 jac=0.292 masked=0.621  route_v2_020  vs  m8a_regression_tests/test_router_generalization[24]
+          V2: 内部资料往外发，公司在管理上的大方向是什么？
+          RF: 办公区域管理的大方向是什么
+  0.579  seq=0.579 jac=0.286 masked=0.467  route_v2_056  vs  route_audit_v1/route_holdout_036
+          V2: 年假的算法整体给我理一理，Sku-C300 今天剩几箱
+          RF: 查一下 SKU-C300 还剩几箱
+  0.576  seq=0.576 jac=0.326 masked=0.561  route_v2_046  vs  route_audit_v1/route_holdout_045
+          V2: 帮我把远程办公政策梳理一下；哪些岗位不适用，要原文
+          RF: 下周给新人做分享。远程办公政策整体讲一下，哪些岗位不适用，手册里原文是怎么列的？
+  0.571  seq=0.571 jac=0.222 masked=0.571  route_v2_014  vs  answerability_audit_v1/answer_holdout_012
+          V2: 账号权限管理的整体思路是什么样的
+          RF: 账号和权限管理整体是怎么设计的，讲讲思路
+  0.571  seq=0.571 jac=0.205 masked=0.450  route_v2_032  vs  route_validation_v1/route_system_only_h006
+          V2: 客服那边催着回话，麻烦把 sku b200 目前库存数报给我
+          RF: 我这边着急。SKU-B200 的库存实时数字给我一个。
+  0.571  seq=0.571 jac=0.200 masked=0.571  route_v2_035  vs  answerability_validation_v1/boundary_missing_sku_h002
+          V2: 库存还有货吗
+          RF: 库存现在还有多少？
+  0.571  seq=0.571 jac=0.333 masked=0.452  route_v2_053  vs  answerability_audit_v1/answer_holdout_015
+          V2: 信息安全那块的全貌先说一下；对了，SKU_B200 现在还有存货没
+          RF: SKU_B200 现在还有货吗？
+  0.562  seq=0.562 jac=0.319 masked=0.473  route_v2_064  vs  route_audit_v1/route_holdout_067
+          V2: 设备遗失几小时内要上报？Sku-C300 当前存量报我一下
+          RF: 设备遗失几小时内必须上报？我照着写通知，要原文。仓库 SKU-C300 现在多少箱也说下
+  0.557  seq=0.557 jac=0.283 masked=0.500  route_v2_075  vs  route_audit_v1/route_holdout_072
+          V2: 年假先给个总览，满三年增加到几天那句准确措辞发我，再看下 Sku-C300 最新库存
+          RF: 年假先给个总体说明，再把满三年 8 天那句原话贴出来，最后帮我看下 sku-c300 目前还有几箱
+  0.552  seq=0.552 jac=0.217 masked=0.519  route_v2_041  vs  route_audit_v1/route_holdout_041
+          V2: 远程办公从头到尾是怎么安排的？每周上限那句原话也发我
+          RF: 先跟我讲讲远程办公整体是怎么回事，然后把每周天数上限那句原文也贴给我
+
+  max similarity        : 0.727
+  pairs >= 0.85       : 0 (limit 0)
+  pairs >= 0.80       : 0 (limit 4)
+  entity-swap suspects  : 0 (limit 0)
+  internal templates >2x: 0 (limit 0)
+
+==============================================================================
+answerability_v2  (40 questions vs 441 reference questions)
+==============================================================================
+  0.759  seq=0.759 jac=0.350 masked=0.842  answer_v2_021  vs  route_validation_v1/route_system_only_h001
+          V2: SKU-D400 目前库存量多少？
+          RF: SKU-B200 目前的库存是多少？
+  0.750  seq=0.750 jac=0.500 masked=0.636  answer_v2_015  vs  route_validation_v1/route_document_system_h008
+          V2: Sku-C300 当前还剩多少箱？
+          RF: SKU-C300 目前还剩多少？请引用原文。
+  0.727  seq=0.727 jac=0.500 masked=0.727  answer_v2_001  vs  answerability_dev/answer_document_003
+          V2: 报销申请最晚要在费用发生后多少天内提交？需要附哪些材料
+          RF: 报销申请应该在费用发生后多少天内提交？
+  0.718  seq=0.718 jac=0.321 masked=0.686  answer_v2_009  vs  route_audit_v1/route_holdout_012
+          V2: 远程办公这块的规定大体是什么样，简单说说就行
+          RF: 远程办公大概是个什么政策，简单说说就行
+  0.667  seq=0.667 jac=0.417 masked=0.625  answer_v2_005  vs  answerability_dev/answer_document_005
+          V2: 每周最多能申请几天远程办公？需要提前多久、找谁批
+          RF: 每周最多可以申请几天远程办公？
+  0.667  seq=0.667 jac=0.409 masked=0.522  answer_v2_016  vs  m8a_regression_tests/test_router_generalization[65]
+          V2: 客户催单，sku a100 今天还有多少件能发
+          RF: SKU-A100 大概还有多少
+  0.645  seq=0.645 jac=0.381 masked=0.476  answer_v2_014  vs  answerability_audit_v1/answer_holdout_015
+          V2: 帮我看下 sku b200 目前还有没有货
+          RF: SKU_B200 现在还有货吗？
+  0.640  seq=0.640 jac=0.371 masked=0.537  answer_v2_020  vs  m8a_regression_tests/test_router_generalization[59]
+          V2: 培训预算每年上限是多少、谁批准？另外 SKU-A100 当前库存报一下
+          RF: 培训预算上限是多少？顺便查下 SKU-A100
+  0.640  seq=0.640 jac=0.278 masked=0.667  answer_v2_023  vs  answerability_audit_v1/answer_holdout_015
+          V2: SKU_F600 目前有货吗
+          RF: SKU_B200 现在还有货吗？
+  0.632  seq=0.632 jac=0.308 masked=0.857  answer_v2_033  vs  route_validation_v1/route_system_only_h002
+          V2: 帮我查下库存
+          RF: 帮我查下 SKU-C300 库存
+  0.625  seq=0.625 jac=0.429 masked=0.552  answer_v2_039  vs  answerability_audit_v1/answer_holdout_035
+          V2: apr-3001 的审批到哪一步了
+          RF: apr-3001 的审批现在卡在谁那儿？
+  0.621  seq=0.621 jac=0.282 masked=0.400  answer_v2_036  vs  m8a_regression_tests/test_router_generalization[77]
+          V2: 在排下周的补货计划，SKU-A100、SKU_B200 这两个料号的库存数我都要用到
+          RF: 查一下 SKU-A100 和 SKU-B200 的库存
+  0.611  seq=0.611 jac=0.360 masked=0.562  answer_v2_012  vs  route_audit_v1/route_holdout_013
+          V2: 信息安全方面公司整体管哪些事？我只要大方向
+          RF: 信息安全方面公司整体是怎么要求的？
+  0.581  seq=0.581 jac=0.273 masked=0.545  answer_v2_029  vs  answerability_audit_v1/answer_holdout_027
+          V2: 出差住宿费的标准上限是多少？
+          RF: 出差住宿标准是多少钱一晚？餐补一天多少
+  0.564  seq=0.564 jac=0.321 masked=0.444  answer_v2_017  vs  route_validation_v1/route_system_only_h004
+          V2: 远程办公的规定大概讲讲；SKU-A100 手上还有几件
+          RF: SKU-A100库存现在还有几件？
+  0.563  seq=0.563 jac=0.333 masked=0.492  answer_v2_018  vs  route_audit_v1/route_holdout_067
+          V2: 设备遗失几小时内必须上报、报给谁？顺便把 Sku-C300 当下的库存报给我
+          RF: 设备遗失几小时内必须上报？我照着写通知，要原文。仓库 SKU-C300 现在多少箱也说下
+  0.562  seq=0.562 jac=0.304 masked=0.483  answer_v2_038  vs  route_audit_v1/route_holdout_037
+          V2: ord-1001 现在是什么状态？
+          RF: ord-1001 这个订单现在到哪一步了？
+  0.552  seq=0.552 jac=0.286 masked=0.500  answer_v2_024  vs  route_audit_v1/route_holdout_036
+          V2: Sku-H800 还剩几件？客户在等
+          RF: 查一下 SKU-C300 还剩几箱
+  0.552  seq=0.552 jac=0.368 masked=0.552  answer_v2_031  vs  answerability_audit_v1/answer_holdout_023
+          V2: 病假期间工资怎么发？
+          RF: 病假要不要提供医院证明？病假期间工资怎么算
+  0.526  seq=0.526 jac=0.342 masked=0.517  answer_v2_028  vs  answerability_audit_v1/answer_holdout_024
+          V2: 这个月工作日晚上加了不少班，想赶在发工资前自己把账核一遍，工作日加班的加班费是按几倍算的
+          RF: 工作日加班的加班费是按几倍算的？
+
+  max similarity        : 0.759
+  pairs >= 0.85       : 0 (limit 0)
+  pairs >= 0.80       : 0 (limit 2)
+  entity-swap suspects  : 0 (limit 0)
+  internal templates >2x: 0 (limit 0)
+
+==============================================================================
+route_v2 vs answerability_v2 (internal cross-check)
+==============================================================================
+  0.759  masked=0.692  route_v2_038  vs  answer_v2_039
+          R: apr-3001 的审批走完了没
+          A: apr-3001 的审批到哪一步了
+  0.756  masked=0.714  route_v2_040  vs  answer_v2_037
+          R: Sku-C300 跟 sku e500 我都要，一起报给我
+          A: Sku-C300、sku a100 这两个一起报给我
+  0.714  masked=0.714  route_v2_021  vs  answer_v2_001
+          R: 报销最晚要在费用发生后几天内提交
+          A: 报销申请最晚要在费用发生后多少天内提交？需要附哪些材料
+  0.712  masked=0.600  route_v2_064  vs  answer_v2_018
+          R: 设备遗失几小时内要上报？Sku-C300 当前存量报我一下
+          A: 设备遗失几小时内必须上报、报给谁？顺便把 Sku-C300 当下的库存报给我
+  0.667  masked=0.522  route_v2_039  vs  answer_v2_016
+          R: sku a100 今天还剩几件
+          A: 客户催单，sku a100 今天还有多少件能发
+  0.615  masked=0.615  route_v2_036  vs  answer_v2_033
+          R: 查下目前的库存
+          A: 帮我查下库存
+  0.565  masked=0.471  route_v2_060  vs  answer_v2_014
+          R: 远程办公我大概了解下就行，另外 SKU_B200 那个货还有没有
+          A: 帮我看下 sku b200 目前还有没有货
+  0.560  masked=0.378  route_v2_051  vs  answer_v2_017
+          R: 远程办公那套规定给我过一遍，SKU-A100 现在还剩多少？
+          A: 远程办公的规定大概讲讲；SKU-A100 手上还有几件
+  0.556  masked=0.370  route_v2_033  vs  answer_v2_015
+          R: 客户催发货，帮我查一下 SKU_C300 目前有多少
+          A: Sku-C300 当前还剩多少箱？
+  0.512  masked=0.450  route_v2_011  vs  answer_v2_009
+          R: 远程办公这块的规矩大致是怎样的，帮我从头理一遍
+          A: 远程办公这块的规定大体是什么样，简单说说就行
+  0.500  masked=0.438  route_v2_016  vs  answer_v2_009
+          R: 公司对远程办公是什么态度，说说呗
+          A: 远程办公这块的规定大体是什么样，简单说说就行
+  0.492  masked=0.491  route_v2_066  vs  answer_v2_020
+          R: 培训预算上限多少，条款原文给我；SKU_B200 那边最新数量也发一下
+          A: 培训预算每年上限是多少、谁批准？另外 SKU-A100 当前库存报一下
+  0.474  masked=0.276  route_v2_056  vs  answer_v2_015
+          R: 年假的算法整体给我理一理，Sku-C300 今天剩几箱
+          A: Sku-C300 当前还剩多少箱？
+  0.472  masked=0.143  route_v2_034  vs  answer_v2_036
+          R: 这一单要配两个品，麻烦把 SKU-A100 跟 SKU_B200 当前的存量都核一下
+          A: 在排下周的补货计划，SKU-A100、SKU_B200 这两个料号的库存数我都要用到
+  0.468  masked=0.409  route_v2_037  vs  answer_v2_038
+          R: 客户打电话来追进度，ord-1001 这张订单现在的处理状态帮我确认一下
+          A: ord-1001 现在是什么状态？
+  0.468  masked=0.333  route_v2_053  vs  answer_v2_014
+          R: 信息安全那块的全貌先说一下；对了，SKU_B200 现在还有存货没
+          A: 帮我看下 sku b200 目前还有没有货
+  0.462  masked=0.276  route_v2_062  vs  answer_v2_015
+          R: 笔记本坏了按规定该找谁修？顺带 sku c300 还有几箱
+          A: Sku-C300 当前还剩多少箱？
+  0.450  masked=0.400  route_v2_032  vs  answer_v2_021
+          R: 客服那边催着回话，麻烦把 sku b200 目前库存数报给我
+          A: SKU-D400 目前库存量多少？
+  0.449  masked=0.431  route_v2_015  vs  answer_v2_010
+          R: 帮我梳理一下请假相关的规定，有个框架就行，具体条款先别给我
+          A: 帮我把请假和年假的规定捋一捋，有个整体印象就行
+  0.435  masked=0.294  route_v2_068  vs  answer_v2_015
+          R: 软件安装那条允许装什么、不允许装什么，要准确的；sku c300 还剩几箱
+          A: Sku-C300 当前还剩多少箱？
+
+  max similarity        : 0.759
+  pairs >= 0.85       : 0 (limit 0)
+  pairs >= 0.80       : 0 (limit 4 = 5%)
+  entity-swap suspects  : 0 (limit 0)
+
+==============================================================================
+Gates
+==============================================================================
+  [PASS] route_v2: pairs >= 0.85                       0 (limit 0)
+  [PASS] route_v2: pairs >= 0.80                       0 (limit 4)
+  [PASS] route_v2: entity-swap suspects                0 (limit 0)
+  [PASS] route_v2: internal templates used > 2x        0 (limit 0)
+  [PASS] answerability_v2: pairs >= 0.85               0 (limit 0)
+  [PASS] answerability_v2: pairs >= 0.80               0 (limit 2)
+  [PASS] answerability_v2: entity-swap suspects        0 (limit 0)
+  [PASS] answerability_v2: internal templates used > 2x0 (limit 0)
+  [PASS] route_v2 x answerability_v2: pairs >= 0.85    0 (limit 0)
+  [PASS] route_v2 x answerability_v2: pairs >= 0.80    0 (limit 4)
+  [PASS] route_v2 x answerability_v2: entity-swap suspects0 (limit 0)
+
+Wrote evaluation_runs\blind-v2-overlap-report.json

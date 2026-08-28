@@ -27,6 +27,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import sys
@@ -66,6 +67,31 @@ COMPARISONS = (
 
 CORPUS_PATH = ROOT / "sample_company_rules.md"
 WIKI_PATH = ROOT / "wiki_pages" / "sample_company_wiki.json"
+
+# --- Blind Holdout V2 -----------------------------------------------------
+V2_ROUTE_PATH = ROOT / "eval_orchestrated_routes_blind_v2.json"
+V2_ANSWER_PATH = ROOT / "eval_answerability_blind_v2.json"
+
+# Everything V2 must stay independent of: every previously scored dataset, plus
+# the M8A regression tables, which were written from the V1 audit's findings.
+V2_REFERENCE_DATASETS = (
+    ("route_dev", ROOT / "eval_orchestrated_routes_dev.json"),
+    ("route_validation_v1", ROOT / "eval_orchestrated_routes_validation_v1.json"),
+    ("route_audit_v1", ROOT / "eval_orchestrated_routes_holdout.json"),
+    ("answerability_dev", ROOT / "eval_answerability_dev.json"),
+    ("answerability_validation_v1", ROOT / "eval_answerability_validation_v1.json"),
+    ("answerability_audit_v1", ROOT / "eval_answerability_holdout.json"),
+)
+V2_REFERENCE_TESTS = (
+    ("m8a_regression_tests", ROOT / "tests" / "test_router_generalization.py"),
+)
+
+# Per-holdout allowance for the elevated band, as an absolute count.
+V2_ELEVATED_ALLOWANCE = {"route_v2": 4, "answerability_v2": 2}
+# The two V2 files may share phrasing with each other only within this fraction.
+V2_CROSS_ELEVATED_FRACTION = 0.05
+
+_CJK = re.compile(r"[一-鿿]")
 
 # Freeze gates.
 THRESHOLD_BLOCKING = 0.85          # no pair may reach this
@@ -312,21 +338,234 @@ def evaluate(name: str, holdout_path: Path, refs: tuple) -> dict:
     }
 
 
+def questions_from_test_module(path: Path) -> list[dict]:
+    """Pull table-driven questions out of a test file without importing it.
+
+    Parsed with `ast`, never executed: importing a test module would run its
+    module-level code, and this check must stay inert.
+    """
+    if not path.exists():
+        return []
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    found: list[str] = []
+
+    def collect(node: ast.AST) -> None:
+        for child in ast.walk(node):
+            if isinstance(child, ast.Constant) and isinstance(child.value, str):
+                text = child.value.strip()
+                # Table rows are Chinese questions; ids, filenames, and prose
+                # docstrings are not what this comparison is about.
+                if text and _CJK.search(text) and "\n" not in text:
+                    found.append(text)
+
+    for node in tree.body:
+        if isinstance(node, (ast.Assign, ast.AnnAssign)):
+            collect(node)
+
+    ordered: list[dict] = []
+    seen: set[str] = set()
+    for index, text in enumerate(found):
+        if text in seen:
+            continue
+        seen.add(text)
+        norm = normalize(text)
+        ordered.append(
+            {
+                "id": f"{path.stem}[{index}]",
+                "question": text,
+                "normalized": norm,
+                "bigrams": bigrams(norm),
+                "masked": mask(text),
+            }
+        )
+    return ordered
+
+
+def evaluate_v2() -> dict:
+    """Compare both Blind Holdout V2 files against everything already seen."""
+    references: list[tuple[str, list[dict]]] = []
+    for name, path in V2_REFERENCE_DATASETS:
+        if path.exists():
+            references.append((name, load_questions(path)))
+    for name, path in V2_REFERENCE_TESTS:
+        extracted = questions_from_test_module(path)
+        if extracted:
+            references.append((name, extracted))
+
+    reference_total = sum(len(items) for _, items in references)
+    reports = []
+    gates = []
+
+    holdouts = (
+        ("route_v2", V2_ROUTE_PATH),
+        ("answerability_v2", V2_ANSWER_PATH),
+    )
+    loaded = {name: load_questions(path) for name, path in holdouts}
+
+    for name, path in holdouts:
+        items = loaded[name]
+        results = compare(items, references)
+        results.sort(key=lambda r: -r["similarity"])
+        blocking = [r for r in results if r["similarity"] >= THRESHOLD_BLOCKING]
+        elevated = [r for r in results if r["similarity"] >= THRESHOLD_ELEVATED]
+        suspects = [r for r in results if r["entity_swap_suspect"]]
+        templates = internal_templates(items)
+        allowance = V2_ELEVATED_ALLOWANCE[name]
+
+        gates.extend(
+            [
+                {
+                    "name": f"{name}: pairs >= {THRESHOLD_BLOCKING:.2f}",
+                    "value": len(blocking), "limit": 0,
+                    "passed": len(blocking) == 0,
+                },
+                {
+                    "name": f"{name}: pairs >= {THRESHOLD_ELEVATED:.2f}",
+                    "value": len(elevated), "limit": allowance,
+                    "passed": len(elevated) <= allowance,
+                },
+                {
+                    "name": f"{name}: entity-swap suspects",
+                    "value": len(suspects), "limit": 0,
+                    "passed": len(suspects) == 0,
+                },
+                {
+                    "name": f"{name}: internal templates used > 2x",
+                    "value": len(templates), "limit": 0,
+                    "passed": len(templates) == 0,
+                },
+            ]
+        )
+
+        print()
+        print("=" * 78)
+        print(f"{name}  ({len(items)} questions vs {reference_total} reference questions)")
+        print("=" * 78)
+        for entry in results[:TOP_PAIRS_REPORTED]:
+            print(
+                f"  {entry['similarity']:.3f}  seq={entry['sequence_ratio']:.3f} "
+                f"jac={entry['bigram_jaccard']:.3f} masked={entry['masked_ratio']:.3f}"
+                f"  {entry['id']}  vs  {entry['match_dataset']}/{entry['match_id']}"
+            )
+            print(f"          V2: {entry['question']}")
+            print(f"          RF: {entry['match_question']}")
+        print()
+        print(f"  max similarity        : {results[0]['similarity']:.3f}")
+        print(f"  pairs >= {THRESHOLD_BLOCKING:.2f}       : {len(blocking)} (limit 0)")
+        print(f"  pairs >= {THRESHOLD_ELEVATED:.2f}       : {len(elevated)} (limit {allowance})")
+        print(f"  entity-swap suspects  : {len(suspects)} (limit 0)")
+        print(f"  internal templates >2x: {len(templates)} (limit 0)")
+
+        reports.append(
+            {
+                "name": name,
+                "holdout": str(path),
+                "holdout_size": len(items),
+                "reference_sets": [n for n, _ in references],
+                "reference_questions": reference_total,
+                "max_similarity": results[0]["similarity"],
+                "count_blocking": len(blocking),
+                "count_elevated": len(elevated),
+                "allowed_elevated": allowance,
+                "entity_swap_suspects": suspects,
+                "internal_templates": templates,
+                "top_pairs": results[:TOP_PAIRS_REPORTED],
+                "all_pairs": results,
+            }
+        )
+
+    # The two V2 files must also not be paraphrases of each other.
+    cross = compare(loaded["route_v2"], [("answerability_v2", loaded["answerability_v2"])])
+    cross.sort(key=lambda r: -r["similarity"])
+    cross_block = [r for r in cross if r["similarity"] >= THRESHOLD_BLOCKING]
+    cross_elev = [r for r in cross if r["similarity"] >= THRESHOLD_ELEVATED]
+    cross_suspect = [r for r in cross if r["entity_swap_suspect"]]
+    cross_allowance = int(len(loaded["route_v2"]) * V2_CROSS_ELEVATED_FRACTION)
+
+    print()
+    print("=" * 78)
+    print("route_v2 vs answerability_v2 (internal cross-check)")
+    print("=" * 78)
+    for entry in cross[:TOP_PAIRS_REPORTED]:
+        print(
+            f"  {entry['similarity']:.3f}  masked={entry['masked_ratio']:.3f}  "
+            f"{entry['id']}  vs  {entry['match_id']}"
+        )
+        print(f"          R: {entry['question']}")
+        print(f"          A: {entry['match_question']}")
+    print()
+    print(f"  max similarity        : {cross[0]['similarity']:.3f}")
+    print(f"  pairs >= {THRESHOLD_BLOCKING:.2f}       : {len(cross_block)} (limit 0)")
+    print(
+        f"  pairs >= {THRESHOLD_ELEVATED:.2f}       : {len(cross_elev)} "
+        f"(limit {cross_allowance} = {V2_CROSS_ELEVATED_FRACTION:.0%})"
+    )
+    print(f"  entity-swap suspects  : {len(cross_suspect)} (limit 0)")
+
+    gates.extend(
+        [
+            {
+                "name": f"route_v2 x answerability_v2: pairs >= {THRESHOLD_BLOCKING:.2f}",
+                "value": len(cross_block), "limit": 0, "passed": len(cross_block) == 0,
+            },
+            {
+                "name": f"route_v2 x answerability_v2: pairs >= {THRESHOLD_ELEVATED:.2f}",
+                "value": len(cross_elev), "limit": cross_allowance,
+                "passed": len(cross_elev) <= cross_allowance,
+            },
+            {
+                "name": "route_v2 x answerability_v2: entity-swap suspects",
+                "value": len(cross_suspect), "limit": 0,
+                "passed": len(cross_suspect) == 0,
+            },
+        ]
+    )
+
+    reports.append(
+        {
+            "name": "route_v2_x_answerability_v2",
+            "holdout_size": len(loaded["route_v2"]),
+            "reference_sets": ["answerability_v2"],
+            "max_similarity": cross[0]["similarity"],
+            "count_blocking": len(cross_block),
+            "count_elevated": len(cross_elev),
+            "allowed_elevated": cross_allowance,
+            "entity_swap_suspects": cross_suspect,
+            "internal_templates": [],
+            "top_pairs": cross[:TOP_PAIRS_REPORTED],
+            "all_pairs": cross,
+        }
+    )
+
+    return {"comparisons": reports, "gates": gates}
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--report",
-        default="evaluation_runs/overlap-report.json",
+        default=None,
         help="Where to write the full pair-level report",
+    )
+    parser.add_argument(
+        "--v2",
+        action="store_true",
+        help="Check Blind Holdout V2 against every previously seen question set",
     )
     args = parser.parse_args(argv)
 
-    reports = []
-    gates = []
-    for name, holdout_path, refs in COMPARISONS:
-        report = evaluate(name, holdout_path, refs)
-        reports.append(report)
-        gates.extend(report["gates"])
+    if args.v2:
+        outcome = evaluate_v2()
+        reports, gates = outcome["comparisons"], outcome["gates"]
+        default_report = "evaluation_runs/blind-v2-overlap-report.json"
+    else:
+        reports = []
+        gates = []
+        for name, holdout_path, refs in COMPARISONS:
+            report = evaluate(name, holdout_path, refs)
+            reports.append(report)
+            gates.extend(report["gates"])
+        default_report = "evaluation_runs/overlap-report.json"
 
     print()
     print("=" * 78)
@@ -338,7 +577,7 @@ def main(argv: list[str] | None = None) -> int:
             f"{gate['value']} (limit {gate['limit']})"
         )
 
-    report_path = Path(args.report)
+    report_path = Path(args.report or default_report)
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text(
         json.dumps(
