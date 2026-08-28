@@ -48,6 +48,10 @@ MESSAGE_DIRECT = "你好！有什么企业知识库问题可以帮你？"
 MESSAGE_NO_SKU = "请提供需要查询的 SKU。"
 # Saying "give me a SKU" for an order question would imply orders are queryable.
 MESSAGE_SYSTEM_LIMITED = "当前版本仅支持库存查询。"
+# The caller supplied usable SKUs; the System channel just takes one per
+# request. Answering "provide a SKU" here would be false - they already did -
+# and would send them looking for a mistake they did not make.
+MESSAGE_MULTIPLE_SKU = "当前一次支持查询一个 SKU，请拆分后分别查询。"
 MESSAGE_NO_DOCUMENTS = "当前没有可用的文档知识库。"
 MESSAGE_NO_WIKI = "当前没有可用的 Wiki 页面。"
 MESSAGE_TOOL_UNAVAILABLE = "部分信息源暂时不可用，无法给出完整回答。"
@@ -77,12 +81,25 @@ def _load_wiki_pages_safely() -> tuple:
 WIKI_PAGES = _load_wiki_pages_safely()
 
 
+def extract_skus(question: str) -> list[str]:
+    """Every distinct SKU in the question, in a stable order.
+
+    Deterministic and offline. Repeats of one SKU collapse, so `SKU-A100 …
+    SKU-A100` is still a single-SKU request.
+    """
+    return sorted(
+        {"sku-" + match.group(1).lower() for match in SKU_PATTERN.finditer(question)}
+    )
+
+
 def extract_sku(question: str) -> str | None:
-    """Deterministic, offline. Never guesses and never falls back to a default."""
-    found = {"sku-" + match.group(1).lower() for match in SKU_PATTERN.finditer(question)}
-    if len(found) != 1:
-        return None
-    return found.pop()
+    """The one SKU this request is about, or None if it is not exactly one.
+
+    None is deliberately ambiguous between "none given" and "several given";
+    the caller distinguishes them with `extract_skus` so it can say which.
+    """
+    found = extract_skus(question)
+    return found[0] if len(found) == 1 else None
 
 
 @contextmanager
@@ -174,13 +191,17 @@ def _is_inventory_question(question: str) -> bool:
     return "库存" in question or "sku" in lowered
 
 
-def _unavailable(question, plan, chunks, sku) -> str | None:
+def _unavailable(question, plan, chunks, sku, skus) -> str | None:
     """A planned channel with no dependency is a fixed answer, never a 500."""
     if ToolName.DOCUMENT_SEARCH in plan.steps and not chunks:
         return MESSAGE_NO_DOCUMENTS
     if ToolName.WIKI_QUERY in plan.steps and not WIKI_PAGES:
         return MESSAGE_NO_WIKI
     if ToolName.SYSTEM_QUERY in plan.steps and sku is None:
+        # Several valid SKUs is a stated product limit, not a missing input.
+        # It is reported as such rather than disguised as an absent parameter.
+        if len(skus) > 1:
+            return MESSAGE_MULTIPLE_SKU
         # Only inventory is open. Asking an order question for a SKU would
         # promise a capability this version does not have.
         if _is_inventory_question(question):
@@ -205,7 +226,8 @@ def _prepared_without_execution(plan, message: str) -> Prepared:
 def prepare(question: str, chunks: list[Chunk]) -> Prepared:
     """Plan, check availability, execute, and judge - without answering."""
     plan = plan_request(question)
-    sku = extract_sku(question)
+    skus = extract_skus(question)
+    sku = skus[0] if len(skus) == 1 else None
 
     if not plan.steps:
         # A greeting needs no evidence, so it must not reach the answer model.
@@ -220,7 +242,7 @@ def prepare(question: str, chunks: list[Chunk]) -> Prepared:
             fixed_answer=MESSAGE_DIRECT,
         )
 
-    message = _unavailable(question, plan, chunks, sku)
+    message = _unavailable(question, plan, chunks, sku, skus)
     if message is not None:
         return _prepared_without_execution(plan, message)
 

@@ -1,0 +1,121 @@
+{
+  "context": {
+    "dataset": "eval_answerability_holdout.json",
+    "dataset_sha256": "5f55f703502a703b6453bb6e08e42ebc70015b9f06f03b98d17163dd7a64a104",
+    "git_sha": "5c580c1f56b5d7c28a484dc9d3b318559d3b238c",
+    "chat_model": "qwen3:4b",
+    "embed_model": "nomic-embed-text",
+    "python_version": "3.12.13",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "evaluator": "evaluate_answerability.py",
+    "warmup_seconds": 96.67383739999786
+  },
+  "gates": [
+    {
+      "name": "Answer Success Rate",
+      "value": 0.85,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": false
+    },
+    {
+      "name": "False Refusal Rate",
+      "value": 0.05,
+      "direction": "max",
+      "threshold": 0.1,
+      "passed": true
+    },
+    {
+      "name": "Unanswerable Refusal Rate",
+      "value": 1.0,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": true
+    },
+    {
+      "name": "Boundary Message Accuracy",
+      "value": 0.625,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": false
+    },
+    {
+      "name": "Citation Index Validity",
+      "value": 1.0,
+      "direction": "min",
+      "threshold": 0.95,
+      "passed": true
+    },
+    {
+      "name": "Expected Fact Hit Rate",
+      "value": 0.85,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": false
+    },
+    {
+      "name": "Cross-run Stability",
+      "value": 1.0,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": true
+    }
+  ],
+  "runs": [
+    {
+      "total_cases": 40,
+      "passed": 33,
+      "pass_rate": 0.825,
+      "answer_success_rate": 0.85,
+      "false_refusal_rate": 0.05,
+      "unanswerable_refusal_rate": 1.0,
+      "refusal_mechanism_match": 0.9166666666666666,
+      "boundary_accuracy": 0.625,
+      "citation_presence_rate": 1.0,
+      "citation_index_validity": 1.0,
+      "required_source_coverage": 0.95,
+      "expected_fact_hit_rate": 0.85,
+      "expected_fact_group_hit_rate": 0.9180327868852459,
+      "route_accuracy": 0.8,
+      "production_marker_refusal_gap": 0,
+      "question_restatements": 0,
+      "duration_p50": 20.47078640000109,
+      "duration_p95": 52.773592114994216,
+      "duration_max": 61.25241649999225,
+      "duration_total": 953.2145775999961
+    }
+  ],
+  "aggregate": {
+    "pass_rate": 0.825,
+    "answer_success_rate": 0.85,
+    "false_refusal_rate": 0.05,
+    "unanswerable_refusal_rate": 1.0,
+    "refusal_mechanism_match": 0.9166666666666666,
+    "boundary_accuracy": 0.625,
+    "citation_presence_rate": 1.0,
+    "citation_index_validity": 1.0,
+    "required_source_coverage": 0.95,
+    "expected_fact_hit_rate": 0.85,
+    "expected_fact_group_hit_rate": 0.9180327868852459,
+    "route_accuracy": 0.8,
+    "run_count": 1,
+    "stable_pass": 33,
+    "stable_fail": 7,
+    "unstable": 0,
+    "stability_rate": 1.0,
+    "stable_pass_rate": 0.825,
+    "unstable_ids": [],
+    "stable_fail_ids": [
+      "answer_holdout_002",
+      "answer_holdout_015",
+      "answer_holdout_016",
+      "answer_holdout_028",
+      "answer_holdout_034",
+      "answer_holdout_036",
+      "answer_holdout_040"
+    ],
+    "duration_p50": 20.47078640000109,
+    "duration_p95": 52.773592114994216,
+    "duration_max": 61.25241649999225
+  }
+}

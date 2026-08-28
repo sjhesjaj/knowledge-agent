@@ -496,7 +496,68 @@ False Refusal Rate 主要由此产生（`answer_holdout_015`–`018`）。
 
 ---
 
-## 13. 复现命令
+## 13. M8A 修复后诊断（post-fix diagnostic on an already-seen audit set）
+
+> **这不是新的 holdout 结果，不得用作简历指标。**
+>
+> 下列数字来自在 **Blind Holdout V1（pre-fix audit）** 上重跑修复后的代码。
+> 该集合的每一道题在 M7.1 中都已计分并逐条分析过，修复正是针对它暴露的类别
+> 编写的。因此这些数字是 **post-fix diagnostic on an already-seen audit set**，
+> 只能说明「针对已知失败类别的修复是否生效」，**不能**说明泛化能力。
+> 真正未见的 Blind Holdout V2 将在 M8A 代码冻结后由另一个全新 Agent 编写，
+> 届时才有可对外引用的泛化数字。
+>
+> 数据集未改动：SHA-256 仍为 `35995ded…`（route）与 `5f55f703…`（answerability）。
+
+Route（确定性，单次运行）：
+
+| 指标 | pre-fix | post-fix |
+|---|---:|---:|
+| Overall / Macro Accuracy | 22.5% | **85.0%** |
+| Boundary Accuracy | 35.7% | **82.1%** |
+| Exact Citation Signal | 70.0% | **85.0%** |
+| `direct` | 0.0% | **100.0%** |
+| `wiki_only` | 10.0% | **90.0%** |
+| `document_only` | 100.0% | 100.0% |
+| `system_only` | 50.0% | **80.0%** |
+| `wiki_document` | 0.0% | **70.0%** |
+| `wiki_system` | 10.0% | **70.0%** |
+| `document_system` | 10.0% | **80.0%** |
+| `wiki_document_system` | 0.0% | **90.0%** |
+
+非 `document_only` 题目塌陷到兜底路由：**62/80 → 1/70**。
+
+Answerability（单轮，qwen3:4b）：
+
+| 指标 | pre-fix(run1) | post-fix |
+|---|---:|---:|
+| Pass rate | 52.5% | **82.5%** |
+| Answer Success Rate | 45.0% | **85.0%** |
+| False Refusal Rate | 20.0% | **5.0%** |
+| Unanswerable Refusal Rate | 83.3% | **100.0%** |
+| Refusal Mechanism Match | 58.3% | **91.7%** |
+| Required Source Coverage | 50.0% | **95.0%** |
+| Expected Fact Hit Rate | 75.0% | **85.0%** |
+| Route Accuracy | 57.5% | **80.0%** |
+| Boundary Message Accuracy | 62.5% | 62.5%（未变） |
+
+修复后仍失败的 7 题，无一是本轮新引入的：
+
+| ID | 说明 |
+|---|---|
+| `answer_holdout_002` | 生成层漏掉 `直属主管`，与路由无关 |
+| `answer_holdout_015` | **数据侧限制**：系统答「SKU_B200 现在没有货。」语义正确，但盲写的正则只列了 `0 件/无库存/缺货/售罄`，未预料「没有货」。holdout 已冻结，未改题，按失败计 |
+| `answer_holdout_016` | 多 SKU：现返回正确的新边界文案，分类已修正为 `boundary`；该题人工预期是 `answer`，仍按失败计 |
+| `answer_holdout_028` | `大概` 软标记在无 System 信号的子句中仍加 Wiki，属本轮未处理的残留 |
+| `answer_holdout_034/036/040` | **指代型主语**：`那个单`、`我提交的转正审批`、`那个产品` 没有业务对象名词、SKU 或 ID，仍落到文档兜底。这是 Boundary Message Accuracy 未提升的唯一原因 |
+
+耗时不作前后对比：本次单轮 P50 为 20.47s，明显高于此前同配置的 4–7s。
+Planner 为纯字符串匹配，两次运行的代码路径一致，差异来自本机模型加载与资源
+竞争，属环境噪声，不构成性能结论。
+
+---
+
+## 14. 复现命令
 
 ```powershell
 .\.venv\Scripts\python.exe -m py_compile `

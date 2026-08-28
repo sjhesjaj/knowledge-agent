@@ -29,6 +29,7 @@ from time import perf_counter
 import chat_orchestration
 import rag
 from chat_orchestration import (
+    MESSAGE_MULTIPLE_SKU,
     MESSAGE_NO_DOCUMENTS,
     MESSAGE_NO_SKU,
     MESSAGE_NO_WIKI,
@@ -59,9 +60,13 @@ VALID_EXPECTED_BEHAVIORS = (
     BEHAVIOR_BOUNDARY,
 )
 
-# The two fixed messages that mean "this is outside what V1 offers", as opposed
-# to "the evidence does not support an answer".
-BOUNDARY_MESSAGES = frozenset({MESSAGE_SYSTEM_LIMITED, MESSAGE_NO_SKU})
+# The fixed messages that mean "this is outside what V1 offers", as opposed to
+# "the evidence does not support an answer". `MESSAGE_MULTIPLE_SKU` belongs
+# here and not with the refusals: the caller supplied usable SKUs and is being
+# told about a per-request limit, which is a capability statement.
+BOUNDARY_MESSAGES = frozenset(
+    {MESSAGE_SYSTEM_LIMITED, MESSAGE_NO_SKU, MESSAGE_MULTIPLE_SKU}
+)
 # A missing corpus is an environment fault, not a product decision. If either
 # appears, the run is misconfigured and the report must say so.
 UNAVAILABLE_MESSAGES = frozenset({MESSAGE_NO_DOCUMENTS, MESSAGE_NO_WIKI})
