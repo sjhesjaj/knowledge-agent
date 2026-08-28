@@ -1,0 +1,541 @@
+﻿==============================================================================
+Per-case results
+==============================================================================
+001. PASS | route_direct_001 | normal
+     Q: 您好
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+002. PASS | route_direct_002 | normal
+     Q: 早上好！
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+003. PASS | route_direct_003 | normal
+     Q: Hello
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+004. PASS | route_direct_004 | normal
+     Q: 多谢
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+005. PASS | route_direct_005 | normal
+     Q: 辛苦了。
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+006. PASS | route_direct_006 | normal
+     Q: thanks
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+007. PASS | route_direct_007 | boundary
+     Q:   晚安  
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+008. PASS | route_direct_008 | boundary
+     Q: 拜拜~
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+009. FAIL | route_direct_009 | boundary
+     Q: 谢谢，再见
+     route    expected=direct                actual=document_only
+     steps    expected=-                     actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  default_document
+010. FAIL | route_direct_010 | boundary
+     Q: 你好呀
+     route    expected=direct                actual=document_only
+     steps    expected=-                     actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  default_document
+011. PASS | route_wiki_only_001 | normal
+     Q: 介绍一下远程办公这块
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+012. PASS | route_wiki_only_002 | normal
+     Q: 概述一下账号与权限管理
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+013. PASS | route_wiki_only_003 | normal
+     Q: 梳理一下信息安全的主要内容
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+014. PASS | route_wiki_only_004 | normal
+     Q: 帮我整体说明一下绩效考核
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+015. PASS | route_wiki_only_005 | normal
+     Q: 先别给我条文，大概介绍一下考勤这块是怎么回事
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+016. PASS | route_wiki_only_006 | normal
+     Q: 我刚入职，想先了解公司的请假安排，能整体介绍一下吗？
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+017. PASS | route_wiki_only_007 | normal
+     Q: 帮我梳理一下差旅和报销之间的关系
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+018. PASS | route_wiki_only_008 | boundary
+     Q: 介绍一下库存管理这块
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+019. PASS | route_wiki_only_009 | boundary
+     Q: 综述一下公司的培训政策
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+020. PASS | route_wiki_only_010 | boundary
+     Q: 先概览一下审批这块，别展开细节
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+021. PASS | route_document_only_001 | normal
+     Q: 费用报销的单笔上限是多少元？
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, exact_citation_requested
+022. PASS | route_document_only_002 | normal
+     Q: 年假原文具体是怎么写的？
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, exact_citation_requested
+023. PASS | route_document_only_003 | normal
+     Q: 境外出差和国内出差在审批上有什么区别？
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, exact_citation_requested
+024. PASS | route_document_only_004 | boundary
+     Q: 现在这版考勤制度对迟到是怎么规定的？
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  document_policy_context, freshness_requested
+025. PASS | route_document_only_005 | normal
+     Q: 加班转调休的话，多久不用就作废了？
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  default_document
+026. PASS | route_document_only_006 | normal
+     Q: 我想确认下公司电脑到底能不能装游戏
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  default_document
+027. PASS | route_document_only_007 | normal
+     Q: 同事说漏打卡可以补。我想确认手册里明确规定的补卡时限是多久。
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, exact_citation_requested
+028. PASS | route_document_only_008 | normal
+     Q: 不用讲太宽泛的东西。请直接引用原文，说明离职交接需要完成哪些事项。
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, exact_citation_requested
+029. PASS | route_document_only_009 | boundary
+     Q: 库存管理办法对盘点周期是怎么规定的？
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  document_policy_context
+030. PASS | route_document_only_010 | boundary
+     Q: 帮我查看一下审批流程是怎么规定的
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  document_policy_context
+031. PASS | route_system_only_001 | normal
+     Q: SKU-A100 的库存现在还剩多少？
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+032. PASS | route_system_only_002 | normal
+     Q: 帮我查一下 SKU-C300 目前的库存数量
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+033. PASS | route_system_only_003 | normal
+     Q: 查询 SKU-B200 库存
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  system_current_state
+034. PASS | route_system_only_004 | normal
+     Q: sku a100 现在还有货吗？库存给我看一下
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+035. PASS | route_system_only_005 | normal
+     Q: 麻烦看下我这笔审批的进度
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  system_current_state
+036. PASS | route_system_only_006 | normal
+     Q: 我不需要文件里的说法。SKU-C300 的库存现在实际是多少？
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+037. PASS | route_system_only_007 | boundary
+     Q: 你好，另外帮我查一下 SKU-A100 的库存。
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  system_current_state
+038. PASS | route_system_only_008 | boundary
+     Q: SKU_A100 库存还剩多少？
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  system_current_state
+039. PASS | route_system_only_009 | boundary
+     Q: 我的物流单现在走到哪儿了？
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+040. PASS | route_system_only_010 | boundary
+     Q: 我当前的积分还有多少？
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+041. PASS | route_wiki_document_001 | normal
+     Q: 先概述远程办公政策，再引用原文条款。
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, exact_citation_requested
+042. PASS | route_wiki_document_002 | normal
+     Q: 介绍一下年假制度，并说明具体天数是多少。
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, exact_citation_requested
+043. PASS | route_wiki_document_003 | normal
+     Q: 员工手册这次修订了哪些内容？
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  document_version_change, document_policy_context
+044. PASS | route_wiki_document_004 | normal
+     Q: 新旧两版报销规则有什么不同？
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  document_version_change, document_policy_context
+045. PASS | route_wiki_document_005 | normal
+     Q: 先大致介绍下信息安全这块，然后把相关原文贴出来
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, exact_citation_requested
+046. PASS | route_wiki_document_006 | normal
+     Q: 我想先有个整体说明。另外，培训预算的具体金额条款也一并给我。
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, exact_citation_requested
+047. PASS | route_wiki_document_007 | boundary
+     Q: 梳理一下账号权限管理，同时给出对应的条款依据。
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, exact_citation_requested
+048. PASS | route_wiki_document_008 | boundary
+     Q: 介绍一下差旅报销，重点说明单笔上限是多少。
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, exact_citation_requested
+049. PASS | route_wiki_document_009 | boundary
+     Q: 概览一下库存管理制度，并引用原文规定。
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, exact_citation_requested
+050. PASS | route_wiki_document_010 | boundary
+     Q: 考勤政策今年有什么改动？
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  document_version_change, document_policy_context
+051. PASS | route_wiki_system_001 | normal
+     Q: 先介绍一下审批是怎么回事，再看看我这笔审批的进度。
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state
+052. PASS | route_wiki_system_002 | normal
+     Q: 整体说明一下库存这块，另外 SKU-A100 现在还有多少？
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+053. PASS | route_wiki_system_003 | normal
+     Q: 介绍一下我的账户情况，顺便说下当前余额。
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+054. PASS | route_wiki_system_004 | normal
+     Q: 简单介绍下考勤这块，然后帮我查下我目前的考勤状态。
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+055. PASS | route_wiki_system_005 | normal
+     Q: 我是新来的。麻烦先梳理一下积分体系，再告诉我我的积分现在是多少。
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+056. PASS | route_wiki_system_006 | normal
+     Q: 概述一下物流这块，同时看下我的物流现在到哪了。
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+057. PASS | route_wiki_system_007 | normal
+     Q: 介绍一下工单处理，另外我的工单现在是什么状态？
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+058. PASS | route_wiki_system_008 | boundary
+     Q: 别只给我数字。先概览一下库存口径，再说 SKU-C300 目前的库存。
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+059. PASS | route_wiki_system_009 | boundary
+     Q: 介绍一下排班规则，并查询我当前的排班。
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+060. PASS | route_wiki_system_010 | boundary
+     Q: 先介绍额度是怎么算的，再查一下我的额度还剩多少。
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state
+061. PASS | route_document_system_001 | normal
+     Q: SKU-A100 库存目前是多少？请一并给出原文依据。
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+062. PASS | route_document_system_002 | normal
+     Q: 我的审批现在到哪一步了？另外请引用相关条款。
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+063. PASS | route_document_system_003 | normal
+     Q: SKU-C300 的库存还有多少？顺便把原文贴出来。
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, exact_citation_requested
+064. PASS | route_document_system_004 | normal
+     Q: 我的订单到底啥情况？把依据也一起发我。
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, exact_citation_requested
+065. PASS | route_document_system_005 | normal
+     Q: 两件事。第一，SKU-B200 的库存现在是多少。第二，引用原文说明零库存怎么处理。
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+066. PASS | route_document_system_006 | normal
+     Q: 请给出原文依据，并说明 SKU-A100 当前的库存数量。
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+067. FAIL | route_document_system_007 | boundary
+     Q: 库存管理办法怎么写的？SKU-A100 现在还有多少库存？
+     route    expected=document_system       actual=document_only
+     steps    expected=document_search+system_queryactual=document_search
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, freshness_requested, exact_citation_requested
+068. FAIL | route_document_system_008 | boundary
+     Q: SKU-A100 当前还有多少？请附原文依据。
+     route    expected=document_system       actual=document_only
+     steps    expected=document_search+system_queryactual=document_search
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, freshness_requested, exact_citation_requested
+069. PASS | route_document_system_009 | normal
+     Q: 我的账户余额是多少？请附上对应条款编号。
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, exact_citation_requested
+070. PASS | route_document_system_010 | boundary
+     Q: 我这笔审批卡住了，到哪一步了？顺便把明确规定发我看看。
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, system_current_state, exact_citation_requested
+071. PASS | route_wiki_document_system_001 | normal
+     Q: 先概述库存管理，再引用原文条款，最后告诉我 SKU-A100 当前库存。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+072. PASS | route_wiki_document_system_002 | normal
+     Q: 介绍一下审批机制，引用相关条款，并查一下我的审批状态。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, exact_citation_requested
+073. PASS | route_wiki_document_system_003 | normal
+     Q: 梳理一下余额相关说明，附上原文依据，并给出我当前的余额。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+074. PASS | route_wiki_document_system_004 | normal
+     Q: 帮我把远程办公这块整体说明一下，把原文条款也贴上，顺便看下我的申请记录现在什么状态。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+075. PASS | route_wiki_document_system_005 | normal
+     Q: 三件事：概览积分规则；引用原文；查询我的积分。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, system_current_state, exact_citation_requested
+076. PASS | route_wiki_document_system_006 | boundary
+     Q: 概述一下工单处理，引用原文规定，并查询我的工单进度。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, system_current_state, exact_citation_requested
+077. PASS | route_wiki_document_system_007 | boundary
+     Q: 介绍下考勤口径，给出原文依据，再查一下我目前的考勤状态。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+078. PASS | route_wiki_document_system_008 | boundary
+     Q: 不只要条款。先梳理整体逻辑，引用原文，再给我 SKU-C300 现在的库存。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+079. PASS | route_wiki_document_system_009 | normal
+     Q: 介绍一下差旅制度，引用原文条款，并查询我当前的差旅额度。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, system_current_state, freshness_requested, exact_citation_requested
+080. PASS | route_wiki_document_system_010 | boundary
+     Q: 先大致介绍下物流这块儿，再把原文依据发我，最后看看我的物流到哪一步了。
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, exact_citation_requested
+
+==============================================================================
+Summary
+==============================================================================
+Total cases                    : 80
+Overall Accuracy               : 95.0%
+Macro Accuracy                 : 95.0%
+Steps Exact Match              : 95.0%
+Freshness Signal Accuracy      : 100.0%
+Exact Citation Signal Accuracy : 100.0%
+Boundary Accuracy              : 85.7% (28 cases)
+
+Per-route accuracy
+  direct                  8/10  80.0%
+  wiki_only              10/10  100.0%
+  document_only          10/10  100.0%
+  system_only            10/10  100.0%
+  wiki_document          10/10  100.0%
+  wiki_system            10/10  100.0%
+  document_system         8/10  80.0%
+  wiki_document_system   10/10  100.0%
+
+Confusion matrix (rows = expected, columns = actual)
+                              direct   wiki_only  document_o  system_onl  wiki_docum  wiki_syste  document_s  wiki_docum
+  direct                           8           0           2           0           0           0           0           0
+  wiki_only                        0          10           0           0           0           0           0           0
+  document_only                    0           0          10           0           0           0           0           0
+  system_only                      0           0           0          10           0           0           0           0
+  wiki_document                    0           0           0           0          10           0           0           0
+  wiki_system                      0           0           0           0           0          10           0           0
+  document_system                  0           0           2           0           0           0           8           0
+  wiki_document_system             0           0           0           0           0           0           0          10
+
+Failures: 4
+  - route_direct_009 [boundary] direct -> document_only
+      谢谢，再见
+  - route_direct_010 [boundary] direct -> document_only
+      你好呀
+  - route_document_system_007 [boundary] document_system -> document_only
+      库存管理办法怎么写的？SKU-A100 现在还有多少库存？
+  - route_document_system_008 [boundary] document_system -> document_only
+      SKU-A100 当前还有多少？请附原文依据。
+
+Gates
+  [PASS] Overall Accuracy                 95.0% (>= 90%)
+  [PASS] Macro Accuracy                   95.0% (>= 90%)
+  [PASS] Boundary Accuracy                85.7% (>= 85%)
+  [PASS] Route Accuracy [direct]          80.0% (>= 80%)
+  [PASS] Route Accuracy [wiki_only]       100.0% (>= 80%)
+  [PASS] Route Accuracy [document_only]   100.0% (>= 80%)
+  [PASS] Route Accuracy [system_only]     100.0% (>= 80%)
+  [PASS] Route Accuracy [wiki_document]   100.0% (>= 80%)
+  [PASS] Route Accuracy [wiki_system]     100.0% (>= 80%)
+  [PASS] Route Accuracy [document_system] 80.0% (>= 80%)
+  [PASS] Route Accuracy [wiki_document_system] 100.0% (>= 80%)
+
+Wrote evaluation_runs\route-dev.json
+Dataset SHA-256: 7548b7ac90a66fe64b75de011db22e7e88492a00bb76dbeda7772d80765ab84c

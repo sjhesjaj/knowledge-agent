@@ -1,0 +1,2575 @@
+{
+  "dataset": "eval_orchestrated_routes_dev.json",
+  "dataset_sha256": "7548b7ac90a66fe64b75de011db22e7e88492a00bb76dbeda7772d80765ab84c",
+  "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+  "python_version": "3.12.13",
+  "evaluator": "evaluate_orchestrated_routes.py",
+  "gates": [
+    {
+      "name": "Overall Accuracy",
+      "value": 0.95,
+      "threshold": 0.9,
+      "passed": true
+    },
+    {
+      "name": "Macro Accuracy",
+      "value": 0.95,
+      "threshold": 0.9,
+      "passed": true
+    },
+    {
+      "name": "Boundary Accuracy",
+      "value": 0.8571428571428571,
+      "threshold": 0.85,
+      "passed": true
+    },
+    {
+      "name": "Route Accuracy [direct]",
+      "value": 0.8,
+      "threshold": 0.8,
+      "passed": true
+    },
+    {
+      "name": "Route Accuracy [wiki_only]",
+      "value": 1.0,
+      "threshold": 0.8,
+      "passed": true
+    },
+    {
+      "name": "Route Accuracy [document_only]",
+      "value": 1.0,
+      "threshold": 0.8,
+      "passed": true
+    },
+    {
+      "name": "Route Accuracy [system_only]",
+      "value": 1.0,
+      "threshold": 0.8,
+      "passed": true
+    },
+    {
+      "name": "Route Accuracy [wiki_document]",
+      "value": 1.0,
+      "threshold": 0.8,
+      "passed": true
+    },
+    {
+      "name": "Route Accuracy [wiki_system]",
+      "value": 1.0,
+      "threshold": 0.8,
+      "passed": true
+    },
+    {
+      "name": "Route Accuracy [document_system]",
+      "value": 0.8,
+      "threshold": 0.8,
+      "passed": true
+    },
+    {
+      "name": "Route Accuracy [wiki_document_system]",
+      "value": 1.0,
+      "threshold": 0.8,
+      "passed": true
+    }
+  ],
+  "summary": {
+    "total_cases": 80,
+    "overall_accuracy": 0.95,
+    "macro_accuracy": 0.95,
+    "steps_exact_match": 0.95,
+    "freshness_signal_accuracy": 1.0,
+    "exact_citation_signal_accuracy": 1.0,
+    "boundary_total": 28,
+    "boundary_accuracy": 0.8571428571428571,
+    "per_route": {
+      "direct": {
+        "total": 10,
+        "passed": 8,
+        "accuracy": 0.8
+      },
+      "wiki_only": {
+        "total": 10,
+        "passed": 10,
+        "accuracy": 1.0
+      },
+      "document_only": {
+        "total": 10,
+        "passed": 10,
+        "accuracy": 1.0
+      },
+      "system_only": {
+        "total": 10,
+        "passed": 10,
+        "accuracy": 1.0
+      },
+      "wiki_document": {
+        "total": 10,
+        "passed": 10,
+        "accuracy": 1.0
+      },
+      "wiki_system": {
+        "total": 10,
+        "passed": 10,
+        "accuracy": 1.0
+      },
+      "document_system": {
+        "total": 10,
+        "passed": 8,
+        "accuracy": 0.8
+      },
+      "wiki_document_system": {
+        "total": 10,
+        "passed": 10,
+        "accuracy": 1.0
+      }
+    },
+    "confusion_matrix": {
+      "direct": {
+        "direct": 8,
+        "document_only": 2
+      },
+      "document_only": {
+        "document_only": 10
+      },
+      "document_system": {
+        "document_only": 2,
+        "document_system": 8
+      },
+      "system_only": {
+        "system_only": 10
+      },
+      "wiki_document": {
+        "wiki_document": 10
+      },
+      "wiki_document_system": {
+        "wiki_document_system": 10
+      },
+      "wiki_only": {
+        "wiki_only": 10
+      },
+      "wiki_system": {
+        "wiki_system": 10
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "route_direct_001",
+      "question": "您好",
+      "category": "社交寒暄",
+      "difficulty": "normal",
+      "notes": "普通表达：纯问候，无信息需求",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "expected_steps": [],
+      "actual_steps": [],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "direct_utterance"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_direct_002",
+      "question": "早上好！",
+      "category": "社交寒暄",
+      "difficulty": "normal",
+      "notes": "普通表达：问候带结尾标点",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "expected_steps": [],
+      "actual_steps": [],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "direct_utterance"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_direct_003",
+      "question": "Hello",
+      "category": "社交寒暄",
+      "difficulty": "normal",
+      "notes": "普通表达：英文问候，含大小写差异",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "expected_steps": [],
+      "actual_steps": [],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "direct_utterance"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_direct_004",
+      "question": "多谢",
+      "category": "社交寒暄",
+      "difficulty": "normal",
+      "notes": "口语改写：口语化道谢",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "expected_steps": [],
+      "actual_steps": [],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "direct_utterance"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_direct_005",
+      "question": "辛苦了。",
+      "category": "社交寒暄",
+      "difficulty": "normal",
+      "notes": "口语改写：口语化致意",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "expected_steps": [],
+      "actual_steps": [],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "direct_utterance"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_direct_006",
+      "question": "thanks",
+      "category": "社交寒暄",
+      "difficulty": "normal",
+      "notes": "普通表达：英文道谢",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "expected_steps": [],
+      "actual_steps": [],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "direct_utterance"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_direct_007",
+      "question": "  晚安  ",
+      "category": "社交寒暄",
+      "difficulty": "boundary",
+      "notes": "边界：前后空格不应改变判定",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "expected_steps": [],
+      "actual_steps": [],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "direct_utterance"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_direct_008",
+      "question": "拜拜~",
+      "category": "社交寒暄",
+      "difficulty": "boundary",
+      "notes": "边界：非中文标点结尾",
+      "expected_route": "direct",
+      "actual_route": "direct",
+      "expected_steps": [],
+      "actual_steps": [],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "direct_utterance"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_direct_009",
+      "question": "谢谢，再见",
+      "category": "社交寒暄",
+      "difficulty": "boundary",
+      "notes": "多句复合表达：两个寒暄叠加，人工判定仍是纯社交",
+      "expected_route": "direct",
+      "actual_route": "document_only",
+      "expected_steps": [],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "default_document"
+      ],
+      "fallback_used": false,
+      "route_match": false,
+      "steps_match": false,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": false
+    },
+    {
+      "id": "route_direct_010",
+      "question": "你好呀",
+      "category": "社交寒暄",
+      "difficulty": "boundary",
+      "notes": "口语变体边界：问候加语气词，人工判定仍是纯社交",
+      "expected_route": "direct",
+      "actual_route": "document_only",
+      "expected_steps": [],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "default_document"
+      ],
+      "fallback_used": false,
+      "route_match": false,
+      "steps_match": false,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": false
+    },
+    {
+      "id": "route_wiki_only_001",
+      "question": "介绍一下远程办公这块",
+      "category": "概览导航",
+      "difficulty": "normal",
+      "notes": "普通表达：要综合介绍，不要原文",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_only_002",
+      "question": "概述一下账号与权限管理",
+      "category": "概览导航",
+      "difficulty": "normal",
+      "notes": "普通表达：主题概述",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_only_003",
+      "question": "梳理一下信息安全的主要内容",
+      "category": "概览导航",
+      "difficulty": "normal",
+      "notes": "普通表达：要脉络不要条文",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_only_004",
+      "question": "帮我整体说明一下绩效考核",
+      "category": "概览导航",
+      "difficulty": "normal",
+      "notes": "普通表达：整体说明",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_only_005",
+      "question": "先别给我条文，大概介绍一下考勤这块是怎么回事",
+      "category": "概览导航",
+      "difficulty": "normal",
+      "notes": "口语改写：明确排除原文，只要概览",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_only_006",
+      "question": "我刚入职，想先了解公司的请假安排，能整体介绍一下吗？",
+      "category": "概览导航",
+      "difficulty": "normal",
+      "notes": "多句复合表达：自述背景后提出概览请求",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_only_007",
+      "question": "帮我梳理一下差旅和报销之间的关系",
+      "category": "概览导航",
+      "difficulty": "normal",
+      "notes": "普通表达：跨主题关系梳理",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_only_008",
+      "question": "介绍一下库存管理这块",
+      "category": "概览导航",
+      "difficulty": "boundary",
+      "notes": "边界（易混 system_only）：出现业务对象词但无实时意图",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_only_009",
+      "question": "综述一下公司的培训政策",
+      "category": "概览导航",
+      "difficulty": "boundary",
+      "notes": "边界（易混 document_only）：出现政策名词但只要概览",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_only_010",
+      "question": "先概览一下审批这块，别展开细节",
+      "category": "概览导航",
+      "difficulty": "boundary",
+      "notes": "边界（易混 wiki_system）：审批是业务对象，但用户明确只要概览",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "expected_steps": [
+        "wiki_query"
+      ],
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_001",
+      "question": "费用报销的单笔上限是多少元？",
+      "category": "原文数值",
+      "difficulty": "normal",
+      "notes": "普通表达：要制度里的精确阈值",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_002",
+      "question": "年假原文具体是怎么写的？",
+      "category": "原文条款",
+      "difficulty": "normal",
+      "notes": "普通表达：显式要求原文措辞",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_003",
+      "question": "境外出差和国内出差在审批上有什么区别？",
+      "category": "条款对比",
+      "difficulty": "normal",
+      "notes": "普通表达：制度内部对比，审批一词在此是制度名词而非实时对象",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_004",
+      "question": "现在这版考勤制度对迟到是怎么规定的？",
+      "category": "制度现行版本",
+      "difficulty": "boundary",
+      "notes": "必测边界：「现在的制度」问的是现行制度文本，不是实时 System 状态",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "document_policy_context",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_005",
+      "question": "加班转调休的话，多久不用就作废了？",
+      "category": "原文数值",
+      "difficulty": "normal",
+      "notes": "口语改写：口语量词「多久」，仍是制度时限问题",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "default_document"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_006",
+      "question": "我想确认下公司电脑到底能不能装游戏",
+      "category": "制度许可",
+      "difficulty": "normal",
+      "notes": "口语改写：口语化许可类提问",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "default_document"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_007",
+      "question": "同事说漏打卡可以补。我想确认手册里明确规定的补卡时限是多久。",
+      "category": "原文数值",
+      "difficulty": "normal",
+      "notes": "多句复合表达：先陈述传闻再要求核对手册明确规定",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "document_policy_context",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_008",
+      "question": "不用讲太宽泛的东西。请直接引用原文，说明离职交接需要完成哪些事项。",
+      "category": "原文条款",
+      "difficulty": "normal",
+      "notes": "多句复合表达：显式排除概览、只要原文",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_009",
+      "question": "库存管理办法对盘点周期是怎么规定的？",
+      "category": "制度文本",
+      "difficulty": "boundary",
+      "notes": "必测边界：「库存管理办法」是制度文本，不是当前库存数量",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "document_policy_context"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_only_010",
+      "question": "帮我查看一下审批流程是怎么规定的",
+      "category": "制度文本",
+      "difficulty": "boundary",
+      "notes": "必测边界：「查看流程」问制度，区别于「查看进度」问实时状态",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "document_policy_context"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_001",
+      "question": "SKU-A100 的库存现在还剩多少？",
+      "category": "实时库存",
+      "difficulty": "normal",
+      "notes": "普通表达：标准 SKU 写法，问当前数量",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_002",
+      "question": "帮我查一下 SKU-C300 目前的库存数量",
+      "category": "实时库存",
+      "difficulty": "normal",
+      "notes": "普通表达：显式查询动词",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_003",
+      "question": "查询 SKU-B200 库存",
+      "category": "实时库存",
+      "difficulty": "normal",
+      "notes": "普通表达：极简指令，无显式时效词",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_004",
+      "question": "sku a100 现在还有货吗？库存给我看一下",
+      "category": "实时库存",
+      "difficulty": "normal",
+      "notes": "口语改写 + 必测 SKU 变体：全小写、空格分隔",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_005",
+      "question": "麻烦看下我这笔审批的进度",
+      "category": "实时进度",
+      "difficulty": "normal",
+      "notes": "口语改写：必测边界「查看进度」侧",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_006",
+      "question": "我不需要文件里的说法。SKU-C300 的库存现在实际是多少？",
+      "category": "实时库存",
+      "difficulty": "normal",
+      "notes": "多句复合表达：显式排除文档通道",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_007",
+      "question": "你好，另外帮我查一下 SKU-A100 的库存。",
+      "category": "实时库存",
+      "difficulty": "boundary",
+      "notes": "必测边界：问候语后追加真实问题，应按真实问题路由而非 direct",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_008",
+      "question": "SKU_A100 库存还剩多少？",
+      "category": "实时库存",
+      "difficulty": "boundary",
+      "notes": "必测 SKU 变体：下划线分隔、无空格",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_009",
+      "question": "我的物流单现在走到哪儿了？",
+      "category": "实时进度",
+      "difficulty": "boundary",
+      "notes": "边界（易混 document_only）：第一人称归属明确的实时状态",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_system_only_010",
+      "question": "我当前的积分还有多少？",
+      "category": "实时余额",
+      "difficulty": "boundary",
+      "notes": "边界（易混 document_only）：数量词在此描述实时值而非制度上限",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "expected_steps": [
+        "system_query"
+      ],
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_001",
+      "question": "先概述远程办公政策，再引用原文条款。",
+      "category": "概览加原文",
+      "difficulty": "normal",
+      "notes": "必测边界：Wiki 概览 + 原文条款",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "document_policy_context",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_002",
+      "question": "介绍一下年假制度，并说明具体天数是多少。",
+      "category": "概览加数值",
+      "difficulty": "normal",
+      "notes": "普通表达：概览加精确天数",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "document_policy_context",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_003",
+      "question": "员工手册这次修订了哪些内容？",
+      "category": "版本变化",
+      "difficulty": "normal",
+      "notes": "普通表达：版本变化需要 Wiki 汇总加原文核对",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "document_version_change",
+        "document_policy_context"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_004",
+      "question": "新旧两版报销规则有什么不同？",
+      "category": "版本变化",
+      "difficulty": "normal",
+      "notes": "普通表达：新旧对比",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "document_version_change",
+        "document_policy_context"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_005",
+      "question": "先大致介绍下信息安全这块，然后把相关原文贴出来",
+      "category": "概览加原文",
+      "difficulty": "normal",
+      "notes": "口语改写：先概览后原文",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_006",
+      "question": "我想先有个整体说明。另外，培训预算的具体金额条款也一并给我。",
+      "category": "概览加数值",
+      "difficulty": "normal",
+      "notes": "多句复合表达：两个诉求分句陈述",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_007",
+      "question": "梳理一下账号权限管理，同时给出对应的条款依据。",
+      "category": "概览加原文",
+      "difficulty": "boundary",
+      "notes": "边界（易混 wiki_only）：概览意图后追加原文依据",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_008",
+      "question": "介绍一下差旅报销，重点说明单笔上限是多少。",
+      "category": "概览加数值",
+      "difficulty": "boundary",
+      "notes": "边界（易混 document_only）：概览词与数值词共存",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_009",
+      "question": "概览一下库存管理制度，并引用原文规定。",
+      "category": "概览加原文",
+      "difficulty": "boundary",
+      "notes": "边界（易混 wiki_document_system）：只问制度文本，不问当前库存",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "document_policy_context",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_010",
+      "question": "考勤政策今年有什么改动？",
+      "category": "版本变化",
+      "difficulty": "boundary",
+      "notes": "边界（易混 wiki_only）：变更类问题需要原文核对",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "expected_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "document_version_change",
+        "document_policy_context"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_001",
+      "question": "先介绍一下审批是怎么回事，再看看我这笔审批的进度。",
+      "category": "概览加实时",
+      "difficulty": "normal",
+      "notes": "普通表达：概览加个人实时进度",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_002",
+      "question": "整体说明一下库存这块，另外 SKU-A100 现在还有多少？",
+      "category": "概览加实时",
+      "difficulty": "normal",
+      "notes": "必测边界：Wiki 概览 + 当前状态",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_003",
+      "question": "介绍一下我的账户情况，顺便说下当前余额。",
+      "category": "概览加实时",
+      "difficulty": "normal",
+      "notes": "普通表达：概览加当前余额",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_004",
+      "question": "简单介绍下考勤这块，然后帮我查下我目前的考勤状态。",
+      "category": "概览加实时",
+      "difficulty": "normal",
+      "notes": "口语改写：先概览后查个人状态",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_005",
+      "question": "我是新来的。麻烦先梳理一下积分体系，再告诉我我的积分现在是多少。",
+      "category": "概览加实时",
+      "difficulty": "normal",
+      "notes": "多句复合表达：自述背景加两段诉求",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_006",
+      "question": "概述一下物流这块，同时看下我的物流现在到哪了。",
+      "category": "概览加实时",
+      "difficulty": "normal",
+      "notes": "多句复合表达：概览加个人物流状态",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_007",
+      "question": "介绍一下工单处理，另外我的工单现在是什么状态？",
+      "category": "概览加实时",
+      "difficulty": "normal",
+      "notes": "普通表达：概览加个人工单状态",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_008",
+      "question": "别只给我数字。先概览一下库存口径，再说 SKU-C300 目前的库存。",
+      "category": "概览加实时",
+      "difficulty": "boundary",
+      "notes": "边界（易混 system_only）：显式要求先概览再给实时值",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_009",
+      "question": "介绍一下排班规则，并查询我当前的排班。",
+      "category": "概览加实时",
+      "difficulty": "boundary",
+      "notes": "边界（易混 wiki_document_system）：出现政策名词但未索取原文",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_system_010",
+      "question": "先介绍额度是怎么算的，再查一下我的额度还剩多少。",
+      "category": "概览加实时",
+      "difficulty": "boundary",
+      "notes": "边界（易混 wiki_document）：数量词描述实时余量而非制度上限",
+      "expected_route": "wiki_system",
+      "actual_route": "wiki_system",
+      "expected_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": false,
+      "actual_requires_exact_citation": false,
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_system_001",
+      "question": "SKU-A100 库存目前是多少？请一并给出原文依据。",
+      "category": "复合意图",
+      "difficulty": "normal",
+      "notes": "必测边界：原文依据 + 当前状态",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_system_002",
+      "question": "我的审批现在到哪一步了？另外请引用相关条款。",
+      "category": "复合意图",
+      "difficulty": "normal",
+      "notes": "普通表达：个人实时进度加条款",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_system_003",
+      "question": "SKU-C300 的库存还有多少？顺便把原文贴出来。",
+      "category": "复合意图",
+      "difficulty": "normal",
+      "notes": "普通表达：实时数量加原文",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "system_current_state",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_system_004",
+      "question": "我的订单到底啥情况？把依据也一起发我。",
+      "category": "复合意图",
+      "difficulty": "normal",
+      "notes": "口语改写：口语化状态询问加依据",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "system_current_state",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_system_005",
+      "question": "两件事。第一，SKU-B200 的库存现在是多少。第二，引用原文说明零库存怎么处理。",
+      "category": "复合意图",
+      "difficulty": "normal",
+      "notes": "多句复合表达：显式编号的两个诉求",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_system_006",
+      "question": "请给出原文依据，并说明 SKU-A100 当前的库存数量。",
+      "category": "复合意图",
+      "difficulty": "normal",
+      "notes": "必测边界：原文依据在前、当前状态在后",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_system_007",
+      "question": "库存管理办法怎么写的？SKU-A100 现在还有多少库存？",
+      "category": "复合意图",
+      "difficulty": "boundary",
+      "notes": "必测边界：制度文本与当前库存数量同时被问到，人工判定两条通道都需要",
+      "expected_route": "document_system",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "document_policy_context",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": false,
+      "steps_match": false,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": false
+    },
+    {
+      "id": "route_document_system_008",
+      "question": "SKU-A100 当前还有多少？请附原文依据。",
+      "category": "复合意图",
+      "difficulty": "boundary",
+      "notes": "边界：只给 SKU 未出现「库存」一词，人工判定仍是库存实时查询加原文",
+      "expected_route": "document_system",
+      "actual_route": "document_only",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": false,
+      "steps_match": false,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": false
+    },
+    {
+      "id": "route_document_system_009",
+      "question": "我的账户余额是多少？请附上对应条款编号。",
+      "category": "复合意图",
+      "difficulty": "normal",
+      "notes": "普通表达：个人余额加条款编号",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "system_current_state",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_document_system_010",
+      "question": "我这笔审批卡住了，到哪一步了？顺便把明确规定发我看看。",
+      "category": "复合意图",
+      "difficulty": "boundary",
+      "notes": "口语改写边界：政策名词与个人实时状态共存",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "expected_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "document_exact",
+        "document_policy_context",
+        "system_current_state",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_001",
+      "question": "先概述库存管理，再引用原文条款，最后告诉我 SKU-A100 当前库存。",
+      "category": "三通道",
+      "difficulty": "normal",
+      "notes": "必测边界：三条通道同时需要",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_002",
+      "question": "介绍一下审批机制，引用相关条款，并查一下我的审批状态。",
+      "category": "三通道",
+      "difficulty": "normal",
+      "notes": "普通表达：概览加条款加个人状态",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "system_current_state",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_003",
+      "question": "梳理一下余额相关说明，附上原文依据，并给出我当前的余额。",
+      "category": "三通道",
+      "difficulty": "normal",
+      "notes": "普通表达：梳理加原文加当前值",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_004",
+      "question": "帮我把远程办公这块整体说明一下，把原文条款也贴上，顺便看下我的申请记录现在什么状态。",
+      "category": "三通道",
+      "difficulty": "normal",
+      "notes": "口语改写：三段口语化诉求",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_005",
+      "question": "三件事：概览积分规则；引用原文；查询我的积分。",
+      "category": "三通道",
+      "difficulty": "normal",
+      "notes": "多句复合表达：分号并列三个诉求",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "document_policy_context",
+        "system_current_state",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_006",
+      "question": "概述一下工单处理，引用原文规定，并查询我的工单进度。",
+      "category": "三通道",
+      "difficulty": "boundary",
+      "notes": "边界（易混 wiki_document）：末段是个人实时进度",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "document_policy_context",
+        "system_current_state",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_007",
+      "question": "介绍下考勤口径，给出原文依据，再查一下我目前的考勤状态。",
+      "category": "三通道",
+      "difficulty": "boundary",
+      "notes": "边界（易混 wiki_system）：中段显式索取原文依据",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_008",
+      "question": "不只要条款。先梳理整体逻辑，引用原文，再给我 SKU-C300 现在的库存。",
+      "category": "三通道",
+      "difficulty": "boundary",
+      "notes": "边界（易混 document_system）：首句显式追加概览诉求",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_009",
+      "question": "介绍一下差旅制度，引用原文条款，并查询我当前的差旅额度。",
+      "category": "三通道",
+      "difficulty": "normal",
+      "notes": "普通表达：制度概览加原文加个人额度",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": true,
+      "actual_requires_freshness": true,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "document_policy_context",
+        "system_current_state",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    },
+    {
+      "id": "route_wiki_document_system_010",
+      "question": "先大致介绍下物流这块儿，再把原文依据发我，最后看看我的物流到哪一步了。",
+      "category": "三通道",
+      "difficulty": "boundary",
+      "notes": "口语改写边界：口语儿化音加三段诉求",
+      "expected_route": "wiki_document_system",
+      "actual_route": "wiki_document_system",
+      "expected_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "actual_steps": [
+        "wiki_query",
+        "document_search",
+        "system_query"
+      ],
+      "expected_requires_freshness": false,
+      "actual_requires_freshness": false,
+      "expected_requires_exact_citation": true,
+      "actual_requires_exact_citation": true,
+      "reason_codes": [
+        "wiki_overview",
+        "document_exact",
+        "system_current_state",
+        "exact_citation_requested"
+      ],
+      "fallback_used": false,
+      "route_match": true,
+      "steps_match": true,
+      "freshness_match": true,
+      "exact_citation_match": true,
+      "passed": true
+    }
+  ]
+}

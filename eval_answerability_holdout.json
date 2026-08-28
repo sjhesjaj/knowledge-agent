@@ -1,0 +1,531 @@
+[
+  {
+    "id": "answer_holdout_001",
+    "question": "试用期快结束了，转正总结要提前多久交？手册里写的是多少个工作日",
+    "expected_behavior": "answer",
+    "expected_route": "document_only",
+    "required_source_types": ["document"],
+    "expected_fact_patterns": [
+      ["(?:10|十)\\s*个\\s*工作日"],
+      ["期满前|试用期"],
+      ["转正"]
+    ],
+    "category": "document",
+    "difficulty": "boundary",
+    "notes": "依据「转正流程」：试用期员工应在期满前 10 个工作日提交转正总结；语料中另有 10 日发薪、10 分钟迟到、10 个工作日反馈申诉，需靠单位与语境绑定"
+  },
+  {
+    "id": "answer_holdout_002",
+    "question": "报销这块我总记不住：单据多久之内要交？金额多大要部门负责人批？",
+    "expected_behavior": "answer",
+    "expected_route": "document_only",
+    "required_source_types": ["document"],
+    "expected_fact_patterns": [
+      ["(?:30|三十)\\s*天"],
+      ["(?:2000|两千)\\s*元"],
+      ["直属主管"],
+      ["部门负责人"]
+    ],
+    "category": "document",
+    "difficulty": "normal",
+    "notes": "依据「费用报销」：30 天内提交；单笔不超过 2000 元由直属主管审批，超过 2000 元还需部门负责人审批。多事实且含阈值条件"
+  },
+  {
+    "id": "answer_holdout_003",
+    "question": "每个月迟到几次以内是不扣钱的？分钟数上有没有限制",
+    "expected_behavior": "answer",
+    "expected_route": "document_only",
+    "required_source_types": ["document"],
+    "expected_fact_patterns": [
+      ["(?:10|十)\\s*分钟"],
+      ["(?:2|两)\\s*次"],
+      ["提醒|不扣款|不扣钱|不扣工资"]
+    ],
+    "category": "document",
+    "difficulty": "boundary",
+    "notes": "依据「考勤与迟到」：每月迟到不超过 10 分钟且累计不超过 2 次的提醒但不扣款。语料中另有 2 天远程、2 个工作日补卡、2 小时报告，必须绑定「次」"
+  },
+  {
+    "id": "answer_holdout_004",
+    "question": "我在公司干了四年了，年假是几天？跟刚满一年的同事有什么区别",
+    "expected_behavior": "answer",
+    "expected_route": "document_only",
+    "required_source_types": ["document"],
+    "expected_fact_patterns": [
+      ["(?:8|八)\\s*天"],
+      ["(?:5|五)\\s*天"],
+      ["(?:三|3)\\s*年"],
+      ["(?:一|1)\\s*年"]
+    ],
+    "category": "document",
+    "difficulty": "boundary",
+    "notes": "依据「请假制度」：满一年 5 天，满三年增加至 8 天。含司龄条件；语料中 8 小时工作制易混，必须绑定「天」"
+  },
+  {
+    "id": "answer_holdout_005",
+    "question": "工资是每月几号发的？要是正好赶上法定节假日怎么办",
+    "expected_behavior": "answer",
+    "expected_route": "document_only",
+    "required_source_types": ["document"],
+    "expected_fact_patterns": [
+      ["(?:10|十)\\s*日|(?:10|十)\\s*号"],
+      ["上一个自然月|上一自然月|上个自然月|上个月"],
+      ["法定节假日|节假日"],
+      ["最近的工作日|提前"]
+    ],
+    "category": "document",
+    "difficulty": "boundary",
+    "notes": "依据「薪资发放」：每月 10 日发放上一个自然月工资，遇法定节假日提前至最近的工作日。同段还有「5 个工作日内反馈」，易被误取"
+  },
+  {
+    "id": "answer_holdout_006",
+    "question": "加班换的调休有有效期吗？换算比例又是多少",
+    "expected_behavior": "answer",
+    "expected_route": "document_only",
+    "required_source_types": ["document"],
+    "expected_fact_patterns": [
+      ["1\\s*[:：]\\s*1|一比一|1\\s*比\\s*1|同等时长|等时长"],
+      ["(?:3|三)\\s*个月"],
+      ["失效|作废|过期|不能再用"]
+    ],
+    "category": "document",
+    "difficulty": "normal",
+    "notes": "依据「加班与调休」：按 1:1 转为调休，3 个月内使用，逾期自动失效。多事实；「3 个工作日」为邻近干扰项"
+  },
+  {
+    "id": "answer_holdout_007",
+    "question": "高权限账号隔多长时间要复核一次？",
+    "expected_behavior": "answer",
+    "expected_route": "document_only",
+    "required_source_types": ["document"],
+    "expected_fact_patterns": [
+      ["(?:90|九十)\\s*天"],
+      ["高权限"],
+      ["复核|审核|核查"]
+    ],
+    "category": "document",
+    "difficulty": "normal",
+    "notes": "依据「账号与权限」：高权限账号每 90 天复核一次。语料中另有 30 天报销期限、3 个月调休期限"
+  },
+  {
+    "id": "answer_holdout_008",
+    "question": "出差审批要谁签字？国内和出境是不是不一样",
+    "expected_behavior": "answer",
+    "expected_route": "document_only",
+    "required_source_types": ["document"],
+    "expected_fact_patterns": [
+      ["国内"],
+      ["境外|出境|海外|国外"],
+      ["部门负责人"],
+      ["总经理"]
+    ],
+    "category": "document",
+    "difficulty": "normal",
+    "notes": "依据「差旅申请」：国内出差由部门负责人审批，境外出差还需总经理审批。含分支条件"
+  },
+  {
+    "id": "answer_holdout_009",
+    "question": "远程办公整体是个什么政策，先给我讲讲大概",
+    "expected_behavior": "answer",
+    "expected_route": "wiki_only",
+    "required_source_types": ["wiki"],
+    "expected_fact_patterns": [
+      ["(?:2|两)\\s*天"],
+      ["提前|一个工作日"],
+      ["直属主管|主管"]
+    ],
+    "category": "wiki",
+    "difficulty": "normal",
+    "notes": "依据 wiki 页面「远程办公」的 wiki-remote-quota 与 wiki-remote-approval 两条 claim，三组共同要求覆盖页面实际内容"
+  },
+  {
+    "id": "answer_holdout_010",
+    "question": "年假和请假这块整体是怎么规定的？大概说说就行",
+    "expected_behavior": "answer",
+    "expected_route": "wiki_only",
+    "required_source_types": ["wiki"],
+    "expected_fact_patterns": [
+      ["(?:5|五)\\s*天"],
+      ["实习生"],
+      ["审批|主管"]
+    ],
+    "category": "wiki",
+    "difficulty": "normal",
+    "notes": "依据 wiki 页面「请假与年假」的三条 claim（年假天数、实习生、分级审批）"
+  },
+  {
+    "id": "answer_holdout_011",
+    "question": "信息安全这块公司整体是什么要求？",
+    "expected_behavior": "answer",
+    "expected_route": "wiki_only",
+    "required_source_types": ["wiki"],
+    "expected_fact_patterns": [
+      ["公共网盘|网盘"],
+      ["加密"],
+      ["部门负责人|批准|审批"]
+    ],
+    "category": "wiki",
+    "difficulty": "normal",
+    "notes": "依据 wiki 页面「信息安全」的 wiki-security-upload 与 wiki-security-external-send"
+  },
+  {
+    "id": "answer_holdout_012",
+    "question": "账号和权限管理整体是怎么设计的，讲讲思路",
+    "expected_behavior": "answer",
+    "expected_route": "wiki_only",
+    "required_source_types": ["wiki"],
+    "expected_fact_patterns": [
+      ["不得共享|不能共享|仅限本人|禁止共享"],
+      ["(?:90|九十)\\s*天"],
+      ["权限变更|岗位调整|信息安全团队|异常"]
+    ],
+    "category": "wiki",
+    "difficulty": "normal",
+    "notes": "依据 wiki 页面「账号与权限」的三条 claim；90 天与语料内 30 天、3 个月构成邻近干扰"
+  },
+  {
+    "id": "answer_holdout_013",
+    "question": "客户下午三点要来提货，我得先给仓库回个准数：SKU-A100 现在库存还有多少",
+    "expected_behavior": "answer",
+    "expected_route": "system_only",
+    "required_source_types": ["system"],
+    "expected_fact_patterns": [
+      ["(?:42|四十二)\\s*件"],
+      ["库存|剩余|现有|还有"]
+    ],
+    "category": "system",
+    "difficulty": "normal",
+    "notes": "依据 fixture：sku-a100 = 42 件"
+  },
+  {
+    "id": "answer_holdout_014",
+    "question": "出库单还差最后一行没填完，主管等着签字，帮我确认下 sku-c300 目前的库存是多少",
+    "expected_behavior": "answer",
+    "expected_route": "system_only",
+    "required_source_types": ["system"],
+    "expected_fact_patterns": [
+      ["(?:7|七)\\s*箱"],
+      ["库存|剩余|现有"]
+    ],
+    "category": "system",
+    "difficulty": "boundary",
+    "notes": "依据 fixture：sku-c300 = 7 箱（单位是箱不是件），42 件为邻近干扰值"
+  },
+  {
+    "id": "answer_holdout_015",
+    "question": "SKU_B200 现在还有货吗？",
+    "expected_behavior": "answer",
+    "expected_route": "system_only",
+    "required_source_types": ["system"],
+    "expected_fact_patterns": [
+      ["(?:0|零)\\s*件|无库存|没有库存|缺货|售罄|库存为\\s*0"],
+      ["库存|现货|存量"]
+    ],
+    "category": "system",
+    "difficulty": "boundary",
+    "notes": "依据 fixture：sku-b200 = 0 件，零库存但记录存在，应作答而非拒答"
+  },
+  {
+    "id": "answer_holdout_016",
+    "question": "Sku-A100 和 SKU-C300 现在各有多少？我要做个对比",
+    "expected_behavior": "answer",
+    "expected_route": "system_only",
+    "required_source_types": ["system"],
+    "expected_fact_patterns": [
+      ["(?:42|四十二)\\s*件"],
+      ["(?:7|七)\\s*箱"]
+    ],
+    "category": "system",
+    "difficulty": "boundary",
+    "notes": "依据 fixture：sku-a100 = 42 件、sku-c300 = 7 箱；一次需要两个事实且单位不同"
+  },
+  {
+    "id": "answer_holdout_017",
+    "question": "远程办公政策整体讲一下；另外 SKU-A100 现在库存多少件？",
+    "expected_behavior": "answer",
+    "expected_route": "wiki_system",
+    "required_source_types": ["wiki", "system"],
+    "expected_fact_patterns": [
+      ["(?:2|两)\\s*天"],
+      ["直属主管|主管"],
+      ["(?:42|四十二)\\s*件"]
+    ],
+    "category": "multi_channel",
+    "difficulty": "normal",
+    "notes": "wiki 页面「远程办公」+ fixture sku-a100 = 42 件，两个通道缺一不可"
+  },
+  {
+    "id": "answer_holdout_018",
+    "question": "单笔超过多少钱要部门负责人批？原文给我。还有 sku-c300 现在还剩多少箱",
+    "expected_behavior": "answer",
+    "expected_route": "document_system",
+    "required_source_types": ["document", "system"],
+    "expected_fact_patterns": [
+      ["(?:2000|两千)\\s*元"],
+      ["部门负责人"],
+      ["(?:7|七)\\s*箱"]
+    ],
+    "category": "multi_channel",
+    "difficulty": "boundary",
+    "notes": "「费用报销」2000 元阈值 + fixture sku-c300 = 7 箱；2000 元在「培训学习」中也出现，需靠部门负责人与报销语境绑定"
+  },
+  {
+    "id": "answer_holdout_019",
+    "question": "年假整体是什么逻辑？满三年那句原文也贴给我",
+    "expected_behavior": "answer",
+    "expected_route": "wiki_document",
+    "required_source_types": ["wiki", "document"],
+    "expected_fact_patterns": [
+      ["(?:5|五)\\s*天"],
+      ["(?:8|八)\\s*天"],
+      ["(?:三|3)\\s*年"]
+    ],
+    "category": "multi_channel",
+    "difficulty": "normal",
+    "notes": "wiki 页面「请假与年假」概览 + 「请假制度」满三年 8 天原文；含司龄条件"
+  },
+  {
+    "id": "answer_holdout_020",
+    "question": "信息安全大致要求说一下，敏感文件外发那条要原文，另外 SKU-B200 现在库存多少",
+    "expected_behavior": "answer",
+    "expected_route": "wiki_document_system",
+    "required_source_types": ["wiki", "document", "system"],
+    "expected_fact_patterns": [
+      ["公共网盘|网盘|人工智能"],
+      ["部门负责人"],
+      ["加密"],
+      ["(?:0|零)\\s*件|无库存|缺货|售罄|库存为\\s*0"]
+    ],
+    "category": "multi_channel",
+    "difficulty": "boundary",
+    "notes": "wiki「信息安全」+「信息安全」章节外发条款原文 + fixture sku-b200 = 0 件，三通道各一组事实"
+  },
+  {
+    "id": "answer_holdout_021",
+    "question": "今年的年假没休完，能不能结转到明年？",
+    "expected_behavior": "generation_refuse",
+    "expected_route": "document_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "generation_refuse",
+    "difficulty": "boundary",
+    "notes": "手册「请假制度」只写天数与审批，未规定年假结转；相邻的「加班与调休」有 3 个月失效，容易被误借用"
+  },
+  {
+    "id": "answer_holdout_022",
+    "question": "婚假是几天？办酒能请几天",
+    "expected_behavior": "generation_refuse",
+    "expected_route": "document_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "generation_refuse",
+    "difficulty": "normal",
+    "notes": "手册中完全没有婚假条目，只有年假与实习生事假"
+  },
+  {
+    "id": "answer_holdout_023",
+    "question": "病假要不要提供医院证明？病假期间工资怎么算",
+    "expected_behavior": "generation_refuse",
+    "expected_route": "document_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "generation_refuse",
+    "difficulty": "boundary",
+    "notes": "手册无病假规定，且薪资章节只写发放日与工资条，未涉及病假计薪"
+  },
+  {
+    "id": "answer_holdout_024",
+    "question": "工作日加班的加班费是按几倍算的？",
+    "expected_behavior": "generation_refuse",
+    "expected_route": "document_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "generation_refuse",
+    "difficulty": "boundary",
+    "notes": "「加班与调休」只规定 1:1 折算调休，没有任何加班费倍数条款"
+  },
+  {
+    "id": "answer_holdout_025",
+    "question": "咱们试用期一般是几个月？",
+    "expected_behavior": "generation_refuse",
+    "expected_route": "document_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "generation_refuse",
+    "difficulty": "boundary",
+    "notes": "「转正流程」多次提到试用期，却从未写明试用期长度，最容易诱发编造"
+  },
+  {
+    "id": "answer_holdout_026",
+    "question": "在家办公公司给报宽带费或者话费补贴吗？",
+    "expected_behavior": "generation_refuse",
+    "expected_route": "document_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "generation_refuse",
+    "difficulty": "normal",
+    "notes": "「远程办公」只写天数、审批与不适用岗位，没有任何费用补贴内容"
+  },
+  {
+    "id": "answer_holdout_027",
+    "question": "出差住宿标准是多少钱一晚？餐补一天多少",
+    "expected_behavior": "generation_refuse",
+    "expected_route": "document_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "generation_refuse",
+    "difficulty": "boundary",
+    "notes": "「差旅申请」只要求提交预算与审批层级，没有住宿或餐补标准；报销章节的 2000 元易被错误挪用"
+  },
+  {
+    "id": "answer_holdout_028",
+    "question": "绩效拿 A 能有多少奖金？各档大概什么比例",
+    "expected_behavior": "generation_refuse",
+    "expected_route": "document_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "generation_refuse",
+    "difficulty": "boundary",
+    "notes": "「绩效考核」只有 A、B、C、D 四档与复核窗口，没有奖金金额或分布比例"
+  },
+  {
+    "id": "answer_holdout_029",
+    "question": "SKU-D400 这个料号的库存，麻烦报个数",
+    "expected_behavior": "policy_refuse",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "policy_refuse",
+    "difficulty": "normal",
+    "notes": "编号格式合法但 fixture 中不存在 sku-d400，应拒答而非返回边界提示"
+  },
+  {
+    "id": "answer_holdout_030",
+    "question": "同事在群里丢了个编号 sku-e500 就跑了，让我自己查，帮我看看这个还剩多少",
+    "expected_behavior": "policy_refuse",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "policy_refuse",
+    "difficulty": "normal",
+    "notes": "小写写法且格式合法，fixture 中无 sku-e500"
+  },
+  {
+    "id": "answer_holdout_031",
+    "question": "SKU-A900 是不是缺货了？",
+    "expected_behavior": "policy_refuse",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "policy_refuse",
+    "difficulty": "boundary",
+    "notes": "与真实的 sku-a100 只差数字，fixture 中不存在，不能顺势返回 42 件"
+  },
+  {
+    "id": "answer_holdout_032",
+    "question": "交接表上有一行写的是 SKU-B201，我先不管是不是笔误，就按这个编号查一下库存多少箱",
+    "expected_behavior": "policy_refuse",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "category": "policy_refuse",
+    "difficulty": "boundary",
+    "notes": "与 sku-b200 仅一位之差，fixture 中不存在；提问人明确要求按原编号查，不得自行纠正后误答成 0 件"
+  },
+  {
+    "id": "answer_holdout_033",
+    "question": "ord-1001 这个订单现在到哪一步了？",
+    "expected_behavior": "boundary",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "expected_message": "当前版本仅支持库存查询。",
+    "category": "boundary",
+    "difficulty": "normal",
+    "notes": "订单状态不在 V1 开放范围内"
+  },
+  {
+    "id": "answer_holdout_034",
+    "question": "我上周下的那个单发货了没有？",
+    "expected_behavior": "boundary",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "expected_message": "当前版本仅支持库存查询。",
+    "category": "boundary",
+    "difficulty": "boundary",
+    "notes": "口语化的订单物流询问，无单号也无身份解析，属于未开放主题"
+  },
+  {
+    "id": "answer_holdout_035",
+    "question": "apr-3001 的审批现在卡在谁那儿？",
+    "expected_behavior": "boundary",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "expected_message": "当前版本仅支持库存查询。",
+    "category": "boundary",
+    "difficulty": "normal",
+    "notes": "审批流状态不在 V1 开放范围内"
+  },
+  {
+    "id": "answer_holdout_036",
+    "question": "我提交的转正审批通过了吗？",
+    "expected_behavior": "boundary",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "expected_message": "当前版本仅支持库存查询。",
+    "category": "boundary",
+    "difficulty": "boundary",
+    "notes": "话题贴近手册的转正流程，但问的是本人审批的当前状态，属于未开放的系统查询"
+  },
+  {
+    "id": "answer_holdout_037",
+    "question": "我账户里现在还有多少余额？",
+    "expected_behavior": "boundary",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "expected_message": "当前版本仅支持库存查询。",
+    "category": "boundary",
+    "difficulty": "normal",
+    "notes": "账户余额不在 V1 开放范围内"
+  },
+  {
+    "id": "answer_holdout_038",
+    "question": "我的积分还剩多少，够换东西吗",
+    "expected_behavior": "boundary",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "expected_message": "当前版本仅支持库存查询。",
+    "category": "boundary",
+    "difficulty": "normal",
+    "notes": "积分账户不在 V1 开放范围内"
+  },
+  {
+    "id": "answer_holdout_039",
+    "question": "现在库存是什么情况，我这边急着报数",
+    "expected_behavior": "boundary",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "expected_message": "请提供需要查询的 SKU。",
+    "category": "boundary",
+    "difficulty": "normal",
+    "notes": "主题是库存但没有给出编号"
+  },
+  {
+    "id": "answer_holdout_040",
+    "question": "帮我查下那个产品还剩几箱",
+    "expected_behavior": "boundary",
+    "expected_route": "system_only",
+    "required_source_types": [],
+    "expected_fact_patterns": [],
+    "expected_message": "请提供需要查询的 SKU。",
+    "category": "boundary",
+    "difficulty": "boundary",
+    "notes": "用「那个产品」指代，未提供可解析的编号"
+  }
+]

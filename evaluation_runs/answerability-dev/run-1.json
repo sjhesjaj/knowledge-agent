@@ -1,0 +1,2011 @@
+{
+  "context": {
+    "dataset": "eval_answerability_dev.json",
+    "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+    "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+    "chat_model": "qwen3:4b",
+    "embed_model": "nomic-embed-text",
+    "python_version": "3.12.13",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "evaluator": "evaluate_answerability.py",
+    "warmup_seconds": 8.127178599999752
+  },
+  "run": 1,
+  "summary": {
+    "total_cases": 40,
+    "passed": 39,
+    "pass_rate": 0.975,
+    "answer_success_rate": 0.95,
+    "false_refusal_rate": 0.05,
+    "unanswerable_refusal_rate": 1.0,
+    "refusal_mechanism_match": 1.0,
+    "boundary_accuracy": 1.0,
+    "citation_presence_rate": 1.0,
+    "citation_index_validity": 1.0,
+    "required_source_coverage": 1.0,
+    "expected_fact_hit_rate": 0.95,
+    "expected_fact_group_hit_rate": 0.9565217391304348,
+    "route_accuracy": 1.0,
+    "production_marker_refusal_gap": 0,
+    "question_restatements": 0,
+    "duration_p50": 3.3371628999993845,
+    "duration_p95": 12.109394359998804,
+    "duration_max": 12.909800199999154,
+    "duration_total": 164.03498539999782
+  },
+  "cases": [
+    {
+      "run": 1,
+      "id": "answer_document_001",
+      "question": "费用报销的单笔上限是多少元？",
+      "category": "document",
+      "difficulty": "normal",
+      "notes": "依据 sample_company_rules.md「费用报销」：单笔不超过 2000 元由直属主管审批",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "费用报销的单笔上限是2000元。[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "2000",
+            "2,000",
+            "两千"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.325534299998253,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_document_002",
+      "question": "正式员工入职满一年后每年有多少天带薪年假？",
+      "category": "document",
+      "difficulty": "normal",
+      "notes": "依据「请假制度」：满一年后每年 5 天带薪年假",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "正式员工入职满一年后每年享有 5 天带薪年假。[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "5",
+            "五"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.530889500001649,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_document_003",
+      "question": "报销申请应该在费用发生后多少天内提交？",
+      "category": "document",
+      "difficulty": "normal",
+      "notes": "依据「费用报销」：费用发生后 30 天内提交",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "报销申请应在费用发生后 30 天内提交。[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "30",
+            "三十"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.5345105999986117,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_document_004",
+      "question": "高权限账号多久复核一次？",
+      "category": "document",
+      "difficulty": "normal",
+      "notes": "依据「账号与权限」：高权限账号每 90 天复核一次",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "高权限账号每 90 天复核一次。[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "90",
+            "九十"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.2990801999985706,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_document_005",
+      "question": "每周最多可以申请几天远程办公？",
+      "category": "document",
+      "difficulty": "normal",
+      "notes": "依据「远程办公」：每周最多申请 2 天",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "每周最多可以申请2天远程办公[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "2",
+            "两"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.3142729999999574,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_document_006",
+      "question": "员工每年可申请的培训预算上限是多少元？",
+      "category": "document",
+      "difficulty": "normal",
+      "notes": "依据「培训学习」：每年不超过 2000 元培训预算",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "2000元[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "2000",
+            "2,000",
+            "两千"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.231982799999969,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_document_007",
+      "question": "设备遗失应该在多少小时内报告？",
+      "category": "document",
+      "difficulty": "normal",
+      "notes": "依据「设备领用」：设备遗失应在 2 小时内报告",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "设备遗失应在2小时内报告。[来源1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "2",
+            "两"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.1885722000006353,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_document_008",
+      "question": "现在这版制度里，迟到多少分钟不扣款？",
+      "category": "document",
+      "difficulty": "boundary",
+      "notes": "依据「考勤与迟到」：每月迟到不超过 10 分钟且累计不超过 2 次不扣款。边界：问句含「现在」，考察时效词是否导致对可回答制度问题误拒",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "policy_refuse",
+      "outcome": "refuse",
+      "reason_codes": [
+        "freshness_unsupported"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "根据现有资料无法确定。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "10",
+            "十"
+          ],
+          "hit": false
+        }
+      ],
+      "all_facts_hit": false,
+      "duration_seconds": 0.004247299999406096,
+      "passed": false,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_wiki_001",
+      "question": "介绍一下远程办公",
+      "category": "wiki",
+      "difficulty": "normal",
+      "notes": "依据 wiki 页面「远程办公」：每周最多 2 天",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "route_match": true,
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "wiki"
+      ],
+      "source_count": 3,
+      "answer": "远程办公须至少提前一个工作日获得直属主管批准[来源1]，涉及客户现场支持、机房值守的岗位不适用远程办公政策[来源2]，员工每周最多申请2天远程办公[来源3]。",
+      "citation_indices": [
+        1,
+        2,
+        3
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "wiki"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "2",
+            "两"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.623008700000355,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_wiki_002",
+      "question": "介绍一下账号与权限的相关规定",
+      "category": "wiki",
+      "difficulty": "normal",
+      "notes": "依据 wiki 页面「账号与权限」的三条 claim，命中任意一条即可",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "route_match": true,
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "wiki"
+      ],
+      "source_count": 3,
+      "answer": "高权限账号需每90天复核一次[来源1]，发现账号异常应立即联系信息安全团队[来源2]，系统账号仅限本人使用且不得共享密码或验证码[来源3]。",
+      "citation_indices": [
+        1,
+        2,
+        3
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "wiki"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "本人",
+            "密码",
+            "共享",
+            "90",
+            "复核",
+            "信息安全"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.566169699999591,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_wiki_003",
+      "question": "梳理一下信息安全方面的要点",
+      "category": "wiki",
+      "difficulty": "normal",
+      "notes": "依据 wiki 页面「信息安全」的两条 claim",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "route_match": true,
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "wiki"
+      ],
+      "source_count": 3,
+      "answer": "根据资料，信息安全要点包括：1. 敏感文件对外发送前需经部门负责人批准并使用公司指定加密工具[来源1]；2. 内部资料不得上传至未经公司批准的公共网盘或外部AI服务[来源2]；3. 发现账号异常应立即联系信息安全团队[来源3]。",
+      "citation_indices": [
+        1,
+        2,
+        3
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "wiki"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "网盘",
+            "加密",
+            "批准",
+            "外发",
+            "敏感"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 4.028538700000354,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_wiki_004",
+      "question": "介绍一下请假与年假",
+      "category": "wiki",
+      "difficulty": "normal",
+      "notes": "依据 wiki 页面「请假与年假」：5 天或满三年后 8 天",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "wiki_only",
+      "actual_route": "wiki_only",
+      "route_match": true,
+      "actual_steps": [
+        "wiki_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "wiki"
+      ],
+      "source_count": 3,
+      "answer": "根据资料，正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天；请假需提前在系统提交申请，1天内由直属主管审批，超过1天需部门负责人审批；实习生不享有带薪年假，但每月可申请1天事假。[来源1][来源2][来源3]",
+      "citation_indices": [
+        1,
+        2,
+        3
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "wiki"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "5",
+            "五",
+            "8",
+            "八"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 4.053773600000568,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_inventory_001",
+      "question": "帮我查一下 SKU-A100 当前的库存",
+      "category": "system",
+      "difficulty": "normal",
+      "notes": "依据 system fixture：sku-a100 = 42 件",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "system"
+      ],
+      "source_count": 1,
+      "answer": "SKU-A100 当前库存为 42 件。[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "system"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "42",
+            "四十二"
+          ],
+          "hit": true
+        },
+        {
+          "candidates": [
+            "件"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.443391100001463,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_inventory_002",
+      "question": "SKU-C300 现在的库存是多少？",
+      "category": "system",
+      "difficulty": "normal",
+      "notes": "依据 system fixture：sku-c300 = 7 箱",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "system"
+      ],
+      "source_count": 1,
+      "answer": "SKU-C300 现在的库存是 7 箱。[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "system"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "7",
+            "七"
+          ],
+          "hit": true
+        },
+        {
+          "candidates": [
+            "箱"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.245553700002347,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_inventory_003",
+      "question": "SKU-B200 库存还有多少？",
+      "category": "system",
+      "difficulty": "boundary",
+      "notes": "依据 system fixture：sku-b200 = 0 件。边界：存在且为零，不等于查不到",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "system"
+      ],
+      "source_count": 1,
+      "answer": "SKU-B200 当前库存为 0 件。[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "system"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "0",
+            "零"
+          ],
+          "hit": true
+        },
+        {
+          "candidates": [
+            "件"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.348791500000516,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_inventory_004",
+      "question": "查询 SKU-A100 库存",
+      "category": "system",
+      "difficulty": "normal",
+      "notes": "依据 system fixture：sku-a100 = 42 件；极简指令写法",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "system"
+      ],
+      "source_count": 1,
+      "answer": "SKU-A100 的当前库存为 42 件。[来源 1]",
+      "citation_indices": [
+        1
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "system"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "42",
+            "四十二"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 3.231482099999994,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_multi_001",
+      "question": "SKU-A100 库存目前是多少？请一并给出原文依据。",
+      "category": "multi_channel",
+      "difficulty": "normal",
+      "notes": "原文通道 + 实时通道合并；数值必须来自 system fixture",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "route_match": true,
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document",
+        "system"
+      ],
+      "source_count": 3,
+      "answer": "SKU-A100 库存目前是 42 件。[来源 3：demo-business-system，片段 3]",
+      "citation_indices": [
+        3,
+        3
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "document",
+        "system"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "42",
+            "四十二"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 9.0623751000021,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_multi_002",
+      "question": "SKU-C300 的库存还有多少？顺便把原文贴出来。",
+      "category": "multi_channel",
+      "difficulty": "normal",
+      "notes": "原文通道 + 实时通道合并",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_system",
+      "actual_route": "document_system",
+      "route_match": true,
+      "actual_steps": [
+        "document_search",
+        "system_query"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document",
+        "system"
+      ],
+      "source_count": 3,
+      "answer": "SKU-C300 的当前库存为 7 箱。[来源 3：demo-business-system，片段 3]",
+      "citation_indices": [
+        3,
+        3
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "document",
+        "system"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "7",
+            "七"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 9.012738699999318,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_multi_003",
+      "question": "先概述远程办公政策，再引用原文条款。",
+      "category": "multi_channel",
+      "difficulty": "normal",
+      "notes": "Wiki 概览 + 原文条款；每周最多 2 天",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "route_match": true,
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document",
+        "wiki"
+      ],
+      "source_count": 7,
+      "answer": "星河科技远程办公政策规定：员工每周最多申请2天远程办公，须至少提前一个工作日获得直属主管批准；涉及客户现场支持、机房值守的岗位不适用远程办公政策。[来源4]（原文条款：员工每周最多申请 2 天远程办公，须至少提前一个工作日获得直属主管批准。涉及客户现场支持、机房值守的岗位不适用远程办公政策。）",
+      "citation_indices": [
+        4
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "wiki",
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "2",
+            "两"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 4.359101699999883,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "answer_multi_004",
+      "question": "介绍一下年假制度，并说明具体天数是多少。",
+      "category": "multi_channel",
+      "difficulty": "normal",
+      "notes": "Wiki 概览 + 原文数值；满一年后 5 天",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "wiki_document",
+      "actual_route": "wiki_document",
+      "route_match": true,
+      "actual_steps": [
+        "wiki_query",
+        "document_search"
+      ],
+      "expected_behavior": "answer",
+      "actual_behavior": "answer",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document",
+        "wiki"
+      ],
+      "source_count": 7,
+      "answer": "根据资料，星河科技的年假制度规定：正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。[来源4]。实习生不享有带薪年假，但每月可申请1天事假。[来源4]。具体天数为：正式员工满一年后5天，满三年后8天。[来源4]",
+      "citation_indices": [
+        4,
+        4,
+        4
+      ],
+      "has_citation": true,
+      "citation_indices_valid": true,
+      "required_source_types": [
+        "wiki",
+        "document"
+      ],
+      "required_source_coverage": true,
+      "expected_fact_groups": [
+        {
+          "candidates": [
+            "5",
+            "五"
+          ],
+          "hit": true
+        }
+      ],
+      "all_facts_hit": true,
+      "duration_seconds": 4.420542199997726,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_policy_001",
+      "question": "SKU-Z999 的库存现在是多少？",
+      "category": "unknown_sku",
+      "difficulty": "normal",
+      "notes": "SKU 格式合法但 fixture 中不存在，System 返回 EMPTY，应在调用模型前拒答",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "policy_refuse",
+      "actual_behavior": "policy_refuse",
+      "outcome": "refuse",
+      "reason_codes": [
+        "empty_tool_result",
+        "freshness_unsupported"
+      ],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "根据现有资料无法确定。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 0.0008694999996805564,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_policy_002",
+      "question": "查询 SKU-X404 库存",
+      "category": "unknown_sku",
+      "difficulty": "normal",
+      "notes": "不存在的 SKU，应走固定拒答路径",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "policy_refuse",
+      "actual_behavior": "policy_refuse",
+      "outcome": "refuse",
+      "reason_codes": [
+        "empty_tool_result"
+      ],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "根据现有资料无法确定。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 0.0004944000029354356,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_policy_003",
+      "question": "SKU-M500 库存还剩多少？",
+      "category": "unknown_sku",
+      "difficulty": "normal",
+      "notes": "不存在的 SKU，应走固定拒答路径",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "policy_refuse",
+      "actual_behavior": "policy_refuse",
+      "outcome": "refuse",
+      "reason_codes": [
+        "empty_tool_result"
+      ],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "根据现有资料无法确定。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 0.0004718000018328894,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_policy_004",
+      "question": "帮我查一下 SKU-Q777 目前的库存",
+      "category": "unknown_sku",
+      "difficulty": "normal",
+      "notes": "不存在的 SKU，应走固定拒答路径",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "policy_refuse",
+      "actual_behavior": "policy_refuse",
+      "outcome": "refuse",
+      "reason_codes": [
+        "empty_tool_result",
+        "freshness_unsupported"
+      ],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "根据现有资料无法确定。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 0.0004461999997147359,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_missing_001",
+      "question": "公司班车晚上几点发车？",
+      "category": "missing_evidence",
+      "difficulty": "normal",
+      "notes": "样例手册没有班车条目",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "generation_refuse",
+      "actual_behavior": "generation_refuse",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "根据现有资料无法确定。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 11.675469199999498,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": true,
+      "refusal_by_evaluator_markers": true,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_missing_002",
+      "question": "员工食堂的午餐补贴是多少钱？",
+      "category": "missing_evidence",
+      "difficulty": "normal",
+      "notes": "样例手册没有食堂或餐补条目",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "generation_refuse",
+      "actual_behavior": "generation_refuse",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "根据现有资料无法确定",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 12.153891599999042,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": true,
+      "refusal_by_evaluator_markers": true,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_missing_003",
+      "question": "公司提供几种商业保险？",
+      "category": "missing_evidence",
+      "difficulty": "normal",
+      "notes": "样例手册没有商业保险条目",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "generation_refuse",
+      "actual_behavior": "generation_refuse",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "根据现有资料无法确定",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 11.98874430000069,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": true,
+      "refusal_by_evaluator_markers": true,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_missing_004",
+      "question": "试用期工资是转正后的百分之多少？",
+      "category": "missing_evidence",
+      "difficulty": "boundary",
+      "notes": "手册有转正流程和薪资发放，但没有试用期工资比例，容易被相邻条目诱导编造",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "generation_refuse",
+      "actual_behavior": "generation_refuse",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "根据现有资料无法确定",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 6.276272400002199,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": true,
+      "refusal_by_evaluator_markers": true,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_missing_005",
+      "question": "婚假可以休几天？",
+      "category": "missing_evidence",
+      "difficulty": "boundary",
+      "notes": "手册只有年假和事假，没有婚假，容易被年假天数带偏",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "generation_refuse",
+      "actual_behavior": "generation_refuse",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "根据提供的资料，婚假可以休几天？在星河科技员工手册中没有明确提到婚假的天数。员工手册中只提到了带薪年假（满一年5天，满三年8天）和事假（实习生每月1天），但没有关于婚假的具体规定。因此，根据现有资料无法确定婚假可以休几天。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 12.909800199999154,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": true,
+      "refusal_by_evaluator_markers": true,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_missing_006",
+      "question": "公司的年度体检安排在什么时候？",
+      "category": "missing_evidence",
+      "difficulty": "normal",
+      "notes": "样例手册没有体检条目",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "generation_refuse",
+      "actual_behavior": "generation_refuse",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "根据现有资料无法确定。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 12.107052399998793,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": true,
+      "refusal_by_evaluator_markers": true,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_missing_007",
+      "question": "停车位怎么申请？",
+      "category": "missing_evidence",
+      "difficulty": "normal",
+      "notes": "样例手册没有停车位条目",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "generation_refuse",
+      "actual_behavior": "generation_refuse",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "根据现有资料无法确定",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 11.83823029999985,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": true,
+      "refusal_by_evaluator_markers": true,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "refuse_missing_008",
+      "question": "公司有没有股票期权计划？",
+      "category": "missing_evidence",
+      "difficulty": "normal",
+      "notes": "样例手册没有股权激励条目",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "document_only",
+      "actual_route": "document_only",
+      "route_match": true,
+      "actual_steps": [
+        "document_search"
+      ],
+      "expected_behavior": "generation_refuse",
+      "actual_behavior": "generation_refuse",
+      "outcome": "ready",
+      "reason_codes": [
+        "evidence_sufficient"
+      ],
+      "source_types": [
+        "document"
+      ],
+      "source_count": 4,
+      "answer": "根据现有资料无法确定",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 6.258479199997964,
+      "passed": true,
+      "model_called": true,
+      "restates_question": false,
+      "refusal_by_production_markers": true,
+      "refusal_by_evaluator_markers": true,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "boundary_order_001",
+      "question": "我的订单目前是什么状态？",
+      "category": "unsupported_system",
+      "difficulty": "normal",
+      "notes": "V1 未开放订单查询：没有可信身份解析器",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "boundary",
+      "actual_behavior": "boundary",
+      "outcome": "refuse",
+      "reason_codes": [],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "当前版本仅支持库存查询。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 4.5099997805664316e-05,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "boundary_order_002",
+      "question": "帮我查一下我的订单进度",
+      "category": "unsupported_system",
+      "difficulty": "normal",
+      "notes": "V1 未开放订单查询",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "boundary",
+      "actual_behavior": "boundary",
+      "outcome": "refuse",
+      "reason_codes": [],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "当前版本仅支持库存查询。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 2.429999949526973e-05,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "boundary_approval_001",
+      "question": "我的审批现在到哪一步了？",
+      "category": "unsupported_system",
+      "difficulty": "normal",
+      "notes": "V1 未开放审批查询",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "boundary",
+      "actual_behavior": "boundary",
+      "outcome": "refuse",
+      "reason_codes": [],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "当前版本仅支持库存查询。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 1.840000186348334e-05,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "boundary_approval_002",
+      "question": "查一下我的审批状态",
+      "category": "unsupported_system",
+      "difficulty": "normal",
+      "notes": "V1 未开放审批查询",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "boundary",
+      "actual_behavior": "boundary",
+      "outcome": "refuse",
+      "reason_codes": [],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "当前版本仅支持库存查询。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 1.8399998225504532e-05,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "boundary_balance_001",
+      "question": "我的账户余额是多少？",
+      "category": "unsupported_system",
+      "difficulty": "normal",
+      "notes": "V1 未开放账户余额查询",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "boundary",
+      "actual_behavior": "boundary",
+      "outcome": "refuse",
+      "reason_codes": [],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "当前版本仅支持库存查询。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 1.5699999494245276e-05,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "boundary_balance_002",
+      "question": "帮我查一下我当前的积分",
+      "category": "unsupported_system",
+      "difficulty": "normal",
+      "notes": "V1 未开放积分查询",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "boundary",
+      "actual_behavior": "boundary",
+      "outcome": "refuse",
+      "reason_codes": [],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "当前版本仅支持库存查询。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 1.6199999663513154e-05,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "boundary_missing_sku_001",
+      "question": "现在库存还剩多少？",
+      "category": "missing_sku",
+      "difficulty": "normal",
+      "notes": "是库存问题但没有给出 SKU，应要求补充而不是拒答",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "boundary",
+      "actual_behavior": "boundary",
+      "outcome": "refuse",
+      "reason_codes": [],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "请提供需要查询的 SKU。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 1.4499997632810846e-05,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    },
+    {
+      "run": 1,
+      "id": "boundary_missing_sku_002",
+      "question": "查询一下库存数量",
+      "category": "missing_sku",
+      "difficulty": "normal",
+      "notes": "是库存问题但没有给出 SKU",
+      "git_sha": "cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05",
+      "chat_model": "qwen3:4b",
+      "embed_model": "nomic-embed-text",
+      "dataset_sha256": "a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac",
+      "expected_route": "system_only",
+      "actual_route": "system_only",
+      "route_match": true,
+      "actual_steps": [
+        "system_query"
+      ],
+      "expected_behavior": "boundary",
+      "actual_behavior": "boundary",
+      "outcome": "refuse",
+      "reason_codes": [],
+      "source_types": [],
+      "source_count": 0,
+      "answer": "请提供需要查询的 SKU。",
+      "citation_indices": [],
+      "has_citation": false,
+      "citation_indices_valid": false,
+      "required_source_types": [],
+      "required_source_coverage": true,
+      "expected_fact_groups": [],
+      "all_facts_hit": true,
+      "duration_seconds": 5.4600001021753997e-05,
+      "passed": true,
+      "model_called": false,
+      "restates_question": false,
+      "refusal_by_production_markers": false,
+      "refusal_by_evaluator_markers": false,
+      "corpus_unavailable": false
+    }
+  ]
+}

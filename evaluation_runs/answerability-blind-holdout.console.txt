@@ -1,0 +1,746 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache C:\Users\h000_\AppData\Local\Temp\jieba.cache
+Loading model cost 0.450 seconds.
+Prefix dict has been built successfully.
+Dataset      : eval_answerability_holdout.json (40 cases)
+Dataset SHA  : 5f55f703502a703b6453bb6e08e42ebc70015b9f06f03b98d17163dd7a64a104
+Git SHA      : cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05
+Chat model   : qwen3:4b
+Embed model  : nomic-embed-text
+Runs         : 3
+Building document index …
+Indexed 20 chunks from sample_company_rules.md
+Warming up the answer model …
+Warm-up took 13.04s (excluded from results)
+
+==============================================================================
+Run 1
+==============================================================================
+001. PASS | answer_holdout_001 | 10.33s
+     Q: 试用期快结束了，转正总结要提前多久交？手册里写的是多少个工作日
+     route document_only -> wiki_document | behavior answer -> answer | outcome ready
+     sources=['document', 'wiki'] citations=[4] facts=ok reasons=evidence_sufficient
+     A: 试用期员工应在期满前 10 个工作日提交转正总结。[来源 4]
+002. FAIL | answer_holdout_002 | 12.28s
+     Q: 报销这块我总记不住：单据多久之内要交？金额多大要部门负责人批？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=MISS reasons=evidence_sufficient
+     A: 报销申请应在费用发生后30天内提交，单笔金额超过2000元需部门负责人审批。[来源1]
+     -> generation miss
+003. PASS | answer_holdout_003 | 9.70s
+     Q: 每个月迟到几次以内是不扣钱的？分钟数上有没有限制
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，每月迟到不超过 10 分钟且累计不超过 2 次的，进行提醒但不扣款。因此，每个月迟到次数上不扣钱的限制是累计不超过 2 次，分钟数上不扣钱的限制是不超过 10 分钟。[来源 1]
+004. PASS | answer_holdout_004 | 9.17s
+     Q: 我在公司干了四年了，年假是几天？跟刚满一年的同事有什么区别
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，您在公司干了四年，已满足工作满三年的条件，因此年假为8天。刚满一年的同事年假为5天，因此您比他们多3天年假。[来源1]
+005. PASS | answer_holdout_005 | 3.37s
+     Q: 工资是每月几号发的？要是正好赶上法定节假日怎么办
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 工资于每月10日发放上一个自然月的工资；若遇法定节假日，则提前至最近的工作日。[来源 1]
+006. PASS | answer_holdout_006 | 9.13s
+     Q: 加班换的调休有有效期吗？换算比例又是多少
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 加班换的调休有有效期，3个月内必须使用，逾期自动失效。换算比例为1:1，即每加班1小时可换1天调休。[来源 1]
+007. PASS | answer_holdout_007 | 3.40s
+     Q: 高权限账号隔多长时间要复核一次？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 高权限账号每 90 天复核一次。[来源 1]
+008. PASS | answer_holdout_008 | 3.21s
+     Q: 出差审批要谁签字？国内和出境是不是不一样
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 国内出差由部门负责人审批，境外出差需总经理审批。[来源1]
+009. FAIL | answer_holdout_009 | 3.83s
+     Q: 远程办公整体是个什么政策，先给我讲讲大概
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 星河科技远程办公政策规定员工每周最多申请2天远程办公，需提前一个工作日获得直属主管批准，但涉及客户现场支持、机房值守的岗位不适用此政策。[来源 1]
+     -> route marker gap; retrieval miss
+010. FAIL | answer_holdout_010 | 9.57s
+     Q: 年假和请假这块整体是怎么规定的？大概说说就行
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，星河科技员工年假规定：正式员工入职满一年后每年享5天带薪年假，满三年后增至8天；实习生不享有带薪年假，但每月可申请1天事假。请假需提前在系统提交，1天内由直属主管审批，超1天需部门负责人审批。[来源1]
+     -> route marker gap; retrieval miss
+011. FAIL | answer_holdout_011 | 9.41s
+     Q: 信息安全这块公司整体是什么要求？
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 星河科技要求内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务，敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具。[来源 1]
+     -> route marker gap; retrieval miss
+012. FAIL | answer_holdout_012 | 9.59s
+     Q: 账号和权限管理整体是怎么设计的，讲讲思路
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1, 2] facts=ok reasons=evidence_sufficient
+     A: 星河科技的账号和权限管理设计思路是：系统账号仅限本人使用，不得共享密码；岗位调整时由直属主管发起权限变更；高权限账号每90天复核一次；发现异常立即联系信息安全团队。[来源1] 员工离职时需完成项目、文档、账号和资产交接，并归还公司设备，删除个人设备上的公司资料。[来源2]
+     -> route marker gap; retrieval miss
+013. PASS | answer_holdout_013 | 3.36s
+     Q: 客户下午三点要来提货，我得先给仓库回个准数：SKU-A100 现在库存还有多少
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU-A100 现在库存还有 42 件。[来源 1]
+014. PASS | answer_holdout_014 | 3.32s
+     Q: 出库单还差最后一行没填完，主管等着签字，帮我确认下 sku-c300 目前的库存是多少
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，SKU sku-c300 的当前库存为 7 箱。[来源 1]。
+015. FAIL | answer_holdout_015 | 5.50s
+     Q: SKU_B200 现在还有货吗？
+     route system_only -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+016. FAIL | answer_holdout_016 | 5.44s
+     Q: Sku-A100 和 SKU-C300 现在各有多少？我要做个对比
+     route system_only -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+017. FAIL | answer_holdout_017 | 5.73s
+     Q: 远程办公政策整体讲一下；另外 SKU-A100 现在库存多少件？
+     route wiki_system -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+018. FAIL | answer_holdout_018 | 5.55s
+     Q: 单笔超过多少钱要部门负责人批？原文给我。还有 sku-c300 现在还剩多少箱
+     route document_system -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+019. FAIL | answer_holdout_019 | 3.95s
+     Q: 年假整体是什么逻辑？满三年那句原文也贴给我
+     route wiki_document -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 年假整体逻辑是：正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天。原文：正式员工入职满一年后，每年享有 5 天带薪年:年假；工作满三年后增加至 8 天。[来源 1]
+     -> route marker gap; retrieval miss
+020. FAIL | answer_holdout_020 | 3.85s
+     Q: 信息安全大致要求说一下，敏感文件外发那条要原文，另外 SKU-B200 现在库存多少
+     route wiki_document_system -> document_system | behavior answer -> answer | outcome ready
+     sources=['document', 'system'] citations=[1, 5] facts=ok reasons=evidence_sufficient
+     A: 根据资料，信息安全要求：内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务。敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具[来源 1]。SKU-B200 当前库存为 0 件[来源 5]。
+     -> route marker gap; retrieval miss
+021. PASS | answer_holdout_021 | 7.97s
+     Q: 今年的年假没休完，能不能结转到明年？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的[来源1]，星河科技员工手册中关于请假制度的说明是：正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。但该手册中并未明确说明年假是否可以结转到明年。因此，根据现有资料无法确定年假是否可以结转到明年。
+022. PASS | answer_holdout_022 | 16.21s
+     Q: 婚假是几天？办酒能请几天
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，星河科技员工手册中没有明确提及婚假天数和办酒（如婚礼、生日等）的请假天数。资料中只涉及带薪年假、事假和加班调休的规定，但未包含婚假或办酒相关的请假政策。因此，根据现有资料无法确定婚假是几天以及办酒能请几天。
+023. PASS | answer_holdout_023 | 15.85s
+     Q: 病假要不要提供医院证明？病假期间工资怎么算
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，病假是否需要提供医院证明以及病假期间工资的计算方式均未明确提及。资料中仅涉及带薪年假、事假和加班调休的规定，但没有关于病假的具体条款。因此，根据现有资料无法确定。
+024. FAIL | answer_holdout_024 | 3.34s
+     Q: 工作日加班的加班费是按几倍算的？
+     route document_only -> document_only | behavior generation_refuse -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，工作日加班的加班费是按1倍算的。[来源1]
+     -> generation miss
+025. PASS | answer_holdout_025 | 7.94s
+     Q: 咱们试用期一般是几个月？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，问题'咱们试用期一般是几个月？'在[来源1]中没有明确提到试用期的时长。资料中只提到了试用期员工在期满前10个工作日提交转正总结的流程，但没有说明试用期是几个月。因此，根据现有资料无法确定试用期的时长。
+026. FAIL | answer_holdout_026 | 12.30s
+     Q: 在家办公公司给报宽带费或者话费补贴吗？
+     route document_only -> document_only | behavior generation_refuse -> answer | outcome ready
+     sources=['document'] citations=[1, 1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，问题'在家办公公司给报宽带费或者话费补贴吗？'的答案需要从[来源1]中查找相关信息。我将仔细检查[来源1]的内容。
+     -> generation miss
+027. PASS | answer_holdout_027 | 11.41s
+     Q: 出差住宿标准是多少钱一晚？餐补一天多少
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+028. PASS | answer_holdout_028 | 13.15s
+     Q: 绩效拿 A 能有多少奖金？各档大概什么比例
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的[来源1]，绩效考核每季度进行一次，评价由目标完成度、工作质量和协作表现组成。季度结果分为 A、B、C、D 四档，员工可在结果公布后 3 个工作日内申请复核。但是，该资料中并未明确说明绩效拿 A 能有多少奖金以及各档奖金的大致比例。因此，根据现有资料无法确定。
+029. FAIL | answer_holdout_029 | 11.31s
+     Q: SKU-D400 这个料号的库存，麻烦报个数
+     route system_only -> document_only | behavior policy_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+030. FAIL | answer_holdout_030 | 11.76s
+     Q: 同事在群里丢了个编号 sku-e500 就跑了，让我自己查，帮我看看这个还剩多少
+     route system_only -> document_only | behavior policy_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+031. FAIL | answer_holdout_031 | 12.13s
+     Q: SKU-A900 是不是缺货了？
+     route system_only -> document_only | behavior policy_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+     -> route marker gap
+032. PASS | answer_holdout_032 | 0.00s
+     Q: 交接表上有一行写的是 SKU-B201，我先不管是不是笔误，就按这个编号查一下库存多少箱
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+033. PASS | answer_holdout_033 | 0.00s
+     Q: ord-1001 这个订单现在到哪一步了？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+034. FAIL | answer_holdout_034 | 11.24s
+     Q: 我上周下的那个单发货了没有？
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+035. PASS | answer_holdout_035 | 0.00s
+     Q: apr-3001 的审批现在卡在谁那儿？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+036. FAIL | answer_holdout_036 | 6.09s
+     Q: 我提交的转正审批通过了吗？
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+     -> route marker gap
+037. PASS | answer_holdout_037 | 0.00s
+     Q: 我账户里现在还有多少余额？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+038. PASS | answer_holdout_038 | 0.00s
+     Q: 我的积分还剩多少，够换东西吗
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+039. PASS | answer_holdout_039 | 0.00s
+     Q: 现在库存是什么情况，我这边急着报数
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 请提供需要查询的 SKU。
+040. FAIL | answer_holdout_040 | 11.95s
+     Q: 帮我查下那个产品还剩几箱
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+
+Run 1 summary
+  Pass rate                 : 52.5% (21/40)
+  Answer Success Rate       : 45.0%
+  False Refusal Rate        : 20.0%
+  Unanswerable Refusal Rate : 83.3%
+  Boundary Accuracy         : 62.5%
+  Citation Presence Rate    : 100.0%
+  Citation Index Validity   : 100.0%
+  Required Source Coverage  : 50.0%
+  Expected Fact Hit Rate    : 75.0%
+  Route Accuracy            : 57.5%
+  Duration p50/p95/max      : 7.01s / 13.29s / 16.21s
+
+==============================================================================
+Run 2
+==============================================================================
+001. PASS | answer_holdout_001 | 8.52s
+     Q: 试用期快结束了，转正总结要提前多久交？手册里写的是多少个工作日
+     route document_only -> wiki_document | behavior answer -> answer | outcome ready
+     sources=['document', 'wiki'] citations=[4] facts=ok reasons=evidence_sufficient
+     A: 试用期员工应在期满前 10 个工作日提交转正总结。[来源 4]
+002. FAIL | answer_holdout_002 | 8.49s
+     Q: 报销这块我总记不住：单据多久之内要交？金额多大要部门负责人批？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=MISS reasons=evidence_sufficient
+     A: 报销申请应在费用发生后30天内提交，单笔金额超过2000元需部门负责人审批。[来源1]
+     -> generation miss
+003. PASS | answer_holdout_003 | 9.41s
+     Q: 每个月迟到几次以内是不扣钱的？分钟数上有没有限制
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，每个月迟到不超过 10 分钟且累计不超过 2 次的，进行提醒但不扣款。因此，每个月迟到次数上不扣钱的限制是累计不超过 2 次，分钟数上不超过 10 分钟。[来源 1]
+004. PASS | answer_holdout_004 | 8.97s
+     Q: 我在公司干了四年了，年假是几天？跟刚满一年的同事有什么区别
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，您在公司干了四年，已满足工作满三年的条件，因此年假为8天。刚满一年的同事年假为5天，因此区别在于年假天数不同。[来源1]
+005. PASS | answer_holdout_005 | 3.33s
+     Q: 工资是每月几号发的？要是正好赶上法定节假日怎么办
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 工资于每月10日发放上一个自然月的工资；若遇法定节假日，则提前至最近的工作日。[来源 1]
+006. PASS | answer_holdout_006 | 8.82s
+     Q: 加班换的调休有有效期吗？换算比例又是多少
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 加班换的调休有有效期，3个月内使用，逾期自动失效。换算比例是1:1。[来源 1]
+007. PASS | answer_holdout_007 | 3.41s
+     Q: 高权限账号隔多长时间要复核一次？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 高权限账号每 90 天复核一次。[来源 1]
+008. PASS | answer_holdout_008 | 3.18s
+     Q: 出差审批要谁签字？国内和出境是不是不一样
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 国内出差由部门负责人审批，境外出差需总经理审批。[来源1]
+009. FAIL | answer_holdout_009 | 3.70s
+     Q: 远程办公整体是个什么政策，先给我讲讲大概
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 星河科技远程办公政策规定员工每周最多申请2天远程办公，需提前一个工作日获得直属主管批准，但涉及客户现场支持、机房值守的岗位不适用此政策。[来源 1]
+     -> route marker gap; retrieval miss
+010. FAIL | answer_holdout_010 | 9.18s
+     Q: 年假和请假这块整体是怎么规定的？大概说说就行
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，星河科技员工年假规定：正式员工入职满一年后每年享5天带薪年假，满三年后增至8天；实习生不享有带薪年假，但每月可申请1天事假。请假需提前在系统提交，1天内由直属主管审批，超1天需部门负责人审批。[来源1]
+     -> route marker gap; retrieval miss
+011. FAIL | answer_holdout_011 | 9.17s
+     Q: 信息安全这块公司整体是什么要求？
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 星河科技要求员工不得将内部资料上传至未经公司批准的公共网盘或外部人工智能服务，敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具。[来源 1]
+     -> route marker gap; retrieval miss
+012. FAIL | answer_holdout_012 | 9.32s
+     Q: 账号和权限管理整体是怎么设计的，讲讲思路
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1, 2] facts=ok reasons=evidence_sufficient
+     A: 星河科技的账号和权限管理设计思路是：系统账号仅限本人使用，不得共享密码；岗位调整时由直属主管发起权限变更；高权限账号每90天复核一次；发现异常立即联系信息安全团队。[来源1] 员工离职时需完成项目、文档、账号和资产交接，并归还公司设备，删除个人设备上的公司资料。[来源2]
+     -> route marker gap; retrieval miss
+013. PASS | answer_holdout_013 | 3.26s
+     Q: 客户下午三点要来提货，我得先给仓库回个准数：SKU-A100 现在库存还有多少
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU-A100 现在库存还有 42 件。[来源 1]
+014. PASS | answer_holdout_014 | 3.30s
+     Q: 出库单还差最后一行没填完，主管等着签字，帮我确认下 sku-c300 目前的库存是多少
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，SKU sku-c300 的当前库存为 7 箱。[来源 1]。
+015. FAIL | answer_holdout_015 | 5.17s
+     Q: SKU_B200 现在还有货吗？
+     route system_only -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+016. FAIL | answer_holdout_016 | 5.66s
+     Q: Sku-A100 和 SKU-C300 现在各有多少？我要做个对比
+     route system_only -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+017. FAIL | answer_holdout_017 | 5.25s
+     Q: 远程办公政策整体讲一下；另外 SKU-A100 现在库存多少件？
+     route wiki_system -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+018. FAIL | answer_holdout_018 | 5.23s
+     Q: 单笔超过多少钱要部门负责人批？原文给我。还有 sku-c300 现在还剩多少箱
+     route document_system -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+019. FAIL | answer_holdout_019 | 3.88s
+     Q: 年假整体是什么逻辑？满三年那句原文也贴给我
+     route wiki_document -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 年假整体逻辑是：正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天。原文：正式员工入职满一年后，每年享有 5 天带薪年:年假；工作满三年后增加至 8 天。[来源 1]
+     -> route marker gap; retrieval miss
+020. FAIL | answer_holdout_020 | 3.96s
+     Q: 信息安全大致要求说一下，敏感文件外发那条要原文，另外 SKU-B200 现在库存多少
+     route wiki_document_system -> document_system | behavior answer -> answer | outcome ready
+     sources=['document', 'system'] citations=[1, 5] facts=ok reasons=evidence_sufficient
+     A: 根据资料，信息安全要求：内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务。敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具[来源 1]。SKU-B200 当前库存为 0 件[来源 5]。
+     -> route marker gap; retrieval miss
+021. PASS | answer_holdout_021 | 8.18s
+     Q: 今年的年假没休完，能不能结转到明年？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的[来源1]，星河科技员工手册中关于请假制度的说明是：正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。但该手册中并未明确说明年假是否可以结转到明年。因此，根据现有资料无法确定年假是否可以结转到明年。
+022. PASS | answer_holdout_022 | 11.42s
+     Q: 婚假是几天？办酒能请几天
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+023. PASS | answer_holdout_023 | 15.13s
+     Q: 病假要不要提供医院证明？病假期间工资怎么算
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，病假是否需要提供医院证明以及病假期间工资的计算方式均未明确提及。资料中仅涉及带薪年假、事假和加班调休的规定，但没有关于病假的具体条款。因此，根据现有资料无法确定。
+024. FAIL | answer_holdout_024 | 3.33s
+     Q: 工作日加班的加班费是按几倍算的？
+     route document_only -> document_only | behavior generation_refuse -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，工作日加班的加班费是按1倍算的。[来源1]
+     -> generation miss
+025. PASS | answer_holdout_025 | 7.88s
+     Q: 咱们试用期一般是几个月？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，问题'咱们试用期一般是几个月？'在[来源1]中没有明确提到试用期的时长。资料中只提到了试用期员工在期满前10个工作日提交转正总结的流程，但没有说明试用期是几个月。因此，根据现有资料无法确定试用期的时长。
+026. PASS | answer_holdout_026 | 11.77s
+     Q: 在家办公公司给报宽带费或者话费补贴吗？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+027. PASS | answer_holdout_027 | 11.25s
+     Q: 出差住宿标准是多少钱一晚？餐补一天多少
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+028. PASS | answer_holdout_028 | 13.69s
+     Q: 绩效拿 A 能有多少奖金？各档大概什么比例
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的[来源1]，绩效考核每季度进行一次，评价由目标完成度、工作质量和协作表现组成。季度结果分为 A、B、C、D 四档，员工可在结果公布后 3 个工作日内申请复核。但是，该资料中并未明确说明绩效拿 A 能有多少奖金以及各档奖金的大致比例。因此，根据现有资料无法确定。
+029. FAIL | answer_holdout_029 | 11.55s
+     Q: SKU-D400 这个料号的库存，麻烦报个数
+     route system_only -> document_only | behavior policy_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+030. FAIL | answer_holdout_030 | 11.77s
+     Q: 同事在群里丢了个编号 sku-e500 就跑了，让我自己查，帮我看看这个还剩多少
+     route system_only -> document_only | behavior policy_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+031. FAIL | answer_holdout_031 | 11.38s
+     Q: SKU-A900 是不是缺货了？
+     route system_only -> document_only | behavior policy_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+032. PASS | answer_holdout_032 | 0.01s
+     Q: 交接表上有一行写的是 SKU-B201，我先不管是不是笔误，就按这个编号查一下库存多少箱
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+033. PASS | answer_holdout_033 | 0.00s
+     Q: ord-1001 这个订单现在到哪一步了？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+034. FAIL | answer_holdout_034 | 11.74s
+     Q: 我上周下的那个单发货了没有？
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+035. PASS | answer_holdout_035 | 0.00s
+     Q: apr-3001 的审批现在卡在谁那儿？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+036. FAIL | answer_holdout_036 | 6.10s
+     Q: 我提交的转正审批通过了吗？
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+     -> route marker gap
+037. PASS | answer_holdout_037 | 0.00s
+     Q: 我账户里现在还有多少余额？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+038. PASS | answer_holdout_038 | 0.00s
+     Q: 我的积分还剩多少，够换东西吗
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+039. PASS | answer_holdout_039 | 0.00s
+     Q: 现在库存是什么情况，我这边急着报数
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 请提供需要查询的 SKU。
+040. FAIL | answer_holdout_040 | 11.65s
+     Q: 帮我查下那个产品还剩几箱
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+
+Run 2 summary
+  Pass rate                 : 55.0% (22/40)
+  Answer Success Rate       : 45.0%
+  False Refusal Rate        : 20.0%
+  Unanswerable Refusal Rate : 91.7%
+  Boundary Accuracy         : 62.5%
+  Citation Presence Rate    : 100.0%
+  Citation Index Validity   : 100.0%
+  Required Source Coverage  : 50.0%
+  Expected Fact Hit Rate    : 75.0%
+  Route Accuracy            : 57.5%
+  Duration p50/p95/max      : 6.99s / 11.87s / 15.13s
+
+==============================================================================
+Run 3
+==============================================================================
+001. PASS | answer_holdout_001 | 8.21s
+     Q: 试用期快结束了，转正总结要提前多久交？手册里写的是多少个工作日
+     route document_only -> wiki_document | behavior answer -> answer | outcome ready
+     sources=['document', 'wiki'] citations=[4] facts=ok reasons=evidence_sufficient
+     A: 试用期员工应在期满前 10 个工作日提交转正总结。[来源 4]
+002. FAIL | answer_holdout_002 | 12.06s
+     Q: 报销这块我总记不住：单据多久之内要交？金额多大要部门负责人批？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=MISS reasons=evidence_sufficient
+     A: 报销申请应在费用发生后 30 天内提交，单笔金额超过 2001 元需部门负责人审批。[来源 1]
+     -> generation miss
+003. PASS | answer_holdout_003 | 9.13s
+     Q: 每个月迟到几次以内是不扣钱的？分钟数上有没有限制
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，每月迟到不超过 10 分钟且累计不超过 2 次的，进行提醒但不扣款。因此，每个月迟到次数上不扣钱的限制是累计不超过 2 次，分钟数上不扣钱的限制是不超过 10 分钟。[来源 1]
+004. PASS | answer_holdout_004 | 9.30s
+     Q: 我在公司干了四年了，年假是几天？跟刚满一年的同事有什么区别
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。因此，干了四年了，年假是8天。与刚满一年的同事相比，年假多3天。[来源1]
+005. PASS | answer_holdout_005 | 3.37s
+     Q: 工资是每月几号发的？要是正好赶上法定节假日怎么办
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 工资于每月10日发放上一个自然月的工资；若遇法定节假日，则提前至最近的工作日。[来源1]
+006. PASS | answer_holdout_006 | 8.66s
+     Q: 加班换的调休有有效期吗？换算比例又是多少
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 加班换的调休有有效期，3个月内必须使用，逾期自动失效。换算比例为1:1，即每加班1小时可换1天调休。[来源 1]
+007. PASS | answer_holdout_007 | 3.22s
+     Q: 高权限账号隔多长时间要复核一次？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 高权限账号每 90 天复核一次。[来源 1]
+008. PASS | answer_holdout_008 | 3.20s
+     Q: 出差审批要谁签字？国内和出境是不是不一样
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 国内出差由部门负责人审批，境外出差需总经理审批。[来源1]
+009. FAIL | answer_holdout_009 | 3.92s
+     Q: 远程办公整体是个什么政策，先给我讲讲大概
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 星河科技远程办公政策规定员工每周最多申请2天远程办公，需提前一个工作日获得直属主管批准，但涉及客户现场支持、机房值守的岗位不适用此政策。[来源 1]
+     -> route marker gap; retrieval miss
+010. FAIL | answer_holdout_010 | 9.21s
+     Q: 年假和请假这块整体是怎么规定的？大概说说就行
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，星河科技员工年假规定：正式员工入职满一年后每年享5天带薪年假，满三年后增至8天；实习生不享有带薪年假，但每月可申请1天事假。请假需提前在系统提交，1天内由直属主管审批，超1天需部门负责人审批。[来源1]
+     -> route marker gap; retrieval miss
+011. FAIL | answer_holdout_011 | 9.35s
+     Q: 信息安全这块公司整体是什么要求？
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 星河科技要求员工不得将内部资料上传至未经公司批准的公共网盘或外部人工智能服务，敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具。[来源 1]
+     -> route marker gap; retrieval miss
+012. FAIL | answer_holdout_012 | 9.49s
+     Q: 账号和权限管理整体是怎么设计的，讲讲思路
+     route wiki_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1, 2] facts=ok reasons=evidence_sufficient
+     A: 星河科技的账号和权限管理设计思路是：系统账号仅限本人使用，不得共享密码；岗位调整时由直属主管发起权限变更；高权限账号每90天复核一次；发现异常需立即联系信息安全团队。[来源1] 员工离职时需完成项目、文档、账号和资产交接，并归还公司设备，删除个人设备上保存的公司资料。[来源2]
+     -> route marker gap; retrieval miss
+013. PASS | answer_holdout_013 | 3.29s
+     Q: 客户下午三点要来提货，我得先给仓库回个准数：SKU-A100 现在库存还有多少
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU-A100 现在库存还有 42 件。[来源 1]
+014. PASS | answer_holdout_014 | 3.28s
+     Q: 出库单还差最后一行没填完，主管等着签字，帮我确认下 sku-c300 目前的库存是多少
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，SKU sku-c300 的当前库存为 7 箱。[来源 1]。
+015. FAIL | answer_holdout_015 | 5.53s
+     Q: SKU_B200 现在还有货吗？
+     route system_only -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+016. FAIL | answer_holdout_016 | 8.16s
+     Q: Sku-A100 和 SKU-C300 现在各有多少？我要做个对比
+     route system_only -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+017. FAIL | answer_holdout_017 | 5.06s
+     Q: 远程办公政策整体讲一下；另外 SKU-A100 现在库存多少件？
+     route wiki_system -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+018. FAIL | answer_holdout_018 | 5.19s
+     Q: 单笔超过多少钱要部门负责人批？原文给我。还有 sku-c300 现在还剩多少箱
+     route document_system -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+019. FAIL | answer_holdout_019 | 3.92s
+     Q: 年假整体是什么逻辑？满三年那句原文也贴给我
+     route wiki_document -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 年假整体逻辑是：正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天。原文：正式员工入职满一年后，每年享有 5 天带薪年:年假；工作满三年后增加至 8 天。[来源 1]
+     -> route marker gap; retrieval miss
+020. FAIL | answer_holdout_020 | 3.96s
+     Q: 信息安全大致要求说一下，敏感文件外发那条要原文，另外 SKU-B200 现在库存多少
+     route wiki_document_system -> document_system | behavior answer -> answer | outcome ready
+     sources=['document', 'system'] citations=[1, 5] facts=ok reasons=evidence_sufficient
+     A: 根据资料，信息安全要求：内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务。敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具[来源 1]。SKU-B200 当前库存为 0 件[来源 5]。
+     -> route marker gap; retrieval miss
+021. PASS | answer_holdout_021 | 7.87s
+     Q: 今年的年假没休完，能不能结转到明年？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的[来源1]，星河科技员工手册中关于请假制度的说明是：正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。但该手册中并未明确说明年假是否可以结转到明年。因此，根据现有资料无法确定年假是否可以结转到明年。
+022. PASS | answer_holdout_022 | 15.26s
+     Q: 婚假是几天？办酒能请几天
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1, 2] facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，星河科技员工手册中没有明确提及婚假天数和办酒（如婚礼、婚宴等）可请的天数。资料中只涉及带薪年假、事假和考勤迟到规则，未包含婚假或办酒相关休假政策。[来源 1]、[来源 2]。
+023. PASS | answer_holdout_023 | 12.16s
+     Q: 病假要不要提供医院证明？病假期间工资怎么算
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，病假是否需要提供医院证明以及病假期间工资的计算方式均未明确提及。资料中仅涉及带薪年假、事假和加班调休的规定，但没有关于病假的具体条款。因此，根据现有资料无法确定。
+024. FAIL | answer_holdout_024 | 3.77s
+     Q: 工作日加班的加班费是按几倍算的？
+     route document_only -> document_only | behavior generation_refuse -> answer | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，我需要查找关于工作日加班的加班费计算标准的信息。我将仔细阅读每个来源片段，看是否包含相关细节。
+     -> generation miss
+025. PASS | answer_holdout_025 | 7.83s
+     Q: 咱们试用期一般是几个月？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，问题'咱们试用期一般是几个月？'在[来源1]中没有明确提到试用期的时长。资料中只提到了试用期员工在期满前10个工作日提交转正总结的流程，但没有说明试用期是几个月。因此，根据现有资料无法确定试用期的时长。
+026. PASS | answer_holdout_026 | 11.85s
+     Q: 在家办公公司给报宽带费或者话费补贴吗？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+027. PASS | answer_holdout_027 | 11.33s
+     Q: 出差住宿标准是多少钱一晚？餐补一天多少
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+028. PASS | answer_holdout_028 | 13.10s
+     Q: 绩效拿 A 能有多少奖金？各档大概什么比例
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的[来源1]，绩效考核每季度进行一次，评价由目标完成度、工作质量和协作表现组成。季度结果分为 A、B、C、D 四档，员工可在结果公布后 3 个工作日内申请复核。但是，该资料中并未明确说明绩效拿 A 能有多少奖金以及各档奖金的大致比例。因此，根据现有资料无法确定。
+029. FAIL | answer_holdout_029 | 11.69s
+     Q: SKU-D400 这个料号的库存，麻烦报个数
+     route system_only -> document_only | behavior policy_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+030. FAIL | answer_holdout_030 | 11.45s
+     Q: 同事在群里丢了个编号 sku-e500 就跑了，让我自己查，帮我看看这个还剩多少
+     route system_only -> document_only | behavior policy_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+031. FAIL | answer_holdout_031 | 11.66s
+     Q: SKU-A900 是不是缺货了？
+     route system_only -> document_only | behavior policy_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+     -> route marker gap
+032. PASS | answer_holdout_032 | 0.00s
+     Q: 交接表上有一行写的是 SKU-B201，我先不管是不是笔误，就按这个编号查一下库存多少箱
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+033. PASS | answer_holdout_033 | 0.00s
+     Q: ord-1001 这个订单现在到哪一步了？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+034. FAIL | answer_holdout_034 | 11.66s
+     Q: 我上周下的那个单发货了没有？
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+035. PASS | answer_holdout_035 | 0.00s
+     Q: apr-3001 的审批现在卡在谁那儿？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+036. FAIL | answer_holdout_036 | 6.19s
+     Q: 我提交的转正审批通过了吗？
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+     -> route marker gap
+037. PASS | answer_holdout_037 | 0.00s
+     Q: 我账户里现在还有多少余额？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+038. PASS | answer_holdout_038 | 0.00s
+     Q: 我的积分还剩多少，够换东西吗
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+039. PASS | answer_holdout_039 | 0.00s
+     Q: 现在库存是什么情况，我这边急着报数
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 请提供需要查询的 SKU。
+040. FAIL | answer_holdout_040 | 11.68s
+     Q: 帮我查下那个产品还剩几箱
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+
+Run 3 summary
+  Pass rate                 : 55.0% (22/40)
+  Answer Success Rate       : 45.0%
+  False Refusal Rate        : 20.0%
+  Unanswerable Refusal Rate : 91.7%
+  Boundary Accuracy         : 62.5%
+  Citation Presence Rate    : 94.1%
+  Citation Index Validity   : 100.0%
+  Required Source Coverage  : 50.0%
+  Expected Fact Hit Rate    : 75.0%
+  Route Accuracy            : 57.5%
+  Duration p50/p95/max      : 7.85s / 12.21s / 15.26s
+
+==============================================================================
+Aggregate
+==============================================================================
+Runs                      : 3
+Answer Success Rate       : 45.0%
+False Refusal Rate        : 20.0%
+Unanswerable Refusal Rate : 88.9%
+Boundary Accuracy         : 62.5%
+Citation Presence Rate    : 98.0%
+Citation Index Validity   : 100.0%
+Required Source Coverage  : 50.0%
+Expected Fact Hit Rate    : 75.0%
+Stability                 : 97.5% (3/3 pass 21, unstable 1, 0/N fail 18)
+Duration p50/p95/max      : 7.85s / 13.10s / 16.21s
+
+Gates
+  [FAIL] Answer Success Rate         45.0% (>= 90%)
+  [FAIL] False Refusal Rate          20.0% (<= 10%)
+  [FAIL] Unanswerable Refusal Rate   88.9% (>= 90%)
+  [FAIL] Boundary Message Accuracy   62.5% (>= 90%)
+  [PASS] Citation Index Validity     100.0% (>= 95%)
+  [FAIL] Expected Fact Hit Rate      75.0% (>= 90%)
+  [PASS] Cross-run Stability         97.5% (>= 90%)
+
+Wrote evaluation_runs\answerability-blind-holdout\summary.json and evaluation_runs\answerability-blind-holdout\summary.md

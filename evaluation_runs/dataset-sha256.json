@@ -1,0 +1,26 @@
+﻿[
+    {
+        "File":  "eval_orchestrated_routes_dev.json",
+        "Hash":  "7548B7AC90A66FE64B75DE011DB22E7E88492A00BB76DBEDA7772D80765AB84C"
+    },
+    {
+        "File":  "eval_orchestrated_routes_validation_v1.json",
+        "Hash":  "71435F6F22D3AA7B27FF47E39FF7518FF40B8361EA317E2E01F8E475F0A08051"
+    },
+    {
+        "File":  "eval_orchestrated_routes_holdout.json",
+        "Hash":  "35995DEDACB5EEFEC5CD7333F85015E7599DA581FA1F5EDE81CACCD9B421135F"
+    },
+    {
+        "File":  "eval_answerability_dev.json",
+        "Hash":  "A50596CD934C9B05EF65C198E6B8550D1F8D8447DEDFD322F4F1A5783541CBAC"
+    },
+    {
+        "File":  "eval_answerability_validation_v1.json",
+        "Hash":  "0BE35413352610D19008CA7DE10C88C57982F9EE7D2731B77E1357AA9734FC07"
+    },
+    {
+        "File":  "eval_answerability_holdout.json",
+        "Hash":  "5F55F703502A703B6453BB6E08E42EBC70015B9F06F03B98D17163DD7A64A104"
+    }
+]
