@@ -205,6 +205,16 @@ def _page_from_json(raw: object, path: str) -> WikiPage:
         raise ValueError(f"{path}: {exc}") from exc
 
 
+def page_from_json(raw: object, path: str = "page") -> WikiPage:
+    """Parse one page object, for callers holding pages outside a Wiki file.
+
+    Additive: `load_wiki_pages` and `wiki_query` are unchanged. It exists so a
+    stored Wiki build reads its pages through this parser rather than a second
+    one, which is the only way the two cannot drift into different page formats.
+    """
+    return _page_from_json(raw, path)
+
+
 def load_wiki_pages(path: str | Path = DEFAULT_WIKI_PATH) -> tuple[WikiPage, ...]:
     """Read and validate a Wiki collection.
 
