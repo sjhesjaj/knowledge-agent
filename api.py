@@ -28,6 +28,7 @@ from rag import (
     split_text,
 )
 from storage import SQLiteStorage
+from wiki_maintenance import derive_document_id
 
 
 app = FastAPI(title="Enterprise Knowledge Agent API", version="1.2.0")
@@ -187,17 +188,43 @@ def delete_conversation(
         conversation_lock.release()
 
 
+def _upload_name(file: UploadFile) -> str:
+    return file.filename or "document"
+
+
+def _reject_duplicate_documents(names: list[str]) -> None:
+    """One batch may name each document at most once."""
+    by_document: dict[str, list[str]] = {}
+    for name in names:
+        by_document.setdefault(derive_document_id(name), []).append(name)
+    repeated = sorted(
+        group[0] for group in by_document.values() if len(group) > 1
+    )
+    if repeated:
+        raise HTTPException(
+            400,
+            "同一批次不能包含重复文档：" + "、".join(repeated) + "。请分批上传或重命名后重试。",
+        )
+
+
 @app.post("/api/knowledge/upload")
 async def upload_knowledge(files: list[UploadFile] = File(...)) -> dict:
     global knowledge_version
     if not knowledge_mutation_lock.acquire(blocking=False):
         raise HTTPException(409, "知识库正在更新，请稍后重试")
     try:
+        # Rejected before anything is read, embedded, stored or queued. Two
+        # files with one document identity would leave retrieval holding both
+        # versions while the Wiki compiled only one, and there is no safe
+        # tie-break: keeping either would silently discard content the user just
+        # uploaded, which is worse than refusing the batch.
+        _reject_duplicate_documents([_upload_name(file) for file in files])
+
         parsed: list[Chunk] = []
         names: list[str] = []
         documents: list[tuple[str, str]] = []
         for file in files:
-            name = file.filename or "document"
+            name = _upload_name(file)
             if name.lower().rsplit(".", 1)[-1] not in {"pdf", "txt", "md"}:
                 raise HTTPException(400, f"不支持的文件类型：{name}")
             raw = await file.read()
@@ -210,20 +237,58 @@ async def upload_knowledge(files: list[UploadFile] = File(...)) -> dict:
         if not parsed:
             raise HTTPException(400, "文件中没有可索引的文本")
 
-        # split_text 会为每个文件从 1 编号；合并后改为全局唯一编号。
-        reindex_chunks(parsed)
+        # Upsert by document identity, not wholesale replacement. The Wiki
+        # accumulates documents, so a retrieval index that replaced everything
+        # would leave the Wiki summarising a document whose source text
+        # `document_search` could no longer find. `derive_document_id` is the
+        # Wiki's own notion of "the same document", reused here so the two
+        # cannot disagree about what a re-upload replaces.
+        #
+        # Backlog: this handles a document replacing *itself*. A Wiki decision
+        # that document X supersedes document Y retires Y from the Wiki but
+        # leaves Y's chunks in retrieval, so the same inconsistency remains for
+        # cross-file supersedes. Deliberately out of scope here.
+        incoming_ids = {derive_document_id(name) for name in names}
+        with state_lock:
+            # Copied so a failed commit cannot leave live chunks renumbered.
+            kept = [
+                Chunk(
+                    text=chunk.text,
+                    source=chunk.source,
+                    index=chunk.index,
+                    embedding=chunk.embedding,
+                )
+                for chunk in chunks
+                if derive_document_id(chunk.source) not in incoming_ids
+            ]
 
         stats: dict = {}
-        indexed_chunks = await run_in_threadpool(build_index, parsed, stats)
+        # Only the incoming chunks are embedded. A document nobody touched keeps
+        # the vectors it already has, so re-uploading one file does not re-pay
+        # for the whole knowledge base.
+        indexed_new = await run_in_threadpool(build_index, parsed, stats)
+
+        merged = kept + list(indexed_new)
+        # split_text 会为每个文件从 1 编号；合并后改为全局唯一编号。
+        reindex_chunks(merged)
         with state_lock:
-            storage.replace_knowledge(indexed_chunks)
-            chunks[:] = indexed_chunks
+            storage.replace_knowledge(merged)
+            chunks[:] = merged
             knowledge_version += 1
         # Queued, not awaited: retrieval is ready now, and Wiki compilation
         # takes model time the uploader should not sit through. Progress is
         # polled from /api/wiki/status.
         wiki_job_id = wiki_runtime.RUNTIME.submit(documents)
-        return {"files": names, **stats, "wiki_job_id": wiki_job_id}
+        return {
+            "files": names,
+            **stats,
+            # `chunks` stays what it has always meant to the client: the size of
+            # the whole knowledge base. `uploaded_chunks` is what this upload
+            # contributed, which is what `stats` was counting.
+            "chunks": len(merged),
+            "uploaded_chunks": len(indexed_new),
+            "wiki_job_id": wiki_job_id,
+        }
     finally:
         knowledge_mutation_lock.release()
 
