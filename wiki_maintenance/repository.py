@@ -451,6 +451,34 @@ class WikiRepository:
         """Make `build_id` the live build; the previous one becomes archived."""
         return self._switch_current(build_id, require_archived=False)
 
+    def retract_current(self) -> str | None:
+        """Take the live build offline, deleting nothing.
+
+        Returns the build id that was retracted, or `None` if nothing was live.
+        Builds and snapshots stay on disk: the history is still true, it is only
+        the claim "this is what the Wiki says now" that is being withdrawn. A
+        retracted build can be published again with `publish`.
+
+        The pointer goes first here, the opposite of `_switch_current`. The goal
+        of a publish is to serve something, so its safe half-done state is
+        "still serving the old build"; the goal of a retraction is to stop
+        serving, so its safe half-done state is "already stopped".
+        """
+        build_id = self.get_current_build_id()
+        if self.current_path.exists():
+            self.current_path.unlink()
+
+        records = self._load_records()
+        timestamp = utc_now()
+        retracted = {
+            other_id: _with_status(other, BuildStatus.ARCHIVED, timestamp)
+            for other_id, other in records.items()
+            if other.status is BuildStatus.PUBLISHED
+        }
+        if retracted:
+            self._save_records({**records, **retracted})
+        return build_id
+
     def rollback(self, build_id: str) -> BuildRecord:
         """Return to a previously published build.
 

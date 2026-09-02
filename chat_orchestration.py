@@ -17,6 +17,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from time import perf_counter
 
+import wiki_runtime
 from rag import Chunk
 
 from orchestration import (
@@ -77,8 +78,21 @@ def _load_wiki_pages_safely() -> tuple:
         return ()
 
 
-# Loaded once at import, mirroring how api.py loads chunks.
+# The committed sample, loaded once at import. It is the fallback, not the
+# answer: once a compiled build has been published, that build is the Wiki.
 WIKI_PAGES = _load_wiki_pages_safely()
+
+
+def current_wiki_pages() -> tuple:
+    """The Wiki this request should read.
+
+    Resolved per request rather than at import, so publishing a build takes
+    effect without restarting the API. Before the first build exists - a fresh
+    install, or one where nothing has been uploaded yet - the committed sample
+    still answers, so the demo works out of the box.
+    """
+    published = wiki_runtime.RUNTIME.published_pages()
+    return WIKI_PAGES if published is None else published
 
 
 def extract_skus(question: str) -> list[str]:
@@ -191,11 +205,11 @@ def _is_inventory_question(question: str) -> bool:
     return "库存" in question or "sku" in lowered
 
 
-def _unavailable(question, plan, chunks, sku, skus) -> str | None:
+def _unavailable(question, plan, chunks, sku, skus, wiki_pages) -> str | None:
     """A planned channel with no dependency is a fixed answer, never a 500."""
     if ToolName.DOCUMENT_SEARCH in plan.steps and not chunks:
         return MESSAGE_NO_DOCUMENTS
-    if ToolName.WIKI_QUERY in plan.steps and not WIKI_PAGES:
+    if ToolName.WIKI_QUERY in plan.steps and not wiki_pages:
         return MESSAGE_NO_WIKI
     if ToolName.SYSTEM_QUERY in plan.steps and sku is None:
         # Several valid SKUs is a stated product limit, not a missing input.
@@ -242,16 +256,19 @@ def prepare(question: str, chunks: list[Chunk]) -> Prepared:
             fixed_answer=MESSAGE_DIRECT,
         )
 
-    message = _unavailable(question, plan, chunks, sku, skus)
+    # Read once per request, so a build published mid-request cannot make the
+    # availability check and the execution disagree about what the Wiki is.
+    wiki_pages = current_wiki_pages()
+    message = _unavailable(question, plan, chunks, sku, skus, wiki_pages)
     if message is not None:
         return _prepared_without_execution(plan, message)
 
     started = perf_counter()
     if ToolName.SYSTEM_QUERY in plan.steps:
         with demo_system_connection() as connection:
-            bundle = _execute(question, plan, chunks, connection, sku)
+            bundle = _execute(question, plan, chunks, connection, sku, wiki_pages)
     else:
-        bundle = _execute(question, plan, chunks, None, None)
+        bundle = _execute(question, plan, chunks, None, None, wiki_pages)
     executor_seconds = perf_counter() - started
 
     decision = bundle.decision
@@ -276,7 +293,7 @@ def prepare(question: str, chunks: list[Chunk]) -> Prepared:
     )
 
 
-def _execute(question, plan, chunks, connection, sku):
+def _execute(question, plan, chunks, connection, sku, wiki_pages):
     request = (
         SystemRequest(
             operation=SystemOperation.GET_INVENTORY_LEVEL, parameters={"sku": sku}
@@ -286,7 +303,7 @@ def _execute(question, plan, chunks, connection, sku):
     )
     context = ExecutionContext(
         chunks=tuple(chunks),
-        wiki_pages=WIKI_PAGES,
+        wiki_pages=wiki_pages,
         system_connection=connection,
         # No trusted identity resolver exists, so subject-scoped operations are
         # not offered at all. Inventory is not subject-scoped.

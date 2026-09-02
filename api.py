@@ -12,6 +12,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 import chat_orchestration
+import wiki_runtime
 from chat_orchestration import MODE_LEGACY, MODE_ORCHESTRATED
 
 from agent import decide_action, list_sources, summarize_knowledge_base
@@ -194,6 +195,7 @@ async def upload_knowledge(files: list[UploadFile] = File(...)) -> dict:
     try:
         parsed: list[Chunk] = []
         names: list[str] = []
+        documents: list[tuple[str, str]] = []
         for file in files:
             name = file.filename or "document"
             if name.lower().rsplit(".", 1)[-1] not in {"pdf", "txt", "md"}:
@@ -202,6 +204,9 @@ async def upload_knowledge(files: list[UploadFile] = File(...)) -> dict:
             text = await run_in_threadpool(read_file, name, raw)
             parsed.extend(split_text(text, name))
             names.append(name)
+            # The Wiki compiles from the raw text, not from the retrieval
+            # chunks: chunk boundaries move whenever a document is edited.
+            documents.append((name, text))
         if not parsed:
             raise HTTPException(400, "文件中没有可索引的文本")
 
@@ -214,9 +219,19 @@ async def upload_knowledge(files: list[UploadFile] = File(...)) -> dict:
             storage.replace_knowledge(indexed_chunks)
             chunks[:] = indexed_chunks
             knowledge_version += 1
-        return {"files": names, **stats}
+        # Queued, not awaited: retrieval is ready now, and Wiki compilation
+        # takes model time the uploader should not sit through. Progress is
+        # polled from /api/wiki/status.
+        wiki_job_id = wiki_runtime.RUNTIME.submit(documents)
+        return {"files": names, **stats, "wiki_job_id": wiki_job_id}
     finally:
         knowledge_mutation_lock.release()
+
+
+@app.get("/api/wiki/status")
+def wiki_status(job_id: str | None = Query(default=None)) -> dict:
+    """Progress of a Wiki job; the most recent one when no id is given."""
+    return wiki_runtime.RUNTIME.status(job_id)
 
 
 @app.delete("/api/knowledge")
@@ -229,6 +244,10 @@ def clear_knowledge() -> dict:
             storage.clear_knowledge()
             chunks.clear()
             knowledge_version += 1
+        # Void pending jobs and take the compiled Wiki offline: it was derived
+        # from documents that no longer exist. Snapshots and builds stay on
+        # disk, and the static sample answers again.
+        wiki_runtime.RUNTIME.clear()
         return {"status": "cleared"}
     finally:
         knowledge_mutation_lock.release()

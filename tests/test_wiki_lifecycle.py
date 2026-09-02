@@ -43,6 +43,20 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DOCUMENT = "sample_company_rules.md"
 DOCUMENT_ID = "rules-md"
 
+
+def data_root_listing() -> list[str] | None:
+    """What the real runtime data root holds, or None when it does not exist."""
+    if not DEFAULT_WIKI_DATA_ROOT.exists():
+        return None
+    return sorted(
+        path.relative_to(DEFAULT_WIKI_DATA_ROOT).as_posix()
+        for path in DEFAULT_WIKI_DATA_ROOT.rglob("*")
+    )
+
+
+# Captured at import, which unittest does before running anything.
+DATA_ROOT_AT_IMPORT = data_root_listing()
+
 LEAVE_TEXT = "正式员工入职满一年后，每年享有 5 天带薪年假。"
 REMOTE_TEXT = "员工每周最多申请 2 天远程办公。"
 SECURITY_TEXT = "内部资料不得上传至未经公司批准的公共网盘。"
@@ -1111,10 +1125,15 @@ class IsolationTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(sorted(Path(directory).iterdir()), [])
 
-    def test_the_default_data_root_is_never_created_by_this_suite(self):
-        self.assertFalse(
-            DEFAULT_WIKI_DATA_ROOT.exists(),
-            f"{DEFAULT_WIKI_DATA_ROOT} must stay a runtime-only location",
+    def test_the_suite_never_writes_to_the_default_data_root(self):
+        """Asserts the suite leaves it alone, not that it is absent: once the
+        app has actually run, `data/wiki` legitimately holds builds, and a test
+        that failed for that reason would be testing the developer's history
+        rather than the code."""
+        self.assertEqual(
+            data_root_listing(),
+            DATA_ROOT_AT_IMPORT,
+            f"{DEFAULT_WIKI_DATA_ROOT} is runtime data and must not change during tests",
         )
 
     def test_a_repository_writes_only_under_its_own_root(self):
