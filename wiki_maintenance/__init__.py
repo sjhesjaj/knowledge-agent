@@ -17,6 +17,7 @@ from __future__ import annotations
 
 from .bootstrap import bootstrap_from_wiki_file
 from .compiler import (
+    PAGE_BATCH_SIZE,
     DocumentAction,
     DocumentDecision,
     ModelRequest,
@@ -69,6 +70,7 @@ from .source_spans import (
 
 __all__ = [
     "DEFAULT_WIKI_DATA_ROOT",
+    "PAGE_BATCH_SIZE",
     "BuildNotFoundError",
     "BuildNotPublishableError",
     "BuildRecord",

@@ -48,6 +48,11 @@ PAGE_ID_HEX_LENGTH = 12
 CLAIM_ID_HEX_LENGTH = 8
 INITIAL_PAGE_VERSION = "1.0"
 
+#: Pages compiled per model call. Fixed rather than tuned: bigger batches keep
+#: saving round trips but give a 4B model more chances to lose track of which
+#: page it is writing, and every page in a failed batch is lost together.
+PAGE_BATCH_SIZE = 4
+
 _VERSION_PATTERN = re.compile(r"^(\d+)\.(\d+)$")
 _ARABIC_NUMBER_PATTERN = re.compile(r"\d+")
 _WHITESPACE_PATTERN = re.compile(r"\s+")
@@ -373,67 +378,64 @@ class _DraftClaim:
     existing_claim_id: str | None
 
 
-def compile_page(
-    model: WikiModel,
+@dataclass(frozen=True, kw_only=True)
+class _DraftPage:
+    """One page as the model wrote it, before any of it is trusted."""
+
+    title: str
+    summary: str
+    aliases: tuple[str, ...]
+    claims: tuple[_DraftClaim, ...]
+
+
+def _interpret_page(raw: object, path: str) -> _DraftPage:
+    if not isinstance(raw, dict):
+        raise ValueError(f"{path} must be an object")
+    raw_claims = raw.get("claims")
+    if not isinstance(raw_claims, list) or not raw_claims:
+        raise ValueError(f"{path}.claims must be a non-empty list")
+    drafts = []
+    for index, item in enumerate(raw_claims):
+        claim_path = f"{path}.claims[{index}]"
+        if not isinstance(item, dict):
+            raise ValueError(f"{claim_path} must be an object")
+        drafts.append(
+            _DraftClaim(
+                text=_require_str(item, "text", claim_path),
+                source_span_ids=_require_str_list(item, "source_span_ids", claim_path),
+                existing_claim_id=_optional_str(item, "existing_claim_id", claim_path),
+            )
+        )
+    return _DraftPage(
+        title=_require_str(raw, "title", path),
+        summary=_require_str(raw, "summary", path),
+        aliases=_require_str_list(raw, "aliases", path),
+        claims=tuple(drafts),
+    )
+
+
+def _assemble_page(
     plan: PagePlan,
+    draft: _DraftPage,
     *,
     span_index: dict[str, SourceSpan],
     existing_page: WikiPage | None,
 ) -> WikiPage:
-    """Stage 3: write one page, then check what the model claimed about it."""
+    """Turn one drafted page into a `WikiPage`, checking every claim it makes."""
     page_spans = _resolve_spans(
         plan.source_span_ids, span_index, f"plan for topic {plan.topic!r}"
     )
     # Claims are resolved against this page's planned spans, not the whole
     # document set: a claim citing a span the page was never given is reading
-    # from material the compiler did not put in front of it.
+    # from material the compiler did not put in front of it. Batching makes this
+    # stricter, not looser - the pages share one response but not one corpus.
     page_span_index = {span.span_id: span for span in page_spans}
 
-    def interpret(payload: dict) -> tuple[str, str, tuple[str, ...], tuple[_DraftClaim, ...]]:
-        path = f"page[{plan.topic}]"
-        raw_claims = payload.get("claims")
-        if not isinstance(raw_claims, list) or not raw_claims:
-            raise ValueError(f"{path}.claims must be a non-empty list")
-        drafts = []
-        for index, raw in enumerate(raw_claims):
-            claim_path = f"{path}.claims[{index}]"
-            if not isinstance(raw, dict):
-                raise ValueError(f"{claim_path} must be an object")
-            drafts.append(
-                _DraftClaim(
-                    text=_require_str(raw, "text", claim_path),
-                    source_span_ids=_require_str_list(
-                        raw, "source_span_ids", claim_path
-                    ),
-                    existing_claim_id=_optional_str(
-                        raw, "existing_claim_id", claim_path
-                    ),
-                )
-            )
-        return (
-            _require_str(payload, "title", path),
-            _require_str(payload, "summary", path),
-            _require_str_list(payload, "aliases", path),
-            tuple(drafts),
-        )
-
-    title, summary, aliases, drafts = request_json(
-        model,
-        ModelRequest(
-            stage=f"page_compilation:{plan.topic}",
-            system=prompts.PAGE_COMPILATION_SYSTEM,
-            user=prompts.page_compilation_prompt(
-                topic=plan.topic, spans=page_spans, existing_page=existing_page
-            ),
-        ),
-        interpret,
-    )
-
-    page_id = (
-        existing_page.page_id if existing_page is not None else new_page_id(title)
-    )
     path = f"page[{plan.topic}]"
-    _require_numbers_are_sourced(summary, page_spans, f"{path}.summary")
+    page_id = (
+        existing_page.page_id if existing_page is not None else new_page_id(draft.title)
+    )
+    _require_numbers_are_sourced(draft.summary, page_spans, f"{path}.summary")
 
     reusable_claim_ids = (
         {claim.claim_id for claim in existing_page.claims}
@@ -442,25 +444,25 @@ def compile_page(
     )
     claims: list[WikiClaim] = []
     used_ids: set[str] = set()
-    for index, draft in enumerate(drafts):
+    for index, claim_draft in enumerate(draft.claims):
         claim_path = f"{path}.claims[{index}]"
-        cited = _resolve_spans(draft.source_span_ids, page_span_index, claim_path)
-        _require_numbers_are_sourced(draft.text, cited, claim_path)
+        cited = _resolve_spans(claim_draft.source_span_ids, page_span_index, claim_path)
+        _require_numbers_are_sourced(claim_draft.text, cited, claim_path)
 
-        claim_id = _claim_id_for(draft, page_id, reusable_claim_ids, used_ids)
+        claim_id = _claim_id_for(claim_draft, page_id, reusable_claim_ids, used_ids)
         used_ids.add(claim_id)
         claims.append(
             WikiClaim(
                 claim_id=claim_id,
-                text=draft.text,
+                text=claim_draft.text,
                 # Provenance is read off the span, never off the model.
                 source=cited[0].source,
                 locator=locator_for(cited[0]),
-                source_span_ids=tuple(dict.fromkeys(draft.source_span_ids)),
+                source_span_ids=tuple(dict.fromkeys(claim_draft.source_span_ids)),
             )
         )
 
-    fingerprint = _page_fingerprint(title, summary, aliases, claims)
+    fingerprint = _page_fingerprint(draft.title, draft.summary, draft.aliases, claims)
     if existing_page is not None and _existing_fingerprint(existing_page) == fingerprint:
         version = existing_page.version
     else:
@@ -470,12 +472,115 @@ def compile_page(
 
     return WikiPage(
         page_id=page_id,
-        title=title,
-        summary=summary,
+        title=draft.title,
+        summary=draft.summary,
         version=version,
-        aliases=aliases,
+        aliases=draft.aliases,
         claims=tuple(claims),
     )
+
+
+def compile_page_batch(
+    model: WikiModel,
+    entries: Sequence[tuple[PagePlan, WikiPage | None]],
+    *,
+    span_index: dict[str, SourceSpan],
+    stage: str,
+) -> tuple[WikiPage, ...]:
+    """Stage 3: write up to `PAGE_BATCH_SIZE` pages in one model call.
+
+    One call per page is the obvious design and the slow one: on a local 4B
+    model each round trip costs tens of seconds, and the pages of one batch
+    share nothing but the trip. Batching trades that cost for a mapping problem
+    - which returned page is which - so every page carries back the 1-based
+    `index` it was given, and the batch is rejected unless those indices are
+    exactly the ones sent out. A model that drops, repeats or invents a page
+    fails the build rather than silently reshaping the Wiki.
+    """
+    if not entries:
+        raise WikiCompilationError("a page batch must contain at least one page")
+
+    prompt_entries = [
+        (
+            position,
+            plan.topic,
+            _resolve_spans(
+                plan.source_span_ids, span_index, f"plan for topic {plan.topic!r}"
+            ),
+            existing_page,
+        )
+        for position, (plan, existing_page) in enumerate(entries, start=1)
+    ]
+
+    def interpret(payload: dict) -> tuple[_DraftPage, ...]:
+        raw_pages = payload.get("pages")
+        if not isinstance(raw_pages, list):
+            raise ValueError("batch.pages must be a list")
+        if len(raw_pages) != len(entries):
+            raise ValueError(
+                f"batch.pages has {len(raw_pages)} page(s); the batch asked for "
+                f"{len(entries)}"
+            )
+        by_position: dict[int, _DraftPage] = {}
+        for offset, raw in enumerate(raw_pages):
+            path = f"batch.pages[{offset}]"
+            if not isinstance(raw, dict):
+                raise ValueError(f"{path} must be an object")
+            position = raw.get("index")
+            if isinstance(position, bool) or not isinstance(position, int):
+                raise ValueError(f"{path}.index must be an integer")
+            if not 1 <= position <= len(entries):
+                raise ValueError(f"{path}.index {position} is outside 1..{len(entries)}")
+            if position in by_position:
+                raise ValueError(f"{path}.index {position} appears twice")
+            expected_topic = entries[position - 1][0].topic
+            topic = _require_str(raw, "topic", path)
+            if topic != expected_topic:
+                raise ValueError(
+                    f"{path} has index {position} but topic {topic!r}; that "
+                    f"position is {expected_topic!r}"
+                )
+            by_position[position] = _interpret_page(raw, path)
+        missing = sorted(set(range(1, len(entries) + 1)) - set(by_position))
+        if missing:
+            raise ValueError(f"batch is missing page(s) at index {missing}")
+        # Returned in plan order, whatever order the model answered in.
+        return tuple(by_position[position] for position in range(1, len(entries) + 1))
+
+    drafts = request_json(
+        model,
+        ModelRequest(
+            stage=stage,
+            system=prompts.PAGE_COMPILATION_SYSTEM,
+            user=prompts.page_batch_prompt(prompt_entries),
+        ),
+        interpret,
+    )
+    return tuple(
+        _assemble_page(plan, draft, span_index=span_index, existing_page=existing_page)
+        for (plan, existing_page), draft in zip(entries, drafts)
+    )
+
+
+def compile_page(
+    model: WikiModel,
+    plan: PagePlan,
+    *,
+    span_index: dict[str, SourceSpan],
+    existing_page: WikiPage | None,
+) -> WikiPage:
+    """Compile a single page. Kept for callers that hold exactly one plan.
+
+    Implemented as a batch of one, so there is a single response format to
+    maintain. `compile_wiki` batches; falling back to one call per page would
+    quietly undo the speedup.
+    """
+    return compile_page_batch(
+        model,
+        [(plan, existing_page)],
+        span_index=span_index,
+        stage=f"page_compilation:{plan.topic}",
+    )[0]
 
 
 def locator_for(span: SourceSpan) -> str:
@@ -584,19 +689,35 @@ def compile_wiki(
     plans = plan_topics(model, spans=spans, existing_pages=existing_pages)
     _require_plan_partitions_spans(plans, span_index)
 
-    pages: list[WikiPage] = []
+    entries: list[tuple[PagePlan, WikiPage | None]] = []
     claimed_page_ids: set[str] = set()
     for plan in plans:
         existing = _existing_page_for(plan, pages_by_id)
-        if existing is not None and existing.page_id in claimed_page_ids:
-            raise WikiCompilationError(
-                f"plan reuses page_id {existing.page_id!r} for more than one topic"
+        if existing is not None:
+            if existing.page_id in claimed_page_ids:
+                raise WikiCompilationError(
+                    f"plan reuses page_id {existing.page_id!r} for more than one topic"
+                )
+            claimed_page_ids.add(existing.page_id)
+        entries.append((plan, existing))
+
+    # `ceil(N / PAGE_BATCH_SIZE)` calls instead of N. On a local 4B model the
+    # round trip, not the page, is what costs the minute.
+    batches = [
+        entries[start : start + PAGE_BATCH_SIZE]
+        for start in range(0, len(entries), PAGE_BATCH_SIZE)
+    ]
+    pages: list[WikiPage] = []
+    for number, batch in enumerate(batches, start=1):
+        pages.extend(
+            compile_page_batch(
+                model,
+                batch,
+                span_index=span_index,
+                # Keeps the `page_compilation:` prefix the progress UI reads.
+                stage=f"page_compilation:批次 {number}/{len(batches)}",
             )
-        page = compile_page(
-            model, plan, span_index=span_index, existing_page=existing
         )
-        claimed_page_ids.add(page.page_id)
-        pages.append(page)
 
     try:
         return validate_collection(pages, path="compiled pages")

@@ -20,7 +20,7 @@ import chat_orchestration
 import wiki_runtime
 from rag import Chunk
 from storage import SQLiteStorage
-from tests.test_wiki_compiler import ScriptedModel, dumps, topic_of
+from tests.test_wiki_compiler import ScriptedModel, batch_reply, dumps
 from wiki_maintenance import (
     WikiRepository,
     build_document_snapshot_from_text,
@@ -66,14 +66,14 @@ def model_for(*documents):
     cited every span would cite spans the compiler had not offered yet. Reading
     the prompt keeps the stand-in honest about what it can see.
     """
-    index = {
+    spans_by_id = {
         span.span_id: span
         for filename, text in documents
         for span in spans_of(filename, text)
     }
 
-    def visible(request):
-        return [span for span_id, span in index.items() if span_id in request.user]
+    def visible(text: str):
+        return [span for span_id, span in spans_by_id.items() if span_id in text]
 
     def handler(request):
         if request.stage == "document_decision":
@@ -82,7 +82,7 @@ def model_for(*documents):
             )
         if request.stage == "topic_plan":
             grouped: dict[str, list] = {}
-            for span in visible(request):
+            for span in visible(request.user):
                 grouped.setdefault(span.heading or "未分类", []).append(span)
             return dumps(
                 {
@@ -97,10 +97,12 @@ def model_for(*documents):
                 }
             )
         if request.stage.startswith("page_compilation:"):
-            group = visible(request)
-            topic = topic_of(request)
-            return dumps(
-                {
+
+            def page_for(topic, section):
+                # Only this page's own section, so the fake cannot cite a
+                # sibling page's spans.
+                group = visible(section)
+                return {
                     "title": topic,
                     "summary": f"{topic}：{group[0].text}",
                     "aliases": [],
@@ -113,7 +115,8 @@ def model_for(*documents):
                         for span in group
                     ],
                 }
-            )
+
+            return batch_reply(request, page_for)
         raise AssertionError(f"unscripted stage {request.stage!r}")
 
     return ScriptedModel(handler)

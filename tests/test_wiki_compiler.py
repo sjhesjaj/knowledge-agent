@@ -6,6 +6,7 @@ Every test drives a scripted model. Nothing here reaches Ollama, the network,
 """
 
 import json
+import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -100,6 +101,33 @@ def topic_of(request: ModelRequest) -> str:
     return request.stage.split(":", 1)[1]
 
 
+def batch_sections(request: ModelRequest) -> list[tuple[int, str, str]]:
+    """`(index, topic, section text)` for every page in a batch prompt.
+
+    A stand-in model has to read the batch the way a real one does: each page's
+    spans live in its own section, so a fake that looked at the whole prompt
+    could cite a sibling page's material and never notice.
+    """
+    sections = []
+    for chunk in request.user.split("===== 第 ")[1:]:
+        index = int(chunk.split(" ", 1)[0])
+        topic = re.search(r"^topic：(.+)$", chunk, re.M).group(1).strip()
+        sections.append((index, topic, chunk))
+    return sections
+
+
+def batch_reply(request: ModelRequest, page_for) -> str:
+    """Answer a page batch by calling `page_for(topic, section)` per page."""
+    return dumps(
+        {
+            "pages": [
+                {"index": index, "topic": topic, **page_for(topic, section)}
+                for index, topic, section in batch_sections(request)
+            ]
+        }
+    )
+
+
 def script(*, decision=None, plan=None, pages=None):
     """A handler answering each stage from a fixed payload."""
     decision = decision or {
@@ -114,7 +142,7 @@ def script(*, decision=None, plan=None, pages=None):
         if request.stage == "topic_plan":
             return dumps(plan)
         if request.stage.startswith("page_compilation:"):
-            return dumps(pages[topic_of(request)])
+            return batch_reply(request, lambda topic, section: pages[topic])
         raise AssertionError(f"unscripted stage {request.stage!r}")
 
     return handler
@@ -149,11 +177,12 @@ def heading_script(spans):
                 }
             )
         if request.stage.startswith("page_compilation:"):
-            group = grouped[topic_of(request)]
-            return dumps(
-                {
-                    "title": topic_of(request),
-                    "summary": f"{topic_of(request)}：{group[0].text}",
+
+            def page_for(topic, section):
+                group = grouped[topic]
+                return {
+                    "title": topic,
+                    "summary": f"{topic}：{group[0].text}",
                     "aliases": [],
                     "claims": [
                         {
@@ -164,7 +193,8 @@ def heading_script(spans):
                         for span in group
                     ],
                 }
-            )
+
+            return batch_reply(request, page_for)
         raise AssertionError(f"unscripted stage {request.stage!r}")
 
     return handler
@@ -944,6 +974,39 @@ class TopicPlanValidationTests(unittest.TestCase):
                 (snapshot.spans[0].span_id,),
             )
 
+    def test_two_topics_may_not_reuse_the_same_existing_page(self):
+        """Caught before any page is compiled: two topics sharing one page id
+        would collapse into a single page and silently lose one of them."""
+        with TempRepository() as repository:
+            bootstrap_from_wiki_file(repository)
+            reused = load_wiki_pages(DEFAULT_WIKI_PATH)[0].page_id
+            snapshot = save_document(repository, filename="rules.md", text=LEAVE_DOC)
+            plan = {
+                "pages": [
+                    {
+                        "topic": "甲",
+                        "existing_page_id": reused,
+                        "source_span_ids": [snapshot.spans[0].span_id],
+                    },
+                    {
+                        "topic": "乙",
+                        "existing_page_id": reused,
+                        "source_span_ids": [snapshot.spans[1].span_id],
+                    },
+                ]
+            }
+            model = ScriptedModel(script(plan=plan, pages={}))
+
+            with self.assertRaises(WikiCompilationError) as raised:
+                WikiMaintainer(repository, model).ingest(snapshot)
+
+            self.assertIn("more than one topic", str(raised.exception))
+            self.assertNotIn(
+                "page_compilation",
+                " ".join(model.stages),
+                "no page should be compiled once the plan is known bad",
+            )
+
     def test_an_unknown_existing_page_id_is_rejected_not_silently_new(self):
         with TempRepository() as repository:
             bootstrap_from_wiki_file(repository)
@@ -1084,8 +1147,9 @@ class RepairTests(unittest.TestCase):
                     }
                 )
             if request.stage.startswith("page_compilation:"):
-                return dumps(
-                    {
+                return batch_reply(
+                    request,
+                    lambda topic, section: {
                         "title": "请假制度",
                         "summary": "年假规定。",
                         "aliases": [],
@@ -1096,7 +1160,7 @@ class RepairTests(unittest.TestCase):
                                 "existing_claim_id": None,
                             }
                         ],
-                    }
+                    },
                 )
             return dumps(
                 {"action": "update", "reason": "制度", "supersedes_document_ids": []}
@@ -1320,6 +1384,63 @@ class PromptTests(unittest.TestCase):
         self.assertIn("one repair attempt", message)
 
 
+class OllamaRequestShapeTests(unittest.TestCase):
+    """The settings that made this model usable, pinned. No Ollama contacted."""
+
+    def payload(self, stage: str) -> dict:
+        return ollama_compiler.request_payload(
+            "qwen3:4b", ModelRequest(stage=stage, system="SYS", user="USER")
+        )
+
+    def test_thinking_is_off_for_every_stage(self):
+        """With thinking on, `topic_plan` over 20 spans did not finish in 1800s;
+        off, it took 144s. This is the setting that made the pipeline usable."""
+        for stage in (
+            "document_decision",
+            "topic_plan",
+            "page_compilation:批次 1/5",
+            "document_decision_repair",
+            "topic_plan_repair",
+            "page_compilation:批次 1/5_repair",
+        ):
+            with self.subTest(stage=stage):
+                payload = self.payload(stage)
+                self.assertIs(payload["think"], False)
+                self.assertEqual(payload["options"]["temperature"], 0)
+                self.assertFalse(payload["stream"])
+                # Loose JSON mode, not a strict schema: the compiler's own
+                # checks are what guard quality.
+                self.assertEqual(payload["format"], "json")
+
+    def test_each_stage_caps_its_output(self):
+        for stage, expected in (
+            ("document_decision", 256),
+            ("topic_plan", 2048),
+            ("page_compilation:批次 1/5", 2048),
+            ("page_compilation:请假制度", 2048),
+        ):
+            with self.subTest(stage=stage):
+                self.assertEqual(
+                    self.payload(stage)["options"]["num_predict"], expected
+                )
+
+    def test_a_repair_keeps_its_stage_cap(self):
+        """A smaller cap would truncate the answer it was asked to fix, and only
+        one repair is allowed."""
+        for stage in ("document_decision", "topic_plan", "page_compilation:批次 2/3"):
+            with self.subTest(stage=stage):
+                self.assertEqual(
+                    ollama_compiler.num_predict_for(f"{stage}_repair"),
+                    ollama_compiler.num_predict_for(stage),
+                )
+
+    def test_an_unknown_stage_gets_the_default_cap(self):
+        self.assertEqual(
+            ollama_compiler.num_predict_for("something_new"),
+            ollama_compiler.DEFAULT_NUM_PREDICT,
+        )
+
+
 class OllamaBackendTests(unittest.TestCase):
     """Pins the request shape without contacting Ollama."""
 
@@ -1356,9 +1477,10 @@ class OllamaBackendTests(unittest.TestCase):
                 {"role": "user", "content": "USER"},
             ],
         )
-        # A rigid response schema alongside suppressed thinking has produced
-        # unreasoned output from this model before; neither is sent.
-        self.assertNotIn("think", payload)
+        # Thinking off and the output capped: measured, not assumed. The
+        # response format stays loose - no strict schema.
+        self.assertIs(payload["think"], False)
+        self.assertEqual(payload["options"]["num_predict"], 2048)
 
     def test_the_endpoint_and_model_are_injectable(self):
         model = ollama_compiler.OllamaWikiModel(

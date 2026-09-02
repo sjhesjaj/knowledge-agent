@@ -65,9 +65,14 @@ TOPIC_PLAN_SYSTEM = f"""你是企业知识库的 Wiki 主题规划员。
 {JSON_ONLY}"""
 
 PAGE_COMPILATION_SYSTEM = f"""你是企业知识库的 Wiki 页面编写员。
-根据给定的原文片段编写一个 Wiki 页面。
+本次会一次给你若干个页面，你必须为**每一个**页面都写出内容。
 
-规则：
+批次规则：
+- 返回的 pages 数量必须与给出的页面数量完全一致，不能少写、重复或多写。
+- 每个页面必须原样带回它的 index 和 topic，用于对应，不得改写。
+- 每个页面只能引用**自己**那一节列出的 span_id，不能引用同批其他页面的片段。
+
+单页规则：
 - title 是主题名；summary 用一到两句话概括本页。
 - aliases 是用户可能使用的别名，可以为空数组。
 - claims 是可独立引用的条目，每条一句话，覆盖片段中的关键规定。
@@ -79,8 +84,11 @@ PAGE_COMPILATION_SYSTEM = f"""你是企业知识库的 Wiki 页面编写员。
   以便复用；否则填 null。
 
 输出格式：
-{{"title": "...", "summary": "...", "aliases": ["..."],
- "claims": [{{"text": "...", "source_span_ids": ["span-..."], "existing_claim_id": null}}]}}
+{{"pages": [
+  {{"index": 1, "topic": "原样带回的主题名", "title": "...", "summary": "...",
+   "aliases": ["..."],
+   "claims": [{{"text": "...", "source_span_ids": ["span-..."], "existing_claim_id": null}}]}}
+]}}
 
 {JSON_ONLY}"""
 
@@ -154,11 +162,33 @@ def topic_plan_prompt(
 def page_compilation_prompt(
     *, topic: str, spans: Sequence[SourceSpan], existing_page: WikiPage | None
 ) -> str:
+    """One page's section. Composed into a batch by `page_batch_prompt`."""
     return (
-        f"主题：{topic}\n\n"
+        f"topic：{topic}\n\n"
         f"可复用的已有 claim：\n{render_existing_claims(existing_page)}\n\n"
-        f"本页的原文片段（共 {len(spans)} 条）：\n"
+        f"本页的原文片段（共 {len(spans)} 条，只能引用这些）：\n"
         f"{render_spans(spans, full_text=True)}"
+    )
+
+
+def page_batch_prompt(
+    entries: Sequence[tuple[int, str, Sequence[SourceSpan], WikiPage | None]],
+) -> str:
+    """Several pages in one request.
+
+    Each section is headed by the `index` the model must carry back, so a
+    reply can be matched to the page it was asked for rather than to the
+    position it happened to arrive in.
+    """
+    sections = [
+        f"===== 第 {index} 个页面 =====\n"
+        f"index：{index}\n"
+        + page_compilation_prompt(topic=topic, spans=spans, existing_page=existing_page)
+        for index, topic, spans, existing_page in entries
+    ]
+    return (
+        f"本批共 {len(entries)} 个页面，必须全部编写并全部返回。\n\n"
+        + "\n\n".join(sections)
     )
 
 
