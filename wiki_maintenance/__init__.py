@@ -7,12 +7,31 @@ end without touching a live answer.
 
 Re-exports only. This package performs no work at import time - no directory is
 created and no file is read until a `WikiRepository` is constructed.
+
+`ollama_compiler` is deliberately not re-exported: the compiler takes an injected
+model, so nothing here binds the Wiki to one backend. Import
+`wiki_maintenance.ollama_compiler.OllamaWikiModel` when you want that one.
 """
 
 from __future__ import annotations
 
 from .bootstrap import bootstrap_from_wiki_file
+from .compiler import (
+    DocumentAction,
+    DocumentDecision,
+    ModelRequest,
+    PagePlan,
+    WikiCompilationError,
+    WikiModel,
+    compile_wiki,
+    decide_document,
+    new_claim_id,
+    new_page_id,
+    next_page_version,
+    plan_topics,
+)
 from .diff import WikiDiff, diff_builds
+from .maintainer import MaintenanceOutcome, WikiMaintainer
 from .models import (
     BuildRecord,
     BuildStatus,
@@ -55,12 +74,20 @@ __all__ = [
     "BuildRecord",
     "BuildStatus",
     "CurrentPointer",
+    "DocumentAction",
+    "DocumentDecision",
     "DocumentSnapshot",
     "DocumentVersion",
+    "MaintenanceOutcome",
+    "ModelRequest",
+    "PagePlan",
     "SourceBlock",
     "SourceSpan",
     "WikiBuild",
+    "WikiCompilationError",
     "WikiDiff",
+    "WikiMaintainer",
+    "WikiModel",
     "WikiRepository",
     "WikiRepositoryError",
     "bootstrap_from_wiki_file",
@@ -68,16 +95,22 @@ __all__ = [
     "build_document_snapshot_from_text",
     "build_source_spans",
     "build_source_spans_from_text",
+    "compile_wiki",
     "compute_content_hash",
     "compute_document_content_hash",
     "compute_span_id",
+    "decide_document",
     "derive_document_id",
     "diff_builds",
     "document_version_for",
     "format_build_id",
     "heading_of",
+    "new_claim_id",
+    "new_page_id",
+    "next_page_version",
     "normalize_span_text",
     "parse_build_number",
+    "plan_topics",
     "source_blocks",
     "utc_now",
 ]

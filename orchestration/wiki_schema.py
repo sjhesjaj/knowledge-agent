@@ -15,7 +15,15 @@ from dataclasses import dataclass
 from typing import Sequence
 
 
-LOCATOR_PREFIX = "section:"
+SECTION_LOCATOR_PREFIX = "section:"
+# For sources with no headings at all - a plain TXT, or a PDF that extracts as
+# unbroken prose. The span is then the finest real address the document has, and
+# naming it beats inventing a section that does not exist.
+SPAN_LOCATOR_PREFIX = "span:"
+LOCATOR_PREFIXES = (SECTION_LOCATOR_PREFIX, SPAN_LOCATOR_PREFIX)
+
+# The original name, kept because `section:` is still the preferred form.
+LOCATOR_PREFIX = SECTION_LOCATOR_PREFIX
 
 
 def _require_text(path: str, value: object) -> None:
@@ -27,30 +35,42 @@ def _require_text(path: str, value: object) -> None:
 
 
 def require_locator(path: str, value: object) -> None:
-    """A locator must name a source section, not merely be a non-empty string.
+    """A locator must name a place in the source, not merely be a non-empty string.
 
-    Whether the heading actually exists in the source document is checked by the
-    committed data's source-fidelity test; the shape is a schema invariant so a
-    malformed locator cannot enter the collection at all.
+    Two forms, both addressing something that really exists: `section:<heading>`
+    for a document with headings, and `span:<span_id>` for one without. Whether
+    the target actually exists is checked by the committed data's
+    source-fidelity test; the shape is a schema invariant so a malformed locator
+    cannot enter the collection at all.
     """
     _require_text(path, value)
     assert isinstance(value, str)  # narrowed by _require_text
-    if not value.startswith(LOCATOR_PREFIX):
-        raise ValueError(f"{path} must start with {LOCATOR_PREFIX!r}")
-    if not value[len(LOCATOR_PREFIX) :].strip():
-        raise ValueError(
-            f"{path} must name a non-empty heading after {LOCATOR_PREFIX!r}"
-        )
+    for prefix in LOCATOR_PREFIXES:
+        if value.startswith(prefix):
+            if not value[len(prefix) :].strip():
+                raise ValueError(
+                    f"{path} must name a non-empty target after {prefix!r}"
+                )
+            return
+    allowed = " or ".join(repr(prefix) for prefix in LOCATOR_PREFIXES)
+    raise ValueError(f"{path} must start with {allowed}")
 
 
 @dataclass(frozen=True, kw_only=True)
 class WikiClaim:
-    """One compiled statement, traceable to a source-document section."""
+    """One compiled statement, traceable to a source-document section.
+
+    `source_span_ids` names the exact spans a compiler read to write this claim.
+    It is optional so that a hand-authored claim - which cites its section and
+    nothing finer - stays valid, and so that a page written before spans existed
+    still loads.
+    """
 
     claim_id: str
     text: str
     source: str
     locator: str
+    source_span_ids: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         _require_text("WikiClaim.claim_id", self.claim_id)
@@ -58,13 +78,28 @@ class WikiClaim:
         _require_text("WikiClaim.source", self.source)
         require_locator("WikiClaim.locator", self.locator)
 
+        if not isinstance(self.source_span_ids, tuple):
+            raise ValueError(
+                "WikiClaim.source_span_ids must be a tuple, got "
+                f"{type(self.source_span_ids).__name__}"
+            )
+        for index, span_id in enumerate(self.source_span_ids):
+            _require_text(f"WikiClaim.source_span_ids[{index}]", span_id)
+        if len(set(self.source_span_ids)) != len(self.source_span_ids):
+            raise ValueError("WikiClaim.source_span_ids must not contain duplicates")
+
     def to_dict(self) -> dict[str, object]:
-        return {
+        payload: dict[str, object] = {
             "claim_id": self.claim_id,
             "text": self.text,
             "source": self.source,
             "locator": self.locator,
         }
+        # Omitted when empty, so a claim carrying no span provenance serializes
+        # exactly as it did before this field existed.
+        if self.source_span_ids:
+            payload["source_span_ids"] = list(self.source_span_ids)
+        return payload
 
 
 @dataclass(frozen=True, kw_only=True)

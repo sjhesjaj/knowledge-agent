@@ -53,7 +53,9 @@ DEFAULT_WIKI_PATH = (
 
 _TOP_LEVEL_FIELDS = frozenset({"schema_version", "pages"})
 _PAGE_FIELDS = frozenset({"page_id", "title", "summary", "aliases", "version", "claims"})
-_CLAIM_FIELDS = frozenset({"claim_id", "text", "source", "locator"})
+_CLAIM_FIELDS = frozenset(
+    {"claim_id", "text", "source", "locator", "source_span_ids"}
+)
 
 # CJK Unified Ideographs U+4E00-U+9FFF. Built from ordinals so the range stays
 # reviewable without depending on the editor's font.
@@ -146,9 +148,28 @@ def _claim_from_json(raw: object, path: str) -> WikiClaim:
     # dataclass's bare class path.
     require_locator(f"{path}.locator", locator)
 
+    # Optional: a file written before span provenance existed simply omits it.
+    raw_span_ids = data.get("source_span_ids", [])
+    if not isinstance(raw_span_ids, list):
+        raise ValueError(
+            f"{path}.source_span_ids must be a list, got {type(raw_span_ids).__name__}"
+        )
+    for index, span_id in enumerate(raw_span_ids):
+        span_path = f"{path}.source_span_ids[{index}]"
+        if not isinstance(span_id, str):
+            raise ValueError(
+                f"{span_path} must be a string, got {type(span_id).__name__}"
+            )
+        if not span_id.strip():
+            raise ValueError(f"{span_path} must not be empty")
+
     try:
         return WikiClaim(
-            claim_id=claim_id, text=text, source=source, locator=locator
+            claim_id=claim_id,
+            text=text,
+            source=source,
+            locator=locator,
+            source_span_ids=tuple(raw_span_ids),
         )
     except ValueError as exc:
         raise ValueError(f"{path}: {exc}") from exc
