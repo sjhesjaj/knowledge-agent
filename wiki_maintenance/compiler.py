@@ -340,7 +340,15 @@ def plan_topics(
     spans: Sequence[SourceSpan],
     existing_pages: Sequence[WikiPage],
 ) -> tuple[PagePlan, ...]:
-    """Stage 2: which pages should exist, and which spans belong to each."""
+    """Stage 2: which pages should exist, and which spans belong to each.
+
+    The page count is the model's to decide. A hard cap was tried and removed:
+    it bought nothing once page compilation stopped costing a model call each,
+    and the only way to satisfy it on a varied document is to file unrelated
+    policies together, which makes the Wiki worse to read. The partition rules
+    still bound it - every span assigned exactly once, every page holding at
+    least one - so there can never be more pages than spans.
+    """
 
     def interpret(payload: dict) -> tuple[PagePlan, ...]:
         raw_pages = payload.get("pages")
@@ -365,7 +373,9 @@ def plan_topics(
         ModelRequest(
             stage="topic_plan",
             system=prompts.TOPIC_PLAN_SYSTEM,
-            user=prompts.topic_plan_prompt(spans=spans, existing_pages=existing_pages),
+            user=prompts.topic_plan_prompt(
+                spans=spans, existing_pages=existing_pages
+            ),
         ),
         interpret,
     )
@@ -667,6 +677,137 @@ def _existing_page_for(
             f"{plan.existing_page_id!r}, which is not an existing page"
         )
     return existing
+
+
+def _fast_summary(title: str, headings: Sequence[str]) -> str:
+    """What the page covers - and nothing else.
+
+    Deliberately not a précis: a summary is the one part of a page with no
+    span behind it, so anything it asserted about policy would be a fact with
+    no source. Naming the sections it collects is the most it can say safely.
+    """
+    covered = "、".join(headings) if headings else title
+    return f"本页涵盖：{covered}。"
+
+
+def assemble_page_from_spans(
+    plan: PagePlan,
+    *,
+    span_index: dict[str, SourceSpan],
+    existing_page: WikiPage | None,
+) -> WikiPage:
+    """Build one page from its spans, without asking a model anything.
+
+    Every claim is its span's text verbatim. That is the whole trade: the Wiki
+    stops being a rewrite of the source and becomes an index into it, which
+    costs nothing to generate and cannot invent a number, drop a clause or
+    paraphrase a rule into something the document does not say.
+    """
+    page_spans = _resolve_spans(
+        plan.source_span_ids, span_index, f"plan for topic {plan.topic!r}"
+    )
+    title = plan.topic
+    headings = list(
+        dict.fromkeys(span.heading for span in page_spans if span.heading)
+    )
+    aliases = tuple(heading for heading in headings if heading != title)
+
+    page_id = existing_page.page_id if existing_page is not None else new_page_id(title)
+    claims: list[WikiClaim] = []
+    occurrences: dict[str, int] = {}
+    for span in page_spans:
+        # Two spans can legitimately say the same thing; the occurrence counter
+        # keeps their ids distinct and stable across recompiles.
+        key = _normalize(span.text)
+        occurrence = occurrences.get(key, 0)
+        occurrences[key] = occurrence + 1
+        claims.append(
+            WikiClaim(
+                claim_id=new_claim_id(page_id, span.text, occurrence=occurrence),
+                text=span.text,
+                source=span.source,
+                locator=locator_for(span),
+                source_span_ids=(span.span_id,),
+            )
+        )
+
+    summary = _fast_summary(title, headings)
+    fingerprint = _page_fingerprint(title, summary, aliases, claims)
+    if existing_page is not None and _existing_fingerprint(existing_page) == fingerprint:
+        version = existing_page.version
+    else:
+        version = next_page_version(
+            existing_page.version if existing_page is not None else None
+        )
+
+    return WikiPage(
+        page_id=page_id,
+        title=title,
+        summary=summary,
+        version=version,
+        aliases=aliases,
+        claims=tuple(claims),
+    )
+
+
+def compile_wiki_fast(
+    model: WikiModel,
+    *,
+    spans: Sequence[SourceSpan],
+    existing_pages: Sequence[WikiPage] = (),
+) -> tuple[WikiPage, ...]:
+    """The production path: the model plans the structure, the program fills it in.
+
+    Two model calls for a whole corpus instead of one per page. The division of
+    labour is deliberate, and worth stating precisely:
+
+    - **Business facts are verbatim.** A claim's text is its span's text, and
+      its `source`, `locator` and `source_span_ids` are derived from the span.
+      No rule passes through the model's prose, so none can come back with a
+      changed number, a softened condition, or a clause the document lacks.
+    - **Page titles come from the model.** A plan's topic becomes the title,
+      because naming and grouping is the judgement a model is good at.
+    - **Summaries and aliases are generated here**, from that topic and the
+      spans' headings. They are navigation text, not quotations.
+
+    So this removes the risk of a model rewriting a fact. It does not guarantee
+    the model grouped or named the topic well: a page can still be misfiled or
+    awkwardly titled. What it rules out is misstatement, not misjudgement.
+
+    `compile_wiki` remains available for a richer, model-written Wiki; it costs
+    a call per batch of pages and re-opens the paraphrase questions this path
+    closes.
+    """
+    if not spans:
+        raise WikiCompilationError("cannot compile a Wiki from zero source spans")
+    span_index = {span.span_id: span for span in spans}
+    pages_by_id = {page.page_id: page for page in existing_pages}
+
+    plans = plan_topics(model, spans=spans, existing_pages=existing_pages)
+    _require_plan_partitions_spans(plans, span_index)
+
+    pages: list[WikiPage] = []
+    claimed_page_ids: set[str] = set()
+    for plan in plans:
+        existing = _existing_page_for(plan, pages_by_id)
+        if existing is not None:
+            if existing.page_id in claimed_page_ids:
+                raise WikiCompilationError(
+                    f"plan reuses page_id {existing.page_id!r} for more than one topic"
+                )
+            claimed_page_ids.add(existing.page_id)
+        pages.append(
+            assemble_page_from_spans(
+                plan, span_index=span_index, existing_page=existing
+            )
+        )
+
+    try:
+        return validate_collection(pages, path="compiled pages")
+    except ValueError as exc:
+        raise WikiCompilationError(
+            f"compiled Wiki is not a valid collection: {exc}"
+        ) from exc
 
 
 def compile_wiki(

@@ -200,6 +200,16 @@ def heading_script(spans):
     return handler
 
 
+def batch_maintainer(repository, model):
+    """Every test in this file targets the model-written page compiler.
+
+    `WikiMaintainer` defaults to the fast path, where the program writes the
+    pages and `page_compilation` never runs - so these tests must ask for the
+    batch compiler explicitly or they would be testing nothing.
+    """
+    return WikiMaintainer(repository, model, compile_pages=compile_wiki)
+
+
 class TempRepository:
     def __enter__(self) -> WikiRepository:
         self._directory = tempfile.TemporaryDirectory()
@@ -244,7 +254,7 @@ class DocumentDecisionTests(unittest.TestCase):
                 )
             )
 
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            outcome = batch_maintainer(repository, model).ingest(snapshot)
 
             self.assertIs(outcome.action, DocumentAction.IGNORE)
             self.assertEqual(outcome.reason, "个人笔记，与制度无关")
@@ -260,7 +270,7 @@ class DocumentDecisionTests(unittest.TestCase):
             snapshot = save_document(repository, filename="rules.md", text=LEAVE_DOC)
             model = ScriptedModel(heading_script(snapshot.spans))
 
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            outcome = batch_maintainer(repository, model).ingest(snapshot)
 
             self.assertIs(outcome.action, DocumentAction.UPDATE)
             self.assertTrue(outcome.created_build)
@@ -277,7 +287,7 @@ class DocumentDecisionTests(unittest.TestCase):
     def test_supersedes_retires_the_named_documents(self):
         with TempRepository() as repository:
             old = save_document(repository, filename="old.md", text=REMOTE_DOC)
-            first = WikiMaintainer(
+            first = batch_maintainer(
                 repository, ScriptedModel(heading_script(old.spans))
             ).ingest(old)
             repository.publish(first.build.build_id)
@@ -316,7 +326,7 @@ class DocumentDecisionTests(unittest.TestCase):
                 )
             )
 
-            outcome = WikiMaintainer(repository, model).ingest(new)
+            outcome = batch_maintainer(repository, model).ingest(new)
 
             self.assertEqual(outcome.superseded_document_ids, (old.document_id,))
             self.assertEqual(
@@ -338,7 +348,7 @@ class EffectiveDocumentSetTests(unittest.TestCase):
     def test_a_new_version_replaces_the_old_version_of_the_same_document(self):
         with TempRepository() as repository:
             first = save_document(repository, filename="rules.md", text=LEAVE_DOC)
-            outcome = WikiMaintainer(
+            outcome = batch_maintainer(
                 repository, ScriptedModel(heading_script(first.spans))
             ).ingest(first)
             repository.publish(outcome.build.build_id)
@@ -347,7 +357,7 @@ class EffectiveDocumentSetTests(unittest.TestCase):
             self.assertEqual(second.document_id, first.document_id)
             self.assertNotEqual(second.version, first.version)
 
-            updated = WikiMaintainer(
+            updated = batch_maintainer(
                 repository, ScriptedModel(heading_script(second.spans))
             ).ingest(second)
 
@@ -364,7 +374,7 @@ class EffectiveDocumentSetTests(unittest.TestCase):
             leave = save_document(
                 repository, filename="leave.md", text=LEAVE_DOC_ONE_SPAN
             )
-            first = WikiMaintainer(
+            first = batch_maintainer(
                 repository, ScriptedModel(heading_script(leave.spans))
             ).ingest(leave)
             repository.publish(first.build.build_id)
@@ -404,7 +414,7 @@ class EffectiveDocumentSetTests(unittest.TestCase):
                 )
             )
 
-            outcome = WikiMaintainer(repository, model).ingest(remote)
+            outcome = batch_maintainer(repository, model).ingest(remote)
 
             self.assertEqual(len(outcome.build.pages), 1)
             page = outcome.build.pages[0]
@@ -466,7 +476,7 @@ class EffectiveDocumentSetTests(unittest.TestCase):
                 )
             )
 
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            outcome = batch_maintainer(repository, model).ingest(snapshot)
 
             self.assertEqual(
                 [page.title for page in outcome.build.pages], ["年假天数", "请假审批"]
@@ -513,7 +523,7 @@ class IdentifierTests(unittest.TestCase):
     def test_page_and_claim_ids_are_reused_when_the_plan_asks(self):
         with TempRepository() as repository:
             first_doc = save_document(repository, filename="rules.md", text=LEAVE_DOC)
-            first = WikiMaintainer(
+            first = batch_maintainer(
                 repository, ScriptedModel(heading_script(first_doc.spans))
             ).ingest(first_doc)
             repository.publish(first.build.build_id)
@@ -558,7 +568,7 @@ class IdentifierTests(unittest.TestCase):
                 )
             )
 
-            outcome = WikiMaintainer(repository, model).ingest(second_doc)
+            outcome = batch_maintainer(repository, model).ingest(second_doc)
 
             page = outcome.build.pages[0]
             self.assertEqual(page.page_id, old_page.page_id)
@@ -597,7 +607,7 @@ class IdentifierTests(unittest.TestCase):
                 )
             )
 
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            outcome = batch_maintainer(repository, model).ingest(snapshot)
 
             claim_id = outcome.build.pages[0].claims[0].claim_id
             self.assertNotEqual(claim_id, "claim-i-made-up")
@@ -651,7 +661,7 @@ class ProvenanceTests(unittest.TestCase):
                 },
             )
 
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            outcome = batch_maintainer(repository, model).ingest(snapshot)
 
             claim = outcome.build.pages[0].claims[0]
             self.assertEqual(claim.source, snapshot.spans[0].source)
@@ -661,7 +671,7 @@ class ProvenanceTests(unittest.TestCase):
     def test_source_span_ids_survive_a_save_and_load(self):
         with TempRepository() as repository:
             snapshot = save_document(repository, filename="rules.md", text=LEAVE_DOC)
-            outcome = WikiMaintainer(
+            outcome = batch_maintainer(
                 repository, ScriptedModel(heading_script(snapshot.spans))
             ).ingest(snapshot)
 
@@ -691,7 +701,7 @@ class ProvenanceTests(unittest.TestCase):
             )
 
             with self.assertRaises(WikiCompilationError) as raised:
-                WikiMaintainer(repository, model).ingest(snapshot)
+                batch_maintainer(repository, model).ingest(snapshot)
             self.assertIn("span-doesnotexist", str(raised.exception))
             self.assertEqual(repository.list_builds(), ())
 
@@ -702,7 +712,7 @@ class ProvenanceTests(unittest.TestCase):
                 snapshot, claim_overrides={"source_span_ids": []}
             )
             with self.assertRaises(WikiCompilationError):
-                WikiMaintainer(repository, model).ingest(snapshot)
+                batch_maintainer(repository, model).ingest(snapshot)
 
     def test_an_invented_number_in_a_claim_is_rejected(self):
         with TempRepository() as repository:
@@ -713,7 +723,7 @@ class ProvenanceTests(unittest.TestCase):
             )
 
             with self.assertRaises(WikiCompilationError) as raised:
-                WikiMaintainer(repository, model).ingest(snapshot)
+                batch_maintainer(repository, model).ingest(snapshot)
             self.assertIn("15", str(raised.exception))
             self.assertEqual(repository.list_builds(), ())
 
@@ -749,7 +759,7 @@ class ProvenanceTests(unittest.TestCase):
             )
 
             with self.assertRaises(WikiCompilationError) as raised:
-                WikiMaintainer(repository, model).ingest(snapshot)
+                batch_maintainer(repository, model).ingest(snapshot)
             self.assertIn("30", str(raised.exception))
 
     def test_a_number_that_is_in_the_source_passes(self):
@@ -758,7 +768,7 @@ class ProvenanceTests(unittest.TestCase):
             model = self._single_page_model(
                 snapshot, claim_overrides={"text": "年假为 5 天。"}
             )
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            outcome = batch_maintainer(repository, model).ingest(snapshot)
             self.assertEqual(outcome.build.pages[0].claims[0].text, "年假为 5 天。")
 
     def test_a_headingless_document_cites_its_span(self):
@@ -770,7 +780,7 @@ class ProvenanceTests(unittest.TestCase):
             )
             self.assertTrue(all(span.heading is None for span in snapshot.spans))
 
-            outcome = WikiMaintainer(
+            outcome = batch_maintainer(
                 repository, ScriptedModel(heading_script(snapshot.spans))
             ).ingest(snapshot)
 
@@ -788,7 +798,7 @@ class ProvenanceTests(unittest.TestCase):
             snapshot = save_document(
                 repository, filename="rules.md", text=LEAVE_DOC_ONE_SPAN
             )
-            outcome = WikiMaintainer(
+            outcome = batch_maintainer(
                 repository, ScriptedModel(heading_script(snapshot.spans))
             ).ingest(snapshot)
             self.assertEqual(
@@ -830,7 +840,7 @@ class LocatorFormTests(unittest.TestCase):
 class TopicPlanValidationTests(unittest.TestCase):
     def _ingest(self, repository, snapshot, plan, pages=None):
         model = ScriptedModel(script(plan=plan, pages=pages or {}))
-        return WikiMaintainer(repository, model).ingest(snapshot)
+        return batch_maintainer(repository, model).ingest(snapshot)
 
     def _page(self, topic, span):
         return {
@@ -998,7 +1008,7 @@ class TopicPlanValidationTests(unittest.TestCase):
             model = ScriptedModel(script(plan=plan, pages={}))
 
             with self.assertRaises(WikiCompilationError) as raised:
-                WikiMaintainer(repository, model).ingest(snapshot)
+                batch_maintainer(repository, model).ingest(snapshot)
 
             self.assertIn("more than one topic", str(raised.exception))
             self.assertNotIn(
@@ -1047,7 +1057,7 @@ class SupersedeValidationTests(unittest.TestCase):
     def _run(self, supersedes):
         with TempRepository() as repository:
             old = save_document(repository, filename="old.md", text=REMOTE_DOC)
-            first = WikiMaintainer(
+            first = batch_maintainer(
                 repository, ScriptedModel(heading_script(old.spans))
             ).ingest(old)
             repository.publish(first.build.build_id)
@@ -1068,7 +1078,7 @@ class SupersedeValidationTests(unittest.TestCase):
                 )
             )
             with self.assertRaises(WikiCompilationError) as raised:
-                WikiMaintainer(repository, model).ingest(new)
+                batch_maintainer(repository, model).ingest(new)
 
             # The failure happened before any build was written.
             self.assertEqual(
@@ -1112,7 +1122,7 @@ class RepairTests(unittest.TestCase):
 
         with TempRepository() as repository:
             snapshot = save_document(repository, filename="rules.md", text=LEAVE_DOC)
-            outcome = WikiMaintainer(repository, ScriptedModel(handler)).ingest(snapshot)
+            outcome = batch_maintainer(repository, ScriptedModel(handler)).ingest(snapshot)
 
         self.assertIs(outcome.action, DocumentAction.IGNORE)
         self.assertEqual(calls, ["document_decision", "document_decision_repair"])
@@ -1123,7 +1133,7 @@ class RepairTests(unittest.TestCase):
         with TempRepository() as repository:
             snapshot = save_document(repository, filename="rules.md", text=LEAVE_DOC)
             with self.assertRaises(WikiCompilationError) as raised:
-                WikiMaintainer(repository, model).ingest(snapshot)
+                batch_maintainer(repository, model).ingest(snapshot)
 
         self.assertEqual(
             model.stages, ["document_decision", "document_decision_repair"]
@@ -1172,7 +1182,7 @@ class RepairTests(unittest.TestCase):
             handler.text = snapshot.spans[0].text
             model = ScriptedModel(handler)
 
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            outcome = batch_maintainer(repository, model).ingest(snapshot)
 
         self.assertIn("topic_plan_repair", model.stages)
         self.assertEqual(outcome.page_count, 1)
@@ -1183,7 +1193,7 @@ class RepairTests(unittest.TestCase):
 
         with TempRepository() as repository:
             snapshot = save_document(repository, filename="rules.md", text=LEAVE_DOC)
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            outcome = batch_maintainer(repository, model).ingest(snapshot)
 
         self.assertIs(outcome.action, DocumentAction.IGNORE)
         self.assertEqual(model.stages, ["document_decision"])
@@ -1219,7 +1229,7 @@ class FailureIsolationTests(unittest.TestCase):
             )
 
             with self.assertRaises(WikiCompilationError):
-                WikiMaintainer(repository, model).ingest(snapshot)
+                batch_maintainer(repository, model).ingest(snapshot)
 
             self.assertEqual(repository.get_current_build_id(), before_current)
             self.assertEqual(
@@ -1235,7 +1245,7 @@ class FailureIsolationTests(unittest.TestCase):
             model = ScriptedModel(lambda request: dumps({}))
 
             with self.assertRaises(WikiRepositoryError):
-                WikiMaintainer(repository, model).ingest(snapshot)
+                batch_maintainer(repository, model).ingest(snapshot)
             self.assertEqual(model.stages, [])
 
     def test_compiling_from_an_existing_build_reuses_nothing_it_cannot_re_derive(self):
@@ -1246,7 +1256,7 @@ class FailureIsolationTests(unittest.TestCase):
             sample_page_ids = {page.page_id for page in load_wiki_pages(DEFAULT_WIKI_PATH)}
 
             snapshot = save_document(repository, filename="rules.md", text=REMOTE_DOC)
-            outcome = WikiMaintainer(
+            outcome = batch_maintainer(
                 repository, ScriptedModel(heading_script(snapshot.spans))
             ).ingest(snapshot)
 
@@ -1268,7 +1278,7 @@ class RealDocumentCompilationTests(unittest.TestCase):
             repository.save_document_snapshot(snapshot)
             model = ScriptedModel(heading_script(snapshot.spans))
 
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            outcome = batch_maintainer(repository, model).ingest(snapshot)
 
             self.assertGreaterEqual(len(outcome.build.pages), 4)
             span_ids = {span.span_id for span in snapshot.spans}
@@ -1304,11 +1314,11 @@ class RealDocumentCompilationTests(unittest.TestCase):
             snapshot = sample_spans()
             repository.save_document_snapshot(snapshot)
 
-            first = WikiMaintainer(
+            first = batch_maintainer(
                 repository, ScriptedModel(heading_script(snapshot.spans))
             ).ingest(snapshot)
             repository.publish(first.build.build_id)
-            second = WikiMaintainer(
+            second = batch_maintainer(
                 repository, ScriptedModel(heading_script(snapshot.spans))
             ).ingest(snapshot)
 
@@ -1347,7 +1357,7 @@ class PromptTests(unittest.TestCase):
         with TempRepository() as repository:
             snapshot = save_document(repository, filename="rules.md", text=LEAVE_DOC)
             model = ScriptedModel(heading_script(snapshot.spans))
-            WikiMaintainer(repository, model).ingest(snapshot)
+            batch_maintainer(repository, model).ingest(snapshot)
 
         plan_request = next(r for r in model.requests if r.stage == "topic_plan")
         for span in snapshot.spans:

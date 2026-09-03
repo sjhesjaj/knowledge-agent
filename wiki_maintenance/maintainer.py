@@ -33,7 +33,7 @@ from .compiler import (
     DocumentDecision,
     WikiCompilationError,
     WikiModel,
-    compile_wiki,
+    compile_wiki_fast,
     decide_document,
 )
 from .models import DocumentSnapshot, DocumentVersion, SourceSpan, WikiBuild
@@ -60,11 +60,31 @@ class MaintenanceOutcome:
 
 
 class WikiMaintainer:
-    """Turns saved document snapshots into draft Wiki builds."""
+    """Turns saved document snapshots into draft Wiki builds.
 
-    def __init__(self, repository: WikiRepository, model: WikiModel) -> None:
+    Compilation defaults to `compile_wiki_fast`: the model decides the structure
+    - which topics exist and which spans belong together - and the program
+    builds the pages from that plan. Claim text is its span's text verbatim,
+    with `source`, `locator` and `source_span_ids` derived from the span; page
+    titles are the model's topics, while summaries and aliases are generated
+    from those topics and the spans' headings. Two model calls for a whole
+    corpus, and no business fact the model could have reworded - though a topic
+    it named or grouped poorly remains possible.
+
+    `compile_wiki` can be injected instead for a model-written Wiki, at a call
+    per batch of pages.
+    """
+
+    def __init__(
+        self,
+        repository: WikiRepository,
+        model: WikiModel,
+        *,
+        compile_pages=compile_wiki_fast,
+    ) -> None:
         self.repository = repository
         self.model = model
+        self.compile_pages = compile_pages
 
     def ingest(
         self, snapshot: DocumentSnapshot, *, base_build_id: str | None = None
@@ -108,7 +128,9 @@ class WikiMaintainer:
         existing_pages: Sequence[WikiPage] = (
             base_build.pages if base_build is not None else ()
         )
-        pages = compile_wiki(self.model, spans=spans, existing_pages=existing_pages)
+        pages = self.compile_pages(
+            self.model, spans=spans, existing_pages=existing_pages
+        )
 
         build = self.repository.create_build(
             pages,

@@ -58,6 +58,21 @@ def spans_of(filename: str, text: str):
     ).spans
 
 
+def heading_plan(spans):
+    """One page per heading. The page count is the planner's to choose."""
+    grouped: dict[str, list] = {}
+    for span in spans:
+        grouped.setdefault(span.heading or "未分类", []).append(span)
+    return [
+        {
+            "topic": topic,
+            "existing_page_id": None,
+            "source_span_ids": [span.span_id for span in group],
+        }
+        for topic, group in grouped.items()
+    ]
+
+
 def model_for(*documents):
     """A scripted model that answers from whatever spans the prompt showed it.
 
@@ -81,21 +96,7 @@ def model_for(*documents):
                 {"action": "update", "reason": "公司制度", "supersedes_document_ids": []}
             )
         if request.stage == "topic_plan":
-            grouped: dict[str, list] = {}
-            for span in visible(request.user):
-                grouped.setdefault(span.heading or "未分类", []).append(span)
-            return dumps(
-                {
-                    "pages": [
-                        {
-                            "topic": heading,
-                            "existing_page_id": None,
-                            "source_span_ids": [span.span_id for span in group],
-                        }
-                        for heading, group in grouped.items()
-                    ]
-                }
-            )
+            return dumps({"pages": heading_plan(visible(request.user))})
         if request.stage.startswith("page_compilation:"):
 
             def page_for(topic, section):
@@ -197,12 +198,9 @@ class JobLifecycleTests(RuntimeTestCase):
         self.assertEqual(status["current_build_id"], "build-0001")
         self.assertIsNone(status["stage"], "a finished job reports no stage")
 
-        # The stages the compiler passed through are the documented ones.
-        self.assertEqual(model.stages[0], "document_decision")
-        self.assertEqual(model.stages[1], "topic_plan")
-        self.assertTrue(
-            any(stage.startswith("page_compilation:") for stage in model.stages)
-        )
+        # Two model calls for the whole corpus. The model decides the structure;
+        # the program writes the pages, so `page_compilation` never runs.
+        self.assertEqual(model.stages, ["document_decision", "topic_plan"])
 
     def test_stage_is_visible_while_the_job_runs(self):
         seen = []
@@ -477,7 +475,8 @@ class InvalidationTests(RuntimeTestCase):
         class Blocking:
             def generate(self, request):
                 answer = inner.generate(request)
-                if request.stage.startswith("page_compilation:"):
+                # The last model call before the build is written.
+                if request.stage == "topic_plan":
                     at_last_stage.set()
                     release.wait(WAIT_SECONDS)
                 return answer
@@ -534,6 +533,10 @@ class LiveWikiTests(RuntimeTestCase):
         self.assertNotEqual(first, second)
         self.assertEqual(
             sorted(page.title for page in second), ["请假制度", "远程办公"]
+        )
+        self.assertEqual(
+            sorted(claim.source for page in second for claim in page.claims),
+            ["remote.md", "rules.md"],
         )
 
 

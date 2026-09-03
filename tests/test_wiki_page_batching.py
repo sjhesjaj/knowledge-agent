@@ -145,7 +145,11 @@ class BatchSizingTests(unittest.TestCase):
             repository.save_document_snapshot(snapshot)
             model = batching_model(snapshot.spans)
 
-            outcome = WikiMaintainer(repository, model).ingest(snapshot)
+            # The batch compiler explicitly: the maintainer now defaults to the
+            # fast path, which never runs `page_compilation` at all.
+            outcome = WikiMaintainer(
+                repository, model, compile_pages=compile_wiki
+            ).ingest(snapshot)
 
             self.assertEqual(outcome.page_count, 20)
             self.assertEqual(len(model.stages), 7)

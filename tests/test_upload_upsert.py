@@ -164,6 +164,8 @@ class UploadUpsertTests(UploadFixture):
             sorted(page.title for page in self.runtime.published_pages()),
             ["请假制度", "远程办公"],
         )
+        self.assertIn("5 天带薪年假", " ".join(self.wiki_claims()))
+        self.assertIn("2 天远程办公", " ".join(self.wiki_claims()))
         # `chunks` is the whole base; `uploaded_chunks` is this upload's share.
         self.assertEqual(body["chunks"], len(api.chunks))
         self.assertEqual(body["uploaded_chunks"], 1)
