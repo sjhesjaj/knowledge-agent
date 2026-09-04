@@ -46,6 +46,10 @@ state_lock = Lock()
 knowledge_mutation_lock = Lock()
 conversation_locks: dict[str, Lock] = {}
 knowledge_version = 0
+#: `knowledge_version` at which each document was last uploaded. A Wiki job may
+#: only retire a document it is at least as new as; anything uploaded since is
+#: the user's newer intent and outranks a decision made before it existed.
+document_upload_versions: dict[str, int] = {}
 
 
 class ChatRequest(BaseModel):
@@ -188,6 +192,65 @@ def delete_conversation(
         conversation_lock.release()
 
 
+def retire_superseded_documents(
+    document_ids: list[str], compiled_from_version: int | None
+) -> tuple[str, ...]:
+    """Drop the chunks of documents a published Wiki build superseded.
+
+    Called by the Wiki worker once a build is live. It is the other half of the
+    upsert: a document replacing *itself* is handled at upload, and a document
+    replaced by a *different* file is handled here - otherwise the Wiki would
+    retire a policy that `document_search` could still quote.
+
+    Narrow on purpose. Only the ids the build actually superseded are
+    considered, never the Wiki's active set: a document the Wiki merely ignored
+    is still perfectly good source text, and filtering by "what the Wiki holds"
+    would delete it. A document uploaded since the job started is newer than
+    anything the job knows and is left alone.
+
+    Takes `knowledge_mutation_lock` first, then `state_lock` - the same order
+    the upload path uses. An upload holds the mutation lock across its whole
+    body, including the embedding pass that runs outside `state_lock`; without
+    waiting for it, a retirement could land between the upload's snapshot of the
+    surviving chunks and its commit, and the commit would write the retired
+    document straight back.
+
+    Embeddings are never recomputed - surviving chunks are carried across
+    untouched, and only their positions are renumbered.
+    """
+    global knowledge_version
+    with knowledge_mutation_lock, state_lock:
+        retirable = {
+            document_id
+            for document_id in document_ids
+            if compiled_from_version is None
+            or document_upload_versions.get(document_id, -1) <= compiled_from_version
+        }
+        if not retirable:
+            return ()
+        kept = [
+            Chunk(
+                text=chunk.text,
+                source=chunk.source,
+                index=chunk.index,
+                embedding=chunk.embedding,
+            )
+            for chunk in chunks
+            if derive_document_id(chunk.source) not in retirable
+        ]
+        if len(kept) == len(chunks):
+            return ()
+        reindex_chunks(kept)
+        # Chunks only: this is a background consequence of an upload the user
+        # already made, not a new one, so it must not clear their conversations.
+        storage.replace_chunks(kept)
+        chunks[:] = kept
+        for document_id in retirable:
+            document_upload_versions.pop(document_id, None)
+        knowledge_version += 1
+        return tuple(sorted(retirable))
+
+
 def _upload_name(file: UploadFile) -> str:
     return file.filename or "document"
 
@@ -244,10 +307,9 @@ async def upload_knowledge(files: list[UploadFile] = File(...)) -> dict:
         # Wiki's own notion of "the same document", reused here so the two
         # cannot disagree about what a re-upload replaces.
         #
-        # Backlog: this handles a document replacing *itself*. A Wiki decision
-        # that document X supersedes document Y retires Y from the Wiki but
-        # leaves Y's chunks in retrieval, so the same inconsistency remains for
-        # cross-file supersedes. Deliberately out of scope here.
+        # This half handles a document replacing *itself*. A document replaced
+        # by a *different* file is retired by `retire_superseded_documents`
+        # once the Wiki build that decided it goes live.
         incoming_ids = {derive_document_id(name) for name in names}
         with state_lock:
             # Copied so a failed commit cannot leave live chunks renumbered.
@@ -275,10 +337,17 @@ async def upload_knowledge(files: list[UploadFile] = File(...)) -> dict:
             storage.replace_knowledge(merged)
             chunks[:] = merged
             knowledge_version += 1
+            for document_id in incoming_ids:
+                document_upload_versions[document_id] = knowledge_version
+            compiled_from_version = knowledge_version
         # Queued, not awaited: retrieval is ready now, and Wiki compilation
         # takes model time the uploader should not sit through. Progress is
         # polled from /api/wiki/status.
-        wiki_job_id = wiki_runtime.RUNTIME.submit(documents)
+        wiki_job_id = wiki_runtime.RUNTIME.submit(
+            documents,
+            knowledge_version=compiled_from_version,
+            retire_documents=retire_superseded_documents,
+        )
         return {
             "files": names,
             **stats,
@@ -308,6 +377,7 @@ def clear_knowledge() -> dict:
         with state_lock:
             storage.clear_knowledge()
             chunks.clear()
+            document_upload_versions.clear()
             knowledge_version += 1
         # Void pending jobs and take the compiled Wiki offline: it was derived
         # from documents that no longer exist. Snapshots and builds stay on

@@ -28,7 +28,7 @@ a job is submitted.
 from __future__ import annotations
 
 import threading
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -60,6 +60,11 @@ IDLE_STATUS = "idle"
 
 _ACTIVE_STATUSES = (JobStatus.QUEUED, JobStatus.RUNNING)
 
+#: Retires the source text of documents a published build superseded.
+#: Takes the document ids and the knowledge version the job compiled from, and
+#: returns the ids it actually removed - fewer, if a newer upload overtook it.
+RetireDocuments = Callable[[Sequence[str], "int | None"], "Sequence[str]"]
+
 
 @dataclass
 class WikiJob:
@@ -73,6 +78,16 @@ class WikiJob:
     completed_documents: int = 0
     error: str | None = None
     published_build_id: str | None = None
+    #: The knowledge-base version this batch was compiled from. A document
+    #: uploaded again after that version is newer than anything this job knows,
+    #: and must not be retired by it.
+    knowledge_version: int | None = None
+    retire_documents: RetireDocuments | None = None
+    #: Every supersede the batch decided, and what retrieval actually retired.
+    #: The second is smaller when the final build still cites a document, when a
+    #: re-upload overtook the job, or when nothing published at all.
+    superseded_document_ids: tuple[str, ...] = ()
+    retired_document_ids: tuple[str, ...] = ()
     done: threading.Event = field(default_factory=threading.Event)
 
     @property
@@ -194,8 +209,19 @@ class WikiRuntime:
     # Jobs
     # ------------------------------------------------------------------
 
-    def submit(self, documents: Sequence[tuple[str, str]]) -> str:
-        """Queue one upload batch. Returns immediately with the job id."""
+    def submit(
+        self,
+        documents: Sequence[tuple[str, str]],
+        *,
+        knowledge_version: int | None = None,
+        retire_documents: RetireDocuments | None = None,
+    ) -> str:
+        """Queue one upload batch. Returns immediately with the job id.
+
+        `knowledge_version` stamps the batch with the state of the retrieval
+        index it was compiled from, so a retirement it decides cannot delete a
+        document uploaded after it started.
+        """
         prepared = tuple((str(name), str(text)) for name, text in documents)
         if not prepared:
             raise ValueError("a Wiki job needs at least one document")
@@ -205,6 +231,8 @@ class WikiRuntime:
                 job_id=f"wiki-job-{self._sequence:04d}",
                 documents=prepared,
                 epoch=self._epoch,
+                knowledge_version=knowledge_version,
+                retire_documents=retire_documents,
             )
             self._jobs[job.job_id] = job
             self._order.append(job.job_id)
@@ -251,6 +279,7 @@ class WikiRuntime:
 
         starting_build_id = repository.get_current_build_id()
         base_build_id = starting_build_id
+        superseded: list[str] = []
         for index, (filename, text) in enumerate(job.documents, start=1):
             if self._is_stale(job):
                 self._cancel(job)
@@ -266,12 +295,16 @@ class WikiRuntime:
                 # The next document compiles onto this draft, so a batch reads
                 # as one edit rather than as N competing rewrites of the Wiki.
                 base_build_id = outcome.build.build_id
+            # Collected, not acted on: a supersede only takes effect if the
+            # batch it belongs to reaches publish.
+            superseded.extend(outcome.superseded_document_ids)
             with self._lock:
                 job.completed_documents = index
 
         # Checked and published under the lock so a clear arriving right now
         # cannot slip between the two and publish a Wiki nobody wants.
         with self._lock:
+            job.superseded_document_ids = tuple(sorted(set(superseded)))
             if self._is_stale(job):
                 self._cancel(job)
                 return
@@ -280,9 +313,83 @@ class WikiRuntime:
                 job.stage = None
                 return
             repository.publish(base_build_id)
-            job.status = JobStatus.PUBLISHED
             job.stage = None
             job.published_build_id = base_build_id
+            # Deliberately still RUNNING: the batch is not done until retrieval
+            # agrees with it, and reporting `published` early would tell a
+            # poller the two stores are in step before they are.
+        self._forget_cached_pages()
+
+        try:
+            self._retire_superseded(job, repository, base_build_id)
+        except Exception:
+            # Retrieval could not be brought into step, so the Wiki must not
+            # stay ahead of it. Undo this job's publish and fail the job.
+            self._restore_previous_build(job, repository, base_build_id, starting_build_id)
+            raise
+
+        with self._lock:
+            if not self._is_stale(job):
+                job.status = JobStatus.PUBLISHED
+
+    def _retirement_candidates(
+        self, repository: WikiRepository, build_id: str, superseded: Sequence[str]
+    ) -> tuple[str, ...]:
+        """Superseded documents the published build no longer cites.
+
+        A batch can supersede a document and then re-add a newer version of it -
+        the same file uploaded again later in the same batch. The running union
+        of supersede decisions still names it, but the build that actually went
+        live cites it, so it is emphatically not retired. The final build is the
+        authority; the decisions along the way are not.
+        """
+        still_cited = set(repository.load_build(build_id).document_version_map)
+        return tuple(sorted(set(superseded) - still_cited))
+
+    def _retire_superseded(
+        self, job: WikiJob, repository: WikiRepository, build_id: str
+    ) -> None:
+        """Take the superseded documents out of retrieval.
+
+        Runs after the build is live but before the job reports success, so a
+        failure here can still be undone. The callback takes the API's upload
+        lock and then its state lock; this is called holding no runtime lock, so
+        there is one lock order in the process rather than two.
+        """
+        candidates = self._retirement_candidates(
+            repository, build_id, job.superseded_document_ids
+        )
+        if not candidates or job.retire_documents is None:
+            return
+        if self._is_stale(job):
+            return
+        retired = job.retire_documents(candidates, job.knowledge_version)
+        with self._lock:
+            job.retired_document_ids = tuple(retired)
+
+    def _restore_previous_build(
+        self,
+        job: WikiJob,
+        repository: WikiRepository,
+        published_build_id: str,
+        previous_build_id: str | None,
+    ) -> None:
+        """Put the live pointer back where this job found it.
+
+        Only when the pointer is still the one this job set. A clear, or a later
+        job's publish, means the current Wiki is somebody else's decision and
+        restoring an older build over it would undo a change the user asked for.
+        """
+        with self._lock:
+            if self._is_stale(job):
+                return
+            if repository.get_current_build_id() != published_build_id:
+                return
+            if previous_build_id is None:
+                repository.retract_current()
+            else:
+                repository.rollback(previous_build_id)
+            job.published_build_id = None
         self._forget_cached_pages()
 
     def _is_stale(self, job: WikiJob) -> bool:
@@ -357,6 +464,8 @@ class WikiRuntime:
                     "total_documents": job.total_documents,
                     "error": job.error,
                     "published_build_id": job.published_build_id,
+                    "superseded_document_ids": list(job.superseded_document_ids),
+                    "retired_document_ids": list(job.retired_document_ids),
                 }
             )
         # Read outside the lock: it touches the filesystem.
@@ -372,6 +481,8 @@ class WikiRuntime:
                 "current_build_id": current_build_id,
                 "error": None,
                 "published_build_id": None,
+                "superseded_document_ids": [],
+                "retired_document_ids": [],
             }
         return {**snapshot, "current_build_id": current_build_id}
 
