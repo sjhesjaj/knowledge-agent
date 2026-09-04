@@ -1,0 +1,715 @@
+Building prefix dict from the default dictionary ...
+Dumping model to file cache C:\Users\h000_\AppData\Local\Temp\jieba.cache
+Loading model cost 0.404 seconds.
+Prefix dict has been built successfully.
+Dataset      : eval_answerability_blind_v2.json (40 cases)
+Dataset SHA  : 7ae1c0af4f82e0179ad377a6d433605da6e673d2e1d0ed5a689bcf3fd1bc9d89
+Git SHA      : 65b402c203fe389742b6bf87b81bf32cba081e73
+Chat model   : qwen3:4b
+Embed model  : nomic-embed-text
+Runs         : 3
+Building document index …
+Indexed 20 chunks from sample_company_rules.md
+Warming up the answer model …
+Warm-up took 8.87s (excluded from results)
+
+==============================================================================
+Run 1
+==============================================================================
+001. PASS | answer_v2_001 | 3.37s
+     Q: 报销申请最晚要在费用发生后多少天内提交？需要附哪些材料
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 报销申请最晚要在费用发生后30天内提交。需要附合法有效的发票和支付凭证。[来源1]
+002. PASS | answer_v2_002 | 9.40s
+     Q: 单笔 2500 元的报销，除了直属主管还需要谁审批？门槛金额是多少
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 部门负责人审批，门槛金额是2000元。[来源1]
+003. PASS | answer_v2_003 | 3.13s
+     Q: 实习生有带薪年假吗？他们每月能请几天事假
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，实习生不享有带薪年假，但每月可申请1天事假。[来源1]
+004. PASS | answer_v2_004 | 8.46s
+     Q: 调休必须在多长时间内用完？过期了会怎么样
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 调休必须在3个月内用完，逾期自动失效。[来源1]
+005. PASS | answer_v2_005 | 3.30s
+     Q: 每周最多能申请几天远程办公？需要提前多久、找谁批
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 每周最多能申请2天远程办公，需至少提前一个工作日获得直属主管批准。[来源1]
+006. FAIL | answer_v2_006 | 8.67s
+     Q: 下个月先去深圳、再飞一趟新加坡，这两趟差在系统里提申请，要过的审批人是不是不一样，分别得谁签
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=- facts=MISS reasons=evidence_sufficient
+     A: 下个月先去深圳、再飞一趟新加坡，这两趟差在系统里提申请，要过的审批人是不是不一样，分别得谁签
+     -> citation mismatch; generation miss
+007. PASS | answer_v2_007 | 8.63s
+     Q: 设备丢了以后多久之内必须报告？报给谁
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 设备遗失应在 2 小时内报告直属主管和信息技术部门。[来源 1]
+008. PASS | answer_v2_008 | 8.80s
+     Q: 每月迟到多久、累计几次以内只提醒不扣款？超过之后要做什么
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 每月迟到不超过10分钟且累计不超过2次以内只提醒不扣款；超过上述次数需提交异常说明。[来源1]
+009. PASS | answer_v2_009 | 3.92s
+     Q: 远程办公这块的规定大体是什么样，简单说说就行
+     route wiki_only -> wiki_document | behavior answer -> answer | outcome ready
+     sources=['document', 'wiki'] citations=[4] facts=ok reasons=evidence_sufficient
+     A: 远程办公须至少提前一个工作日获得直属主管批准，员工每周最多申请2天远程办公，涉及客户现场支持、机房值守的岗位不适用远程办公政策。[来源4]
+010. PASS | answer_v2_010 | 4.03s
+     Q: 帮我把请假和年假的规定捋一捋，有个整体印象就行
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 根据资料，正式员工入职满一年后每年享有5天带薪年假，满三年后增加至8天；请假需提前在系统提交，1天内由直属主管审批，超1天需部门负责人审批；实习生不享有带薪年假，但每月可申请1天事假。[来源1][来源2][来源3]
+011. PASS | answer_v2_011 | 3.76s
+     Q: 公司在账号和权限上大致是怎么把关的？
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 公司在账号和权限上通过以下方式把关：1) 高权限账号每90天复核一次[来源1]；2) 发现账号异常立即联系信息安全团队[来源2]；3) 系统账号仅限本人使用，禁止共享密码或验证码[来源3]。
+012. PASS | answer_v2_012 | 3.77s
+     Q: 信息安全方面公司整体管哪些事？我只要大方向
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 信息安全方面公司整体管：1. 敏感文件对外发送前需获得部门负责人批准并使用公司指定加密工具；2. 内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务；3. 发现账号异常应立即联系信息安全团队。[来源1][来源2][来源3]
+013. PASS | answer_v2_013 | 3.34s
+     Q: 月底盘点账面对不上，我想以系统数据为准，SKU-A100 这个品现在显示多少件
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，SKU sku-a100 的当前库存为 42 件。[来源 1]。
+014. PASS | answer_v2_014 | 3.21s
+     Q: 帮我看下 sku b200 目前还有没有货
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU sku-b200 的当前库存为 0 件，表示没有货。[来源 1]
+015. PASS | answer_v2_015 | 3.11s
+     Q: Sku-C300 当前还剩多少箱？
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: Sku-C300 当前还剩 7 箱。[来源 1]
+016. PASS | answer_v2_016 | 3.34s
+     Q: 客户催单，sku a100 今天还有多少件能发
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，SKU sku-a100 的当前库存为 42 件。因此，客户催单，sku a100 今天还有 42 件能发。[来源 1]
+017. PASS | answer_v2_017 | 3.64s
+     Q: 远程办公的规定大概讲讲；SKU-A100 手上还有几件
+     route wiki_system -> wiki_system | behavior answer -> answer | outcome ready
+     sources=['system', 'wiki'] citations=[1, 2, 3, 4] facts=ok reasons=evidence_sufficient
+     A: 远程办公须至少提前一个工作日获得直属主管批准，涉及客户现场支持、机房值守的岗位不适用远程办公政策，员工每周最多申请2天远程办公。SKU-A10: 42件。[来源1][来源2][来源3][来源4]
+018. FAIL | answer_v2_018 | 3.47s
+     Q: 设备遗失几小时内必须上报、报给谁？顺便把 Sku-C300 当下的库存报给我
+     route document_system -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=MISS reasons=evidence_sufficient
+     A: 根据资料，设备遗失几小时内必须上报、报给谁的信息未在资料中提及。SKU sku-c300 的当前库存为 7 箱。[来源 1]
+     -> route marker gap; retrieval miss; generation miss
+019. FAIL | answer_v2_019 | 3.74s
+     Q: 账号权限先给我通盘说一下，高权限复核周期那句要原样给我，再看下 sku b200 那边的存量
+     route wiki_document_system -> wiki_system | behavior answer -> answer | outcome ready
+     sources=['system', 'wiki'] citations=[1, 3, 4] facts=ok reasons=evidence_sufficient
+     A: 高权限账号每 90 天复核一次。[来源 1] 系统账号仅限本人使用，不得共享密码或验证码。[来源 3] SKU sku-b20:0 的当前库存为 0 件。[来源 4]
+     -> route marker gap; retrieval miss
+020. PASS | answer_v2_020 | 8.88s
+     Q: 培训预算每年上限是多少、谁批准？另外 SKU-A100 当前库存报一下
+     route document_system -> document_system | behavior answer -> answer | outcome ready
+     sources=['document', 'system'] citations=[2, 3] facts=ok reasons=evidence_sufficient
+     A: 培训预算每年上限为2000元，由直属主管批准。SKU-A10:00当前库存为42件。[来源2][来源3]
+021. PASS | answer_v2_021 | 0.00s
+     Q: SKU-D400 目前库存量多少？
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result, freshness_unsupported
+     A: 根据现有资料无法确定。
+022. PASS | answer_v2_022 | 0.00s
+     Q: 采购新报了个料号过来说要备货，我先在系统里核一下 sku e500 的存货情况
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+023. PASS | answer_v2_023 | 0.00s
+     Q: SKU_F600 目前有货吗
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result, freshness_unsupported
+     A: 根据现有资料无法确定。
+024. PASS | answer_v2_024 | 0.00s
+     Q: Sku-H800 还剩几件？客户在等
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+025. PASS | answer_v2_025 | 11.90s
+     Q: 公司五险一金的缴纳比例是多少？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+026. PASS | answer_v2_026 | 11.86s
+     Q: 我下个月办婚礼，想提前跟主管把时间排开，公司的婚假是按几天算的
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+027. PASS | answer_v2_027 | 11.75s
+     Q: 年终奖是怎么算的，一般什么时候发
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+028. FAIL | answer_v2_028 | 3.26s
+     Q: 这个月工作日晚上加了不少班，想赶在发工资前自己把账核一遍，工作日加班的加班费是按几倍算的
+     route document_only -> document_only | behavior generation_refuse -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 工作日加班的加班费按1倍计算。[来源1]
+     -> generation miss
+029. PASS | answer_v2_029 | 6.02s
+     Q: 出差住宿费的标准上限是多少？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+030. PASS | answer_v2_030 | 13.14s
+     Q: 试用期通常有多久？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，试用期的具体时长并未明确说明。资料中只提到试用期员工应在期满前10个工作日提交转正总结，但没有说明试用期的时长是多少。因此，根据现有资料无法确定试用期通常有多久。
+031. PASS | answer_v2_031 | 11.36s
+     Q: 病假期间工资怎么发？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+032. PASS | answer_v2_032 | 11.67s
+     Q: 公司给员工买补充商业医疗保险吗？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+033. PASS | answer_v2_033 | 0.00s
+     Q: 帮我查下库存
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 请提供需要查询的 SKU。
+034. FAIL | answer_v2_034 | 5.68s
+     Q: 现在这边货还够吗
+     route system_only -> document_only | behavior boundary -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=ok reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+035. FAIL | answer_v2_035 | 11.67s
+     Q: 库存这边帮我看一眼，挺急的
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+036. PASS | answer_v2_036 | 0.00s
+     Q: 在排下周的补货计划，SKU-A100、SKU_B200 这两个料号的库存数我都要用到
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前一次支持查询一个 SKU，请拆分后分别查询。
+037. PASS | answer_v2_037 | 0.00s
+     Q: Sku-C300、sku a100 这两个一起报给我
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前一次支持查询一个 SKU，请拆分后分别查询。
+038. FAIL | answer_v2_038 | 5.55s
+     Q: ord-1001 现在是什么状态？
+     route system_only -> document_only | behavior boundary -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=ok reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+039. PASS | answer_v2_039 | 0.00s
+     Q: apr-3001 的审批到哪一步了
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+040. FAIL | answer_v2_040 | 11.70s
+     Q: 帮我看下 subject-001 这个账户下有几笔订单
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+
+Run 1 summary
+  Pass rate                 : 80.0% (32/40)
+  Answer Success Rate       : 85.0%
+  False Refusal Rate        : 0.0%
+  Unanswerable Refusal Rate : 91.7%
+  Boundary Accuracy         : 50.0%
+  Citation Presence Rate    : 95.2%
+  Citation Index Validity   : 100.0%
+  Required Source Coverage  : 90.0%
+  Expected Fact Hit Rate    : 90.0%
+  Route Accuracy            : 82.5%
+  Duration p50/p95/max      : 3.77s / 11.86s / 13.14s
+
+==============================================================================
+Run 2
+==============================================================================
+001. PASS | answer_v2_001 | 2.99s
+     Q: 报销申请最晚要在费用发生后多少天内提交？需要附哪些材料
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 报销申请最晚要在费用发生后30天内提交。需要附合法有效的发票和支付凭证。[来源1]
+002. PASS | answer_v2_002 | 8.12s
+     Q: 单笔 2500 元的报销，除了直属主管还需要谁审批？门槛金额是多少
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 单笔2500元的报销需要部门负责人审批，门槛金额是2000元。[来源1]
+003. PASS | answer_v2_003 | 3.21s
+     Q: 实习生有带薪年假吗？他们每月能请几天事假
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，实习生不享有带薪年假，但每月可申请1天事假。[来源 1]
+004. PASS | answer_v2_004 | 8.15s
+     Q: 调休必须在多长时间内用完？过期了会怎么样
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 调休必须在3个月内用完，逾期自动失效。[来源1]
+005. PASS | answer_v2_005 | 3.24s
+     Q: 每周最多能申请几天远程办公？需要提前多久、找谁批
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 每周最多能申请2天远程办公，需至少提前一个工作日获得直属主管批准。[来源1]
+006. FAIL | answer_v2_006 | 8.28s
+     Q: 下个月先去深圳、再飞一趟新加坡，这两趟差在系统里提申请，要过的审批人是不是不一样，分别得谁签
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=- facts=MISS reasons=evidence_sufficient
+     A: 下个月先去深圳、再飞一趟新加坡，这两趟差在系统里提申请，要过的审批人是不是不一样，分别得谁签
+     -> citation mismatch; generation miss
+007. PASS | answer_v2_007 | 8.31s
+     Q: 设备丢了以后多久之内必须报告？报给谁
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 设备遗失应在 2 小时内报告直属主管和信息技术部门。[来源 1]
+008. PASS | answer_v2_008 | 8.44s
+     Q: 每月迟到多久、累计几次以内只提醒不扣款？超过之后要做什么
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 每月迟到不超过10分钟且累计不超过2次以内只提醒不扣款；超过上述次数需提交异常说明。[来源1]
+009. PASS | answer_v2_009 | 3.45s
+     Q: 远程办公这块的规定大体是什么样，简单说说就行
+     route wiki_only -> wiki_document | behavior answer -> answer | outcome ready
+     sources=['document', 'wiki'] citations=[4] facts=ok reasons=evidence_sufficient
+     A: 远程办公须至少提前一个工作日获得直属主管批准，员工每周最多申请2天远程办公，涉及客户现场支持、机房值守的岗位不适用远程办公政策。[来源4]
+010. PASS | answer_v2_010 | 3.88s
+     Q: 帮我把请假和年假的规定捋一捋，有个整体印象就行
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 根据资料，正式员工入职满一年后每年享有5天带薪年假，满三年后增加至8天；请假需提前在系统提交，1天内由直属主管审批，超1天需部门负责人审批；实习生不享有带薪年假，但每月可申请1天事假。[来源1][来源2][来源3]
+011. PASS | answer_v2_011 | 3.66s
+     Q: 公司在账号和权限上大致是怎么把关的？
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 公司在账号和权限上通过以下方式把关：1) 高权限账号每90天复核一次[来源1]；2) 发现账号异常立即联系信息安全团队[来源2]；3) 系统账号仅限本人使用，禁止共享密码或验证码[来源3]。
+012. PASS | answer_v2_012 | 3.71s
+     Q: 信息安全方面公司整体管哪些事？我只要大方向
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 信息安全方面公司整体管：1. 敏感文件对外发送前需获得部门负责人批准并使用公司指定加密工具；2. 内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务；3. 发现账号异常应立即联系信息安全团队。[来源1][来源2][来源3]
+013. PASS | answer_v2_013 | 3.31s
+     Q: 月底盘点账面对不上，我想以系统数据为准，SKU-A100 这个品现在显示多少件
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，SKU sku-a100 的当前库存为 42 件。[来源 1]。
+014. PASS | answer_v2_014 | 3.15s
+     Q: 帮我看下 sku b200 目前还有没有货
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU sku-b200 的当前库存为 0 件，表示没有货。[来源 1]
+015. PASS | answer_v2_015 | 3.00s
+     Q: Sku-C300 当前还剩多少箱？
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: Sku-C300 当前还剩 7 箱。[来源 1]
+016. PASS | answer_v2_016 | 3.49s
+     Q: 客户催单，sku a100 今天还有多少件能发
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，SKU sku-a100 的当前库存为 42 件。因此，客户催单，sku a100 今天还有 42 件能发。[来源 1]
+017. PASS | answer_v2_017 | 3.79s
+     Q: 远程办公的规定大概讲讲；SKU-A100 手上还有几件
+     route wiki_system -> wiki_system | behavior answer -> answer | outcome ready
+     sources=['system', 'wiki'] citations=[1, 2, 3, 4] facts=ok reasons=evidence_sufficient
+     A: 远程办公须至少提前一个工作日获得直属主管批准，涉及客户现场支持、机房值守的岗位不适用远程办公政策，员工每周最多申请2天远程办公。SKU-A10: 42件。[来源1][来源2][来源3][来源4]
+018. FAIL | answer_v2_018 | 3.47s
+     Q: 设备遗失几小时内必须上报、报给谁？顺便把 Sku-C300 当下的库存报给我
+     route document_system -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=MISS reasons=evidence_sufficient
+     A: 根据资料，设备遗失几小时内必须上报、报给谁的信息未在资料中提及。SKU sku-c300 的当前库存为 7 箱。[来源 1]
+     -> route marker gap; retrieval miss; generation miss
+019. FAIL | answer_v2_019 | 3.75s
+     Q: 账号权限先给我通盘说一下，高权限复核周期那句要原样给我，再看下 sku b200 那边的存量
+     route wiki_document_system -> wiki_system | behavior answer -> answer | outcome ready
+     sources=['system', 'wiki'] citations=[1, 3, 4] facts=ok reasons=evidence_sufficient
+     A: 高权限账号每 90 天复核一次。[来源 1] 系统账号仅限本人使用，不得共享密码或验证码。[来源 3] SKU sku-b20:0 的当前库存为 0 件。[来源 4]
+     -> route marker gap; retrieval miss
+020. PASS | answer_v2_020 | 8.83s
+     Q: 培训预算每年上限是多少、谁批准？另外 SKU-A100 当前库存报一下
+     route document_system -> document_system | behavior answer -> answer | outcome ready
+     sources=['document', 'system'] citations=[1, 5] facts=ok reasons=evidence_sufficient
+     A: 培训预算每年上限是2000元，由直属主管批准。SKU-A100当前库存为42件。[来源1][来源5]
+021. PASS | answer_v2_021 | 0.00s
+     Q: SKU-D400 目前库存量多少？
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result, freshness_unsupported
+     A: 根据现有资料无法确定。
+022. PASS | answer_v2_022 | 0.00s
+     Q: 采购新报了个料号过来说要备货，我先在系统里核一下 sku e500 的存货情况
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+023. PASS | answer_v2_023 | 0.00s
+     Q: SKU_F600 目前有货吗
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result, freshness_unsupported
+     A: 根据现有资料无法确定。
+024. PASS | answer_v2_024 | 0.00s
+     Q: Sku-H800 还剩几件？客户在等
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+025. PASS | answer_v2_025 | 10.97s
+     Q: 公司五险一金的缴纳比例是多少？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+026. PASS | answer_v2_026 | 11.12s
+     Q: 我下个月办婚礼，想提前跟主管把时间排开，公司的婚假是按几天算的
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+027. PASS | answer_v2_027 | 11.26s
+     Q: 年终奖是怎么算的，一般什么时候发
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+028. FAIL | answer_v2_028 | 3.15s
+     Q: 这个月工作日晚上加了不少班，想赶在发工资前自己把账核一遍，工作日加班的加班费是按几倍算的
+     route document_only -> document_only | behavior generation_refuse -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 工作日加班的加班费按1倍计算。[来源1]
+     -> generation miss
+029. PASS | answer_v2_029 | 6.13s
+     Q: 出差住宿费的标准上限是多少？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+030. PASS | answer_v2_030 | 12.77s
+     Q: 试用期通常有多久？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，试用期的具体时长并未明确说明。资料中只提到试用期员工应在期满前10个工作日提交转正总结，但没有说明试用期的时长是多少。因此，根据现有资料无法确定试用期通常有多久。
+031. PASS | answer_v2_031 | 11.47s
+     Q: 病假期间工资怎么发？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+032. PASS | answer_v2_032 | 11.54s
+     Q: 公司给员工买补充商业医疗保险吗？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+033. PASS | answer_v2_033 | 0.00s
+     Q: 帮我查下库存
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 请提供需要查询的 SKU。
+034. FAIL | answer_v2_034 | 5.41s
+     Q: 现在这边货还够吗
+     route system_only -> document_only | behavior boundary -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=ok reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+035. FAIL | answer_v2_035 | 11.68s
+     Q: 库存这边帮我看一眼，挺急的
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+036. PASS | answer_v2_036 | 0.00s
+     Q: 在排下周的补货计划，SKU-A100、SKU_B200 这两个料号的库存数我都要用到
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前一次支持查询一个 SKU，请拆分后分别查询。
+037. PASS | answer_v2_037 | 0.00s
+     Q: Sku-C300、sku a100 这两个一起报给我
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前一次支持查询一个 SKU，请拆分后分别查询。
+038. FAIL | answer_v2_038 | 5.45s
+     Q: ord-1001 现在是什么状态？
+     route system_only -> document_only | behavior boundary -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=ok reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+039. PASS | answer_v2_039 | 0.00s
+     Q: apr-3001 的审批到哪一步了
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+040. FAIL | answer_v2_040 | 11.64s
+     Q: 帮我看下 subject-001 这个账户下有几笔订单
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+
+Run 2 summary
+  Pass rate                 : 80.0% (32/40)
+  Answer Success Rate       : 85.0%
+  False Refusal Rate        : 0.0%
+  Unanswerable Refusal Rate : 91.7%
+  Boundary Accuracy         : 50.0%
+  Citation Presence Rate    : 95.2%
+  Citation Index Validity   : 100.0%
+  Required Source Coverage  : 90.0%
+  Expected Fact Hit Rate    : 90.0%
+  Route Accuracy            : 82.5%
+  Duration p50/p95/max      : 3.73s / 11.64s / 12.77s
+
+==============================================================================
+Run 3
+==============================================================================
+001. PASS | answer_v2_001 | 3.17s
+     Q: 报销申请最晚要在费用发生后多少天内提交？需要附哪些材料
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 报销申请最晚要在费用发生后30天内提交。需要附合法有效的发票和支付凭证。[来源1]
+002. PASS | answer_v2_002 | 8.24s
+     Q: 单笔 2500 元的报销，除了直属主管还需要谁审批？门槛金额是多少
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 单笔2500元的报销需要部门负责人审批，门槛金额是2000元。[来源1]
+003. PASS | answer_v2_003 | 3.22s
+     Q: 实习生有带薪年假吗？他们每月能请几天事假
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，实习生不享有带薪年假，但每月可申请1天事假。[来源 1]
+004. PASS | answer_v2_004 | 7.92s
+     Q: 调休必须在多长时间内用完？过期了会怎么样
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 调休必须在3个月内用完，逾期自动失效。[来源1]
+005. PASS | answer_v2_005 | 3.12s
+     Q: 每周最多能申请几天远程办公？需要提前多久、找谁批
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 每周最多能申请2天远程办公，需至少提前一个工作日获得直属主管批准。[来源1]
+006. FAIL | answer_v2_006 | 8.76s
+     Q: 下个月先去深圳、再飞一趟新加坡，这两趟差在系统里提申请，要过的审批人是不是不一样，分别得谁签
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=- facts=MISS reasons=evidence_sufficient
+     A: 下个月先去深圳、再飞一趟新加坡，这两趟差在系统里提申请，要过的审批人是不是不一样，分别得谁签
+     -> citation mismatch; generation miss
+007. PASS | answer_v2_007 | 8.24s
+     Q: 设备丢了以后多久之内必须报告？报给谁
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 设备遗失应在 2 小时内报告直属主管和信息技术部门。[来源 1]
+008. PASS | answer_v2_008 | 8.47s
+     Q: 每月迟到多久、累计几次以内只提醒不扣款？超过之后要做什么
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 每月迟到不超过10分钟且累计不超过2次以内只提醒不扣款；超过上述次数需提交异常说明。[来源1]
+009. PASS | answer_v2_009 | 3.57s
+     Q: 远程办公这块的规定大体是什么样，简单说说就行
+     route wiki_only -> wiki_document | behavior answer -> answer | outcome ready
+     sources=['document', 'wiki'] citations=[4] facts=ok reasons=evidence_sufficient
+     A: 远程办公须至少提前一个工作日获得直属主管批准，员工每周最多申请2天远程办公，涉及客户现场支持、机房值守的岗位不适用远程办公政策。[来源4]
+010. PASS | answer_v2_010 | 3.91s
+     Q: 帮我把请假和年假的规定捋一捋，有个整体印象就行
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 根据资料，正式员工入职满一年后每年享有5天带薪年假，满三年后增加至8天；请假需提前在系统提交，1天内由直属主管审批，超1天需部门负责人审批；实习生不享有带薪年假，但每月可申请1天事假。[来源1][来源2][来源3]
+011. PASS | answer_v2_011 | 3.80s
+     Q: 公司在账号和权限上大致是怎么把关的？
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 公司在账号和权限上通过以下方式把关：1) 高权限账号每90天复核一次[来源1]；2) 发现账号异常立即联系信息安全团队[来源2]；3) 系统账号仅限本人使用，禁止共享密码或验证码[来源3]。
+012. PASS | answer_v2_012 | 3.92s
+     Q: 信息安全方面公司整体管哪些事？我只要大方向
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 信息安全方面公司整体管以下大方向：1. 敏感文件对外发送前需获得部门负责人批准并使用公司指定加密工具；2. 内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务；3. 发现账号异常应立即联系信息安全团队。[来源1][来源2][来源3]
+013. PASS | answer_v2_013 | 3.47s
+     Q: 月底盘点账面对不上，我想以系统数据为准，SKU-A100 这个品现在显示多少件
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，SKU sku-a100 的当前库存为 42 件。[来源 1]。
+014. PASS | answer_v2_014 | 3.06s
+     Q: 帮我看下 sku b200 目前还有没有货
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU sku-b200 的当前库存为 0 件，表示没有货。[来源 1]
+015. PASS | answer_v2_015 | 3.16s
+     Q: Sku-C300 当前还剩多少箱？
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: Sku-C300 当前还剩 7 箱。[来源 1]
+016. PASS | answer_v2_016 | 3.44s
+     Q: 客户催单，sku a100 今天还有多少件能发
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据资料，SKU sku-a100 的当前库存为 42 件。因此，客户催单，sku a100 今天还有 42 件能发。[来源 1]
+017. PASS | answer_v2_017 | 3.74s
+     Q: 远程办公的规定大概讲讲；SKU-A100 手上还有几件
+     route wiki_system -> wiki_system | behavior answer -> answer | outcome ready
+     sources=['system', 'wiki'] citations=[1, 2, 3, 4] facts=ok reasons=evidence_sufficient
+     A: 远程办公须至少提前一个工作日获得直属主管批准，涉及客户现场支持、机房值守的岗位不适用远程办公政策，员工每周最多申请2天远程办公。SKU-A10: 42件。[来源1][来源2][来源3][来源4]
+018. FAIL | answer_v2_018 | 3.47s
+     Q: 设备遗失几小时内必须上报、报给谁？顺便把 Sku-C300 当下的库存报给我
+     route document_system -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=MISS reasons=evidence_sufficient
+     A: 根据资料，设备遗失几小时内必须上报、报给谁的信息未在资料中提及。SKU sku-c300 的当前库存为 7 箱。[来源 1]
+     -> route marker gap; retrieval miss; generation miss
+019. FAIL | answer_v2_019 | 3.80s
+     Q: 账号权限先给我通盘说一下，高权限复核周期那句要原样给我，再看下 sku b200 那边的存量
+     route wiki_document_system -> wiki_system | behavior answer -> answer | outcome ready
+     sources=['system', 'wiki'] citations=[1, 3, 4] facts=ok reasons=evidence_sufficient
+     A: 高权限账号每 90 天复核一次。[来源 1] 系统账号仅限本人使用，不得共享密码或验证码。[来源 3] SKU sku-b20:0 的当前库存为 0 件。[来源 4]
+     -> route marker gap; retrieval miss
+020. PASS | answer_v2_020 | 8.31s
+     Q: 培训预算每年上限是多少、谁批准？另外 SKU-A100 当前库存报一下
+     route document_system -> document_system | behavior answer -> answer | outcome ready
+     sources=['document', 'system'] citations=[2, 3] facts=ok reasons=evidence_sufficient
+     A: 培训预算每年上限是2000元，由直属主管批准。SKU-A101当前库存为42件。[来源2] [来源3]
+021. PASS | answer_v2_021 | 0.00s
+     Q: SKU-D400 目前库存量多少？
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result, freshness_unsupported
+     A: 根据现有资料无法确定。
+022. PASS | answer_v2_022 | 0.00s
+     Q: 采购新报了个料号过来说要备货，我先在系统里核一下 sku e500 的存货情况
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+023. PASS | answer_v2_023 | 0.00s
+     Q: SKU_F600 目前有货吗
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result, freshness_unsupported
+     A: 根据现有资料无法确定。
+024. PASS | answer_v2_024 | 0.00s
+     Q: Sku-H800 还剩几件？客户在等
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+025. PASS | answer_v2_025 | 11.31s
+     Q: 公司五险一金的缴纳比例是多少？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+026. PASS | answer_v2_026 | 11.47s
+     Q: 我下个月办婚礼，想提前跟主管把时间排开，公司的婚假是按几天算的
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+027. PASS | answer_v2_027 | 12.92s
+     Q: 年终奖是怎么算的，一般什么时候发
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 根据提供的[来源1]，星河科技员工手册中只提到了带薪年假和事假的制度，但没有明确说明年终奖的计算方式和发放时间。因此，根据现有资料无法确定年终奖的计算方式和发放时间。
+028. FAIL | answer_v2_028 | 3.21s
+     Q: 这个月工作日晚上加了不少班，想赶在发工资前自己把账核一遍，工作日加班的加班费是按几倍算的
+     route document_only -> document_only | behavior generation_refuse -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 工作日加班的加班费按1倍计算。[来源1]
+     -> generation miss
+029. PASS | answer_v2_029 | 6.14s
+     Q: 出差住宿费的标准上限是多少？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+030. PASS | answer_v2_030 | 13.42s
+     Q: 试用期通常有多久？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，试用期的具体时长并未明确说明。资料中只提到试用期员工应在期满前10个工作日提交转正总结，但没有说明试用期的时长是多少。因此，根据现有资料无法确定试用期通常有多久。
+031. PASS | answer_v2_031 | 11.39s
+     Q: 病假期间工资怎么发？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+032. PASS | answer_v2_032 | 11.23s
+     Q: 公司给员工买补充商业医疗保险吗？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+033. PASS | answer_v2_033 | 0.00s
+     Q: 帮我查下库存
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 请提供需要查询的 SKU。
+034. FAIL | answer_v2_034 | 5.35s
+     Q: 现在这边货还够吗
+     route system_only -> document_only | behavior boundary -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=ok reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+035. FAIL | answer_v2_035 | 11.79s
+     Q: 库存这边帮我看一眼，挺急的
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+036. PASS | answer_v2_036 | 0.00s
+     Q: 在排下周的补货计划，SKU-A100、SKU_B200 这两个料号的库存数我都要用到
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前一次支持查询一个 SKU，请拆分后分别查询。
+037. PASS | answer_v2_037 | 0.00s
+     Q: Sku-C300、sku a100 这两个一起报给我
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前一次支持查询一个 SKU，请拆分后分别查询。
+038. FAIL | answer_v2_038 | 5.50s
+     Q: ord-1001 现在是什么状态？
+     route system_only -> document_only | behavior boundary -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=ok reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> route marker gap; policy/refusal
+039. PASS | answer_v2_039 | 0.00s
+     Q: apr-3001 的审批到哪一步了
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+040. FAIL | answer_v2_040 | 11.05s
+     Q: 帮我看下 subject-001 这个账户下有几笔订单
+     route system_only -> document_only | behavior boundary -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+     -> route marker gap
+
+Run 3 summary
+  Pass rate                 : 80.0% (32/40)
+  Answer Success Rate       : 85.0%
+  False Refusal Rate        : 0.0%
+  Unanswerable Refusal Rate : 91.7%
+  Boundary Accuracy         : 50.0%
+  Citation Presence Rate    : 95.2%
+  Citation Index Validity   : 100.0%
+  Required Source Coverage  : 90.0%
+  Expected Fact Hit Rate    : 90.0%
+  Route Accuracy            : 82.5%
+  Duration p50/p95/max      : 3.80s / 11.84s / 13.42s
+
+==============================================================================
+Aggregate
+==============================================================================
+Runs                      : 3
+Answer Success Rate       : 85.0%
+False Refusal Rate        : 0.0%
+Unanswerable Refusal Rate : 91.7%
+Boundary Accuracy         : 50.0%
+Citation Presence Rate    : 95.2%
+Citation Index Validity   : 100.0%
+Required Source Coverage  : 90.0%
+Expected Fact Hit Rate    : 90.0%
+Stability                 : 100.0% (3/3 pass 32, unstable 0, 0/N fail 8)
+Duration p50/p95/max      : 3.77s / 11.79s / 13.42s
+
+Gates
+  [FAIL] Answer Success Rate         85.0% (>= 90%)
+  [PASS] False Refusal Rate          0.0% (<= 10%)
+  [PASS] Unanswerable Refusal Rate   91.7% (>= 90%)
+  [FAIL] Boundary Message Accuracy   50.0% (>= 90%)
+  [PASS] Citation Index Validity     100.0% (>= 95%)
+  [PASS] Expected Fact Hit Rate      90.0% (>= 90%)
+  [PASS] Cross-run Stability         100.0% (>= 90%)
+
+Wrote evaluation_runs\answerability-blind-v2\summary.json and evaluation_runs\answerability-blind-v2\summary.md

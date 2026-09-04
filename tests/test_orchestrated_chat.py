@@ -10,11 +10,13 @@ import api
 import chat_orchestration
 from chat_orchestration import (
     MESSAGE_DIRECT,
+    MESSAGE_MULTIPLE_SKU,
     MESSAGE_NO_DOCUMENTS,
     MESSAGE_NO_SKU,
     MESSAGE_NO_WIKI,
     MESSAGE_SYSTEM_LIMITED,
     extract_sku,
+    extract_skus,
 )
 from rag import Chunk
 from storage import SQLiteStorage
@@ -187,9 +189,15 @@ class FixedAnswerTests(OrchestratedChatTests):
         self.assertEqual(body["sources"], [])
         executor.assert_not_called()
 
-    def test_two_different_skus_are_treated_as_missing(self):
+    def test_two_different_skus_report_the_one_per_request_limit(self):
+        """Two valid SKUs is a stated limit, not a missing parameter.
+
+        This previously answered `请提供需要查询的 SKU。`, which told a caller who
+        had supplied two usable SKUs that they had supplied none.
+        """
         body = self.ask("查一下 SKU-A100 和 SKU-C300 的库存", "s-twosku").json()
-        self.assertEqual(body["answer"], MESSAGE_NO_SKU)
+        self.assertEqual(body["answer"], MESSAGE_MULTIPLE_SKU)
+        self.assertNotEqual(body["answer"], MESSAGE_NO_SKU)
 
     def test_unknown_sku_refuses_without_calling_the_model(self):
         body = self.ask("帮我查一下 SKU-Z999 的库存", "s-unknown").json()

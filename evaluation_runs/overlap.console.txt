@@ -1,0 +1,154 @@
+﻿
+==============================================================================
+route_holdout  (80 questions vs 160 reference questions)
+==============================================================================
+Top 20 most similar pairs:
+  0.667  seq=0.667 jac=0.389 masked=0.444  route_holdout_036  vs  route_validation_v1/route_system_only_h002
+          H: 查一下 SKU-C300 还剩几箱
+          R: 帮我查下 SKU-C300 库存
+  0.571  seq=0.571 jac=0.357 masked=0.750  route_holdout_040  vs  route_dev/route_system_only_008
+          H: 库存还剩多少来着
+          R: SKU_A100 库存还剩多少？
+  0.560  seq=0.560 jac=0.278 masked=0.455  route_holdout_016  vs  route_dev/route_wiki_only_001
+          H: 简单介绍下远程办公政策吧，别太细
+          R: 介绍一下远程办公这块
+  0.545  seq=0.545 jac=0.258 masked=0.533  route_holdout_039  vs  route_dev/route_system_only_001
+          H: sku-a100 和 SKU-C300 现在分别还有多少？想对比一下
+          R: SKU-A100 的库存现在还剩多少？
+  0.545  seq=0.545 jac=0.260 masked=0.577  route_holdout_077  vs  route_dev/route_wiki_document_system_001
+          H: 先概括下信息安全，再给我公共网盘那条的原文，最后 sku-a100 当前库存多少件
+          R: 先概述库存管理，再引用原文条款，最后告诉我 SKU-A100 当前库存。
+  0.541  seq=0.541 jac=0.296 masked=0.370  route_holdout_033  vs  route_validation_v1/route_system_only_h001
+          H: 客户催得急，SKU_B200 目前是不是已经没货了？
+          R: SKU-B200 目前的库存是多少？
+  0.533  seq=0.533 jac=0.265 masked=0.378  route_holdout_069  vs  route_validation_v1/route_system_only_h008
+          H: 年假满三年是 8 天吧？帮我对下原文；顺便 SKU-A100目前多少件
+          R: Sku-A100 的库存目前是多少件？
+  0.526  seq=0.526 jac=0.310 masked=0.400  route_holdout_032  vs  route_validation_v1/route_system_only_h007
+          H: 我在填盘点表，最后一栏一直空着交不上去，麻烦帮我看下 sku-c300 的库存填多少
+          R: 下午好，麻烦帮我查一下 SKU-C300 的库存。
+  0.524  seq=0.524 jac=0.290 masked=0.400  route_holdout_059  vs  route_validation_v1/route_document_system_h008
+          H: 信息安全大概说说就行。另外 SKU-C300目前多少箱？
+          R: SKU-C300 目前还剩多少？请引用原文。
+  0.491  seq=0.491 jac=0.222 masked=0.400  route_holdout_056  vs  route_dev/route_system_only_006
+          H: 先说说远程办公整体政策。仓库那边 SKU-C300 的箱数现在是多少？
+          R: 我不需要文件里的说法。SKU-C300 的库存现在实际是多少？
+  0.484  seq=0.484 jac=0.250 masked=0.407  route_holdout_031  vs  route_dev/route_wiki_system_002
+          H: 刚跟客户开完会，他们说想再加订一批，我得先心里有底 —— SKU-A100 现在还有多少件？
+          R: 整体说明一下库存这块，另外 SKU-A100 现在还有多少？
+  0.480  seq=0.480 jac=0.270 masked=0.250  route_holdout_061  vs  route_validation_v1/route_system_only_h008
+          H: 手册里写的报销时限是多少天？另外 SKU-A100 目前多少件，这单我要走采购
+          R: Sku-A100 的库存目前是多少件？
+  0.478  seq=0.478 jac=0.222 masked=0.333  route_holdout_035  vs  route_validation_v1/route_document_system_h001
+          H: 仓库刚说 SKU-B200 补过货了，系统里现在显示多少件？
+          R: SKU-B200 的库存现在是多少？请附原文条款。
+  0.476  seq=0.476 jac=0.250 masked=0.312  route_holdout_062  vs  route_validation_v1/route_system_only_h002
+          H: 补卡原文规定是几个工作日内？顺便看下 sku-c300 眼下的库存
+          R: 帮我查下 SKU-C300 库存
+  0.476  seq=0.476 jac=0.245 masked=0.436  route_holdout_074  vs  route_dev/route_wiki_system_002
+          H: 账号权限整体介绍一下；90 天复核那句手册原文也给我；还有 Sku-A100 现在多少件
+          R: 整体说明一下库存这块，另外 SKU-A100 现在还有多少？
+  0.473  seq=0.473 jac=0.262 masked=0.364  route_holdout_073  vs  route_validation_v1/route_document_system_h006
+          H: 信息安全整体要求、外发审批那条原文、SKU_B200 当前库存，三样都要，谢谢
+          R: 请先给出原文依据，再说明 SKU-B200 当前库存。
+  0.471  seq=0.471 jac=0.225 masked=0.333  route_holdout_034  vs  route_validation_v1/route_system_only_h008
+          H: 采购那边今天催了三遍了，Sku-A100实时库存是多少，我拿到就直接转给他们
+          R: Sku-A100 的库存目前是多少件？
+  0.471  seq=0.471 jac=0.195 masked=0.200  route_holdout_055  vs  route_dev/route_document_system_006
+          H: 请假审批是怎么走的？顺便把 Sku-A100 目前的数量报一下
+          R: 请给出原文依据，并说明 SKU-A100 当前的库存数量。
+  0.462  seq=0.462 jac=0.220 masked=0.419  route_holdout_065  vs  route_dev/route_system_only_004
+          H: 培训预算上限原文写的多少钱？SKU-B200 现在还有货没有，也帮我看眼
+          R: sku a100 现在还有货吗？库存给我看一下
+  0.450  seq=0.450 jac=0.226 masked=0.125  route_holdout_053  vs  route_dev/route_system_only_003
+          H: 账号权限整体介绍一下呗。还有，SKU_B200 现在是不是零库存了？
+          R: 查询 SKU-B200 库存
+
+  pairs >= 0.85 : 0 (limit 0)
+  pairs >= 0.80 : 0 (limit 4 = 5% of 80)
+  entity-swap suspects : 0 (limit 0)
+  internal templates >2x: 0 (limit 0)
+
+==============================================================================
+answerability_holdout  (40 questions vs 80 reference questions)
+==============================================================================
+Top 20 most similar pairs:
+  0.769  seq=0.769 jac=0.412 masked=0.786  answer_holdout_007  vs  answerability_dev/answer_document_004
+          H: 高权限账号隔多长时间要复核一次？
+          R: 高权限账号多久复核一次？
+  0.700  seq=0.700 jac=0.385 masked=0.667  answer_holdout_025  vs  answerability_validation_v1/refuse_missing_h006
+          H: 咱们试用期一般是几个月？
+          R: 试用期最长是几个月？
+  0.692  seq=0.692 jac=0.412 masked=0.500  answer_holdout_015  vs  answerability_dev/answer_inventory_003
+          H: SKU_B200 现在还有货吗？
+          R: SKU-B200 库存还有多少？
+  0.636  seq=0.636 jac=0.333 masked=0.636  answer_holdout_037  vs  answerability_validation_v1/boundary_balance_h001
+          H: 我账户里现在还有多少余额？
+          R: 我的账户余额还有多少？
+  0.571  seq=0.571 jac=0.370 masked=0.519  answer_holdout_016  vs  answerability_validation_v1/answer_inventory_h001
+          H: Sku-A100 和 SKU-C300 现在各有多少？我要做个对比
+          R: SKU-A100 现在还有多少库存？
+  0.524  seq=0.524 jac=0.212 masked=0.516  answer_holdout_017  vs  answerability_dev/answer_inventory_002
+          H: 远程办公政策整体讲一下；另外 SKU-A100 现在库存多少件？
+          R: SKU-C300 现在的库存是多少？
+  0.520  seq=0.520 jac=0.333 masked=0.390  answer_holdout_013  vs  answerability_validation_v1/answer_inventory_h001
+          H: 客户下午三点要来提货，我得先给仓库回个准数：SKU-A100 现在库存还有多少
+          R: SKU-A100 现在还有多少库存？
+  0.519  seq=0.519 jac=0.250 masked=0.593  answer_holdout_033  vs  answerability_validation_v1/boundary_order_h002
+          H: ord-1001 这个订单现在到哪一步了？
+          R: 我的订单到哪一步了？
+  0.500  seq=0.500 jac=0.304 masked=0.500  answer_holdout_005  vs  answerability_validation_v1/answer_document_h003
+          H: 工资是每月几号发的？要是正好赶上法定节假日怎么办
+          R: 工资是每月几号发放？
+  0.500  seq=0.500 jac=0.200 masked=0.364  answer_holdout_029  vs  answerability_validation_v1/refuse_policy_h003
+          H: SKU-D400 这个料号的库存，麻烦报个数
+          R: SKU-D009 库存还剩多少？
+  0.500  seq=0.500 jac=0.222 masked=0.286  answer_holdout_031  vs  answerability_dev/answer_inventory_004
+          H: SKU-A900 是不是缺货了？
+          R: 查询 SKU-A100 库存
+  0.491  seq=0.491 jac=0.275 masked=0.364  answer_holdout_014  vs  answerability_dev/answer_inventory_002
+          H: 出库单还差最后一行没填完，主管等着签字，帮我确认下 sku-c300 目前的库存是多少
+          R: SKU-C300 现在的库存是多少？
+  0.449  seq=0.449 jac=0.243 masked=0.308  answer_holdout_018  vs  answerability_dev/answer_inventory_002
+          H: 单笔超过多少钱要部门负责人批？原文给我。还有 sku-c300 现在还剩多少箱
+          R: SKU-C300 现在的库存是多少？
+  0.444  seq=0.444 jac=0.154 masked=0.444  answer_holdout_022  vs  answerability_dev/refuse_missing_005
+          H: 婚假是几天？办酒能请几天
+          R: 婚假可以休几天？
+  0.440  seq=0.440 jac=0.200 masked=0.205  answer_holdout_020  vs  answerability_dev/answer_inventory_003
+          H: 信息安全大致要求说一下，敏感文件外发那条要原文，另外 SKU-B200 现在库存多少
+          R: SKU-B200 库存还有多少？
+  0.435  seq=0.435 jac=0.050 masked=0.417  answer_holdout_036  vs  answerability_dev/boundary_approval_001
+          H: 我提交的转正审批通过了吗？
+          R: 我的审批现在到哪一步了？
+  0.435  seq=0.435 jac=0.105 masked=0.609  answer_holdout_038  vs  answerability_validation_v1/boundary_balance_h001
+          H: 我的积分还剩多少，够换东西吗
+          R: 我的账户余额还有多少？
+  0.417  seq=0.417 jac=0.179 masked=0.316  answer_holdout_030  vs  answerability_dev/refuse_policy_003
+          H: 同事在群里丢了个编号 sku-e500 就跑了，让我自己查，帮我看看这个还剩多少
+          R: SKU-M500 库存还剩多少？
+  0.414  seq=0.414 jac=0.174 masked=0.308  answer_holdout_009  vs  answerability_validation_v1/answer_wiki_h001
+          H: 远程办公整体是个什么政策，先给我讲讲大概
+          R: 概述一下远程办公政策
+  0.392  seq=0.392 jac=0.225 masked=0.392  answer_holdout_001  vs  answerability_validation_v1/answer_document_h004
+          H: 试用期快结束了，转正总结要提前多久交？手册里写的是多少个工作日
+          R: 试用期员工应在期满前多少个工作日提交转正材料？
+
+  pairs >= 0.85 : 0 (limit 0)
+  pairs >= 0.80 : 0 (limit 2 = 5% of 40)
+  entity-swap suspects : 0 (limit 0)
+  internal templates >2x: 0 (limit 0)
+
+==============================================================================
+Gates
+==============================================================================
+  [PASS] route_holdout: pairs >= 0.85                  0 (limit 0)
+  [PASS] route_holdout: pairs >= 0.80                  0 (limit 4)
+  [PASS] route_holdout: entity-swap suspects           0 (limit 0)
+  [PASS] route_holdout: internal templates used > 2x   0 (limit 0)
+  [PASS] answerability_holdout: pairs >= 0.85          0 (limit 0)
+  [PASS] answerability_holdout: pairs >= 0.80          0 (limit 2)
+  [PASS] answerability_holdout: entity-swap suspects   0 (limit 0)
+  [PASS] answerability_holdout: internal templates used > 2x0 (limit 0)
+
+Wrote evaluation_runs\overlap-report.json

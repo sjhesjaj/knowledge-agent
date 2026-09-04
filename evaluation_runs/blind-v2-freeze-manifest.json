@@ -1,0 +1,150 @@
+{
+  "created_utc": "2026-08-28T15:48:12+00:00",
+  "product_commit": "df3b4c9f3143c803a991ac0afc6f734b74a25139",
+  "git_head_at_freeze": "df3b4c9f3143c803a991ac0afc6f734b74a25139",
+  "python_version": "3.12.13",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "datasets": {
+    "route": {
+      "file": "eval_orchestrated_routes_blind_v2.json",
+      "sha256": "c7ad0231567fd98630cdb39e48306803a8b0aa749920bbc48b3e3cf116649efb",
+      "bytes": 39708,
+      "cases": 80,
+      "per_route": {
+        "direct": 10,
+        "document_only": 10,
+        "document_system": 10,
+        "system_only": 10,
+        "wiki_document": 10,
+        "wiki_document_system": 10,
+        "wiki_only": 10,
+        "wiki_system": 10
+      },
+      "difficulty": {
+        "boundary": 45,
+        "normal": 35
+      },
+      "requires_freshness_true": 25,
+      "requires_exact_citation_true": 36
+    },
+    "answerability": {
+      "file": "eval_answerability_blind_v2.json",
+      "sha256": "7ae1c0af4f82e0179ad377a6d433605da6e673d2e1d0ed5a689bcf3fd1bc9d89",
+      "bytes": 23762,
+      "cases": 40,
+      "expected_behavior": {
+        "answer": 20,
+        "boundary": 8,
+        "generation_refuse": 8,
+        "policy_refuse": 4
+      },
+      "answer_categories": {
+        "document": 8,
+        "multi_channel": 4,
+        "system": 4,
+        "wiki": 4
+      },
+      "difficulty": {
+        "boundary": 15,
+        "normal": 25
+      }
+    }
+  },
+  "author_report": "evaluation_runs/blind-v2-author-report.md",
+  "overlap": {
+    "report_json": "evaluation_runs/blind-v2-overlap-report.json",
+    "report_txt": "evaluation_runs/blind-v2-overlap-report.txt",
+    "reference_sets": [
+      "route_dev",
+      "route_validation_v1",
+      "route_audit_v1",
+      "answerability_dev",
+      "answerability_validation_v1",
+      "answerability_audit_v1",
+      "m8a_regression_tests"
+    ],
+    "reference_questions": 441,
+    "thresholds": {
+      "blocking": 0.85,
+      "elevated": 0.8,
+      "max_elevated_fraction": 0.05,
+      "masked_template": 0.9
+    },
+    "max_similarity": {
+      "route_v2": 0.7272727272727273,
+      "answerability_v2": 0.7586206896551724,
+      "route_v2_x_answerability_v2": 0.7586206896551724
+    },
+    "gates": [
+      {
+        "name": "route_v2: pairs >= 0.85",
+        "value": 0,
+        "limit": 0,
+        "passed": true
+      },
+      {
+        "name": "route_v2: pairs >= 0.80",
+        "value": 0,
+        "limit": 4,
+        "passed": true
+      },
+      {
+        "name": "route_v2: entity-swap suspects",
+        "value": 0,
+        "limit": 0,
+        "passed": true
+      },
+      {
+        "name": "route_v2: internal templates used > 2x",
+        "value": 0,
+        "limit": 0,
+        "passed": true
+      },
+      {
+        "name": "answerability_v2: pairs >= 0.85",
+        "value": 0,
+        "limit": 0,
+        "passed": true
+      },
+      {
+        "name": "answerability_v2: pairs >= 0.80",
+        "value": 0,
+        "limit": 2,
+        "passed": true
+      },
+      {
+        "name": "answerability_v2: entity-swap suspects",
+        "value": 0,
+        "limit": 0,
+        "passed": true
+      },
+      {
+        "name": "answerability_v2: internal templates used > 2x",
+        "value": 0,
+        "limit": 0,
+        "passed": true
+      },
+      {
+        "name": "route_v2 x answerability_v2: pairs >= 0.85",
+        "value": 0,
+        "limit": 0,
+        "passed": true
+      },
+      {
+        "name": "route_v2 x answerability_v2: pairs >= 0.80",
+        "value": 0,
+        "limit": 4,
+        "passed": true
+      },
+      {
+        "name": "route_v2 x answerability_v2: entity-swap suspects",
+        "value": 0,
+        "limit": 0,
+        "passed": true
+      }
+    ],
+    "all_gates_passed": true
+  },
+  "product_scoring_started": false,
+  "note": "Frozen before any product scoring. From this point the questions, labels, regexes, and metric definitions of Blind Holdout V2 are immutable; any later score must cite these SHA-256 values."
+}

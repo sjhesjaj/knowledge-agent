@@ -1,0 +1,557 @@
+﻿==============================================================================
+Per-case results
+==============================================================================
+001. PASS | route_holdout_001 | boundary
+     Q: 早上好呀，今天开始干活了
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+002. PASS | route_holdout_002 | normal
+     Q: 谢谢啊，帮大忙了
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+003. PASS | route_holdout_003 | boundary
+     Q: 在吗在吗，方便吗
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+004. PASS | route_holdout_004 | normal
+     Q: 行，那我先撤了，明天见
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+005. PASS | route_holdout_005 | normal
+     Q: 上午好，我是刚转岗过来的运营小周，以后可能要常来打扰你了
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+006. PASS | route_holdout_006 | normal
+     Q: 辛苦啦，今天就到这儿吧
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+007. PASS | route_holdout_007 | normal
+     Q: 嗯嗯明白了，感谢感谢
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+008. PASS | route_holdout_008 | boundary
+     Q: 晚上好，刚开完会，先跟你打个招呼
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+009. PASS | route_holdout_009 | normal
+     Q: 收到，谢谢你哈
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+010. PASS | route_holdout_010 | normal
+     Q: 周末愉快，下周聊
+     route    expected=direct                actual=direct
+     steps    expected=-                     actual=-
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  direct_utterance
+011. PASS | route_holdout_011 | normal
+     Q: 我刚入职，能整体讲讲咱们请假这块是怎么个规矩吗？
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+012. PASS | route_holdout_012 | normal
+     Q: 远程办公大概是个什么政策，简单说说就行
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+013. FAIL | route_holdout_013 | normal
+     Q: 信息安全方面公司整体是怎么要求的？
+     route    expected=wiki_only             actual=wiki_document
+     steps    expected=wiki_query            actual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=T MISMATCH
+     reasons  wiki_overview, document_exact, exact_citation_requested
+014. PASS | route_holdout_014 | normal
+     Q: 账号和权限这块我一直没搞明白，科普一下呗
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+015. PASS | route_holdout_015 | normal
+     Q: 有新同事问我年假的事，我自己也讲不清楚，帮我捋一遍
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+016. PASS | route_holdout_016 | boundary
+     Q: 简单介绍下远程办公政策吧，别太细
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+017. PASS | route_holdout_017 | boundary
+     Q: 外发资料平时要注意些什么？给我个大方向就行，不用抠原文
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+018. PASS | route_holdout_018 | normal
+     Q: 我们组下周做入职分享，想先了解一下账号权限管理的整体思路
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+019. PASS | route_holdout_019 | normal
+     Q: 请假审批大致什么流程？心里有个数就行
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+020. PASS | route_holdout_020 | boundary
+     Q: 公司在保护内部资料这件事上的整体立场是什么？
+     route    expected=wiki_only             actual=wiki_only
+     steps    expected=wiki_query            actual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview
+021. PASS | route_holdout_021 | boundary
+     Q: 现在生效的报销制度里，单据要在多少天内提交？把原文给我
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, freshness_requested, exact_citation_requested
+022. PASS | route_holdout_022 | boundary
+     Q: 漏打卡了我该怎么办，补卡有没有时间限制
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  default_document
+023. PASS | route_holdout_023 | normal
+     Q: 境外出差到底要不要总经理批？按手册原话给我
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, exact_citation_requested
+024. PASS | route_holdout_024 | normal
+     Q: 调休我记得是三个月内用完？帮我对一下手册里的原文
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, exact_citation_requested
+025. PASS | route_holdout_025 | normal
+     Q: 把「转正流程」那段原话发我
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, exact_citation_requested
+026. PASS | route_holdout_026 | normal
+     Q: 绩效结果出来后申请复核有几天窗口期，制度上写的具体是多少？
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, exact_citation_requested
+027. PASS | route_holdout_027 | normal
+     Q: 培训预算每年最多能报多少钱？要准确数字
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  document_exact, exact_citation_requested
+028. PASS | route_holdout_028 | normal
+     Q: 设备丢了要在多久之内上报？我要写进新人须知，得写准确
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=F MISMATCH
+     reasons  default_document
+029. PASS | route_holdout_029 | normal
+     Q: 工资一般几号发？遇到节假日怎么处理，手册里有写吗
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=F MISMATCH
+     reasons  document_policy_context
+030. PASS | route_holdout_030 | boundary
+     Q: 访客来公司要不要人全程陪着？
+     route    expected=document_only         actual=document_only
+     steps    expected=document_search       actual=document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  default_document
+031. PASS | route_holdout_031 | normal
+     Q: 刚跟客户开完会，他们说想再加订一批，我得先心里有底 —— SKU-A100 现在还有多少件？
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+032. PASS | route_holdout_032 | normal
+     Q: 我在填盘点表，最后一栏一直空着交不上去，麻烦帮我看下 sku-c300 的库存填多少
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  system_current_state
+033. PASS | route_holdout_033 | normal
+     Q: 客户催得急，SKU_B200 目前是不是已经没货了？
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+034. PASS | route_holdout_034 | boundary
+     Q: 采购那边今天催了三遍了，Sku-A100实时库存是多少，我拿到就直接转给他们
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+035. FAIL | route_holdout_035 | normal
+     Q: 仓库刚说 SKU-B200 补过货了，系统里现在显示多少件？
+     route    expected=system_only           actual=document_system
+     steps    expected=system_query          actual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=T MISMATCH
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+036. PASS | route_holdout_036 | normal
+     Q: 查一下 SKU-C300 还剩几箱
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  system_current_state
+037. PASS | route_holdout_037 | boundary
+     Q: ord-1001 这个订单现在到哪一步了？
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+038. PASS | route_holdout_038 | boundary
+     Q: 我那个审批（apr-3001）当前卡在谁那里？
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+039. FAIL | route_holdout_039 | boundary
+     Q: sku-a100 和 SKU-C300 现在分别还有多少？想对比一下
+     route    expected=system_only           actual=document_system
+     steps    expected=system_query          actual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=T MISMATCH
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+040. PASS | route_holdout_040 | boundary
+     Q: 库存还剩多少来着
+     route    expected=system_only           actual=system_only
+     steps    expected=system_query          actual=system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=F OK
+     reasons  system_current_state
+041. PASS | route_holdout_041 | normal
+     Q: 先跟我讲讲远程办公整体是怎么回事，然后把每周天数上限那句原文也贴给我
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, exact_citation_requested
+042. PASS | route_holdout_042 | normal
+     Q: 年假整体是个什么逻辑？另外满三年之后到底几天，手册原文怎么写的
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, exact_citation_requested
+043. FAIL | route_holdout_043 | normal
+     Q: 信息安全我想先有个整体概念；敏感文件外发那条的准确表述也一起给我
+     route    expected=wiki_document         actual=wiki_only
+     steps    expected=wiki_query+document_searchactual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=F MISMATCH
+     reasons  wiki_overview
+044. FAIL | route_holdout_044 | boundary
+     Q: 账号权限这块整体介绍一遍。还有高权限账号复核周期，现在执行的还是原来那个天数吗？我要写进材料，得写准
+     route    expected=wiki_document         actual=wiki_only
+     steps    expected=wiki_query+document_searchactual=wiki_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=F MISMATCH
+     reasons  wiki_overview, freshness_requested
+045. PASS | route_holdout_045 | normal
+     Q: 下周给新人做分享。远程办公政策整体讲一下，哪些岗位不适用，手册里原文是怎么列的？
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, exact_citation_requested
+046. PASS | route_holdout_046 | normal
+     Q: 请假审批流程大概说说；「1 天以内」那句具体怎么表述的，我要引用
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, exact_citation_requested
+047. PASS | route_holdout_047 | normal
+     Q: 公共网盘这事儿公司整体什么态度？说完再把制度原文那一条贴上来
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, exact_citation_requested
+048. PASS | route_holdout_048 | normal
+     Q: 实习生的假是怎么安排的，先听个大概；然后手册里那句准确说法也要
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=F MISMATCH
+     reasons  wiki_overview, document_policy_context
+049. FAIL | route_holdout_049 | normal
+     Q: 帮我把远程办公政策梳理一下，同时确认下要提前几个工作日申请，这个数字别弄错
+     route    expected=wiki_document         actual=wiki_only
+     steps    expected=wiki_query+document_searchactual=wiki_query
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=F MISMATCH
+     reasons  wiki_overview
+050. PASS | route_holdout_050 | boundary
+     Q: 账号能不能借同事用？公司整体怎么看，原话我也要，准备转发到群里
+     route    expected=wiki_document         actual=wiki_document
+     steps    expected=wiki_query+document_searchactual=wiki_query+document_search
+     signals  freshness exp=F act=F OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, exact_citation_requested
+051. PASS | route_holdout_051 | normal
+     Q: 两个事：远程办公政策大概讲讲；另外 SKU-A100 现在库存多少，我判断下要不要跑一趟仓库
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+052. PASS | route_holdout_052 | normal
+     Q: 在准备明天的例会。年假政策整体帮我捋一遍，再顺手看下 sku-c300 当前有多少
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+053. PASS | route_holdout_053 | boundary
+     Q: 账号权限整体介绍一下呗。还有，SKU_B200 现在是不是零库存了？
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+054. FAIL | route_holdout_054 | boundary
+     Q: 信息安全的大致要求给我说说；客户在等，SKU-B200 库存也帮我查下
+     route    expected=wiki_system           actual=wiki_document_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=F act=F OK | exact_citation exp=F act=T MISMATCH
+     reasons  wiki_overview, document_exact, system_current_state, exact_citation_requested
+055. FAIL | route_holdout_055 | normal
+     Q: 请假审批是怎么走的？顺便把 Sku-A100 目前的数量报一下
+     route    expected=wiki_system           actual=system_only
+     steps    expected=wiki_query+system_queryactual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  system_current_state, freshness_requested
+056. PASS | route_holdout_056 | normal
+     Q: 先说说远程办公整体政策。仓库那边 SKU-C300 的箱数现在是多少？
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+057. PASS | route_holdout_057 | normal
+     Q: 我在写交接文档，账号和权限的整体思路帮我概括一下，同时把 sku-a100 当前库存也写进盘点表
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+058. FAIL | route_holdout_058 | boundary
+     Q: 年假制度整体是什么情况？还有 ord-1002 现在什么状态，我这边要跟进
+     route    expected=wiki_system           actual=wiki_only
+     steps    expected=wiki_query+system_queryactual=wiki_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, freshness_requested
+059. PASS | route_holdout_059 | boundary
+     Q: 信息安全大概说说就行。另外 SKU-C300目前多少箱？
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+060. PASS | route_holdout_060 | boundary
+     Q: 远程办公政策整体讲一下；对了，我那个审批现在走到哪儿了
+     route    expected=wiki_system           actual=wiki_system
+     steps    expected=wiki_query+system_queryactual=wiki_query+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=F act=F OK
+     reasons  wiki_overview, system_current_state, freshness_requested
+061. PASS | route_holdout_061 | normal
+     Q: 手册里写的报销时限是多少天？另外 SKU-A100 目前多少件，这单我要走采购
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, system_current_state, freshness_requested, exact_citation_requested
+062. PASS | route_holdout_062 | normal
+     Q: 补卡原文规定是几个工作日内？顺便看下 sku-c300 眼下的库存
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=F MISMATCH | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, system_current_state, exact_citation_requested
+063. FAIL | route_holdout_063 | normal
+     Q: 境外出差是不是一定要总经理签字？要准确说法。SKU_B200 当前库存多少，也一起告诉我
+     route    expected=document_system       actual=system_only
+     steps    expected=document_search+system_queryactual=system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=F MISMATCH
+     reasons  system_current_state, freshness_requested
+064. PASS | route_holdout_064 | normal
+     Q: 调休逾期失效那条原文怎么写的？还有 Sku-A100 现在的件数，帮我一并确认
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+065. PASS | route_holdout_065 | normal
+     Q: 培训预算上限原文写的多少钱？SKU-B200 现在还有货没有，也帮我看眼
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+066. PASS | route_holdout_066 | normal
+     Q: 问两件不相干的事：一是高权限账号多久复核一次，要制度原话；二是 sku-a100 当前库存
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, system_current_state, freshness_requested, exact_citation_requested
+067. PASS | route_holdout_067 | normal
+     Q: 设备遗失几小时内必须上报？我照着写通知，要原文。仓库 SKU-C300 现在多少箱也说下
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, document_policy_context, system_current_state, freshness_requested, exact_citation_requested
+068. FAIL | route_holdout_068 | boundary
+     Q: 工资发放日手册明确写的是哪天？另外 ord-2001 目前什么状态
+     route    expected=document_system       actual=document_only
+     steps    expected=document_search+system_queryactual=document_search
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=F MISMATCH
+     reasons  document_policy_context, freshness_requested
+069. PASS | route_holdout_069 | boundary
+     Q: 年假满三年是 8 天吧？帮我对下原文；顺便 SKU-A100目前多少件
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+070. PASS | route_holdout_070 | boundary
+     Q: 申诉要在几个工作日内提交，原文给我；另外库存现在还剩多少
+     route    expected=document_system       actual=document_system
+     steps    expected=document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+071. PASS | route_holdout_071 | normal
+     Q: 我在做新人手册：远程办公整体政策讲一遍，每周上限那句附上原文，顺手查下 SKU-A100 现在的库存，我拿来当示例
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+072. PASS | route_holdout_072 | normal
+     Q: 年假先给个总体说明，再把满三年 8 天那句原话贴出来，最后帮我看下 sku-c300 目前还有几箱
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+073. PASS | route_holdout_073 | boundary
+     Q: 信息安全整体要求、外发审批那条原文、SKU_B200 当前库存，三样都要，谢谢
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+074. PASS | route_holdout_074 | normal
+     Q: 账号权限整体介绍一下；90 天复核那句手册原文也给我；还有 Sku-A100 现在多少件
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, document_policy_context, system_current_state, freshness_requested, exact_citation_requested
+075. PASS | route_holdout_075 | normal
+     Q: 准备下周培训材料：请假制度整体讲讲，1 天以内审批那条要原文，另外 SKU-B200 现在的库存数也放进去
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+076. PASS | route_holdout_076 | boundary
+     Q: 远程办公到底是怎么回事？不适用的岗位那句要原文。仓库的 SKU-C300现在是多少箱，也一并说下
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+077. FAIL | route_holdout_077 | normal
+     Q: 先概括下信息安全，再给我公共网盘那条的原文，最后 sku-a100 当前库存多少件
+     route    expected=wiki_document_system  actual=document_system
+     steps    expected=wiki_query+document_search+system_queryactual=document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  document_exact, system_current_state, freshness_requested, exact_citation_requested
+078. PASS | route_holdout_078 | boundary
+     Q: 账号安全整体说说，账号不能共享那条原话给我，另外我那个审批现在到哪一步了
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+079. PASS | route_holdout_079 | boundary
+     Q: 年假政策讲一下，实习生那句要原文，再帮我查下库存还剩多少
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=F MISMATCH | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, exact_citation_requested
+080. PASS | route_holdout_080 | normal
+     Q: 写盘点说明用：先讲讲信息安全整体要求，把敏感文件外发那条原文放进去，再补上 SKU-C300 现在的箱数
+     route    expected=wiki_document_system  actual=wiki_document_system
+     steps    expected=wiki_query+document_search+system_queryactual=wiki_query+document_search+system_query
+     signals  freshness exp=T act=T OK | exact_citation exp=T act=T OK
+     reasons  wiki_overview, document_exact, system_current_state, freshness_requested, exact_citation_requested
+
+==============================================================================
+Summary
+==============================================================================
+Total cases                    : 80
+Overall Accuracy               : 85.0%
+Macro Accuracy                 : 85.0%
+Steps Exact Match              : 85.0%
+Freshness Signal Accuracy      : 97.5%
+Exact Citation Signal Accuracy : 85.0%
+Boundary Accuracy              : 82.1% (28 cases)
+
+Per-route accuracy
+  direct                 10/10  100.0%
+  wiki_only               9/10  90.0%
+  document_only          10/10  100.0%
+  system_only             8/10  80.0%
+  wiki_document           7/10  70.0%
+  wiki_system             7/10  70.0%
+  document_system         8/10  80.0%
+  wiki_document_system    9/10  90.0%
+
+Confusion matrix (rows = expected, columns = actual)
+                              direct   wiki_only  document_o  system_onl  wiki_docum  wiki_syste  document_s  wiki_docum
+  direct                          10           0           0           0           0           0           0           0
+  wiki_only                        0           9           0           0           1           0           0           0
+  document_only                    0           0          10           0           0           0           0           0
+  system_only                      0           0           0           8           0           0           2           0
+  wiki_document                    0           3           0           0           7           0           0           0
+  wiki_system                      0           1           0           1           0           7           0           1
+  document_system                  0           0           1           1           0           0           8           0
+  wiki_document_system             0           0           0           0           0           0           1           9
+
+Failures: 12
+  - route_holdout_013 [normal] wiki_only -> wiki_document
+      信息安全方面公司整体是怎么要求的？
+  - route_holdout_035 [normal] system_only -> document_system
+      仓库刚说 SKU-B200 补过货了，系统里现在显示多少件？
+  - route_holdout_039 [boundary] system_only -> document_system
+      sku-a100 和 SKU-C300 现在分别还有多少？想对比一下
+  - route_holdout_043 [normal] wiki_document -> wiki_only
+      信息安全我想先有个整体概念；敏感文件外发那条的准确表述也一起给我
+  - route_holdout_044 [boundary] wiki_document -> wiki_only
+      账号权限这块整体介绍一遍。还有高权限账号复核周期，现在执行的还是原来那个天数吗？我要写进材料，得写准
+  - route_holdout_049 [normal] wiki_document -> wiki_only
+      帮我把远程办公政策梳理一下，同时确认下要提前几个工作日申请，这个数字别弄错
+  - route_holdout_054 [boundary] wiki_system -> wiki_document_system
+      信息安全的大致要求给我说说；客户在等，SKU-B200 库存也帮我查下
+  - route_holdout_055 [normal] wiki_system -> system_only
+      请假审批是怎么走的？顺便把 Sku-A100 目前的数量报一下
+  - route_holdout_058 [boundary] wiki_system -> wiki_only
+      年假制度整体是什么情况？还有 ord-1002 现在什么状态，我这边要跟进
+  - route_holdout_063 [normal] document_system -> system_only
+      境外出差是不是一定要总经理签字？要准确说法。SKU_B200 当前库存多少，也一起告诉我
+  - route_holdout_068 [boundary] document_system -> document_only
+      工资发放日手册明确写的是哪天？另外 ord-2001 目前什么状态
+  - route_holdout_077 [normal] wiki_document_system -> document_system
+      先概括下信息安全，再给我公共网盘那条的原文，最后 sku-a100 当前库存多少件
+
+Gates
+  [FAIL] Overall Accuracy                 85.0% (>= 90%)
+  [FAIL] Macro Accuracy                   85.0% (>= 90%)
+  [FAIL] Boundary Accuracy                82.1% (>= 85%)
+  [PASS] Route Accuracy [direct]          100.0% (>= 80%)
+  [PASS] Route Accuracy [wiki_only]       90.0% (>= 80%)
+  [PASS] Route Accuracy [document_only]   100.0% (>= 80%)
+  [PASS] Route Accuracy [system_only]     80.0% (>= 80%)
+  [FAIL] Route Accuracy [wiki_document]   70.0% (>= 80%)
+  [FAIL] Route Accuracy [wiki_system]     70.0% (>= 80%)
+  [PASS] Route Accuracy [document_system] 80.0% (>= 80%)
+  [PASS] Route Accuracy [wiki_document_system] 90.0% (>= 80%)
+
+Wrote evaluation_runs\route-blind-audit-postfix.json
+Dataset SHA-256: 35995dedacb5eefec5cd7333f85015e7599da581fa1f5ede81caccd9b421135f

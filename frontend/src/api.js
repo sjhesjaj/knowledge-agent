@@ -75,6 +75,11 @@ export const api = {
 
   clear: () => request('/api/knowledge', { method: 'DELETE' }),
 
+  wikiStatus(jobId) {
+    const query = jobId ? `?job_id=${encodeURIComponent(jobId)}` : ''
+    return request(`/api/wiki/status${query}`)
+  },
+
   listConversations: () => request(withClient('/api/conversations')),
 
   createConversation(title = '新对话') {

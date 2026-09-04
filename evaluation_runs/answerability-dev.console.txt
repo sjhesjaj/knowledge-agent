@@ -1,0 +1,258 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache C:\Users\h000_\AppData\Local\Temp\jieba.cache
+Loading model cost 0.422 seconds.
+Prefix dict has been built successfully.
+Dataset      : eval_answerability_dev.json (40 cases)
+Dataset SHA  : a50596cd934c9b05ef65c198e6b8550d1f8d8447dedfd322f4f1a5783541cbac
+Git SHA      : cf96fa2bfcb8b2ceffba169e226dcf3cabf65f05
+Chat model   : qwen3:4b
+Embed model  : nomic-embed-text
+Runs         : 1
+Building document index …
+Indexed 20 chunks from sample_company_rules.md
+Warming up the answer model …
+Warm-up took 8.13s (excluded from results)
+
+==============================================================================
+Run 1
+==============================================================================
+001. PASS | answer_document_001 | 3.33s
+     Q: 费用报销的单笔上限是多少元？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 费用报销的单笔上限是2000元。[来源 1]
+002. PASS | answer_document_002 | 3.53s
+     Q: 正式员工入职满一年后每年有多少天带薪年假？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 正式员工入职满一年后每年享有 5 天带薪年假。[来源 1]
+003. PASS | answer_document_003 | 3.53s
+     Q: 报销申请应该在费用发生后多少天内提交？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 报销申请应在费用发生后 30 天内提交。[来源 1]
+004. PASS | answer_document_004 | 3.30s
+     Q: 高权限账号多久复核一次？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 高权限账号每 90 天复核一次。[来源 1]
+005. PASS | answer_document_005 | 3.31s
+     Q: 每周最多可以申请几天远程办公？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 每周最多可以申请2天远程办公[来源 1]
+006. PASS | answer_document_006 | 3.23s
+     Q: 员工每年可申请的培训预算上限是多少元？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 2000元[来源 1]
+007. PASS | answer_document_007 | 3.19s
+     Q: 设备遗失应该在多少小时内报告？
+     route document_only -> document_only | behavior answer -> answer | outcome ready
+     sources=['document'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: 设备遗失应在2小时内报告。[来源1]
+008. FAIL | answer_document_008 | 0.00s
+     Q: 现在这版制度里，迟到多少分钟不扣款？
+     route document_only -> document_only | behavior answer -> policy_refuse | outcome refuse
+     sources=['document'] citations=- facts=MISS reasons=freshness_unsupported
+     A: 根据现有资料无法确定。
+     -> policy/refusal
+009. PASS | answer_wiki_001 | 3.62s
+     Q: 介绍一下远程办公
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 远程办公须至少提前一个工作日获得直属主管批准[来源1]，涉及客户现场支持、机房值守的岗位不适用远程办公政策[来源2]，员工每周最多申请2天远程办公[来源3]。
+010. PASS | answer_wiki_002 | 3.57s
+     Q: 介绍一下账号与权限的相关规定
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 高权限账号需每90天复核一次[来源1]，发现账号异常应立即联系信息安全团队[来源2]，系统账号仅限本人使用且不得共享密码或验证码[来源3]。
+011. PASS | answer_wiki_003 | 4.03s
+     Q: 梳理一下信息安全方面的要点
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 根据资料，信息安全要点包括：1. 敏感文件对外发送前需经部门负责人批准并使用公司指定加密工具[来源1]；2. 内部资料不得上传至未经公司批准的公共网盘或外部AI服务[来源2]；3. 发现账号异常应立即联系信息安全团队[来源3]。
+012. PASS | answer_wiki_004 | 4.05s
+     Q: 介绍一下请假与年假
+     route wiki_only -> wiki_only | behavior answer -> answer | outcome ready
+     sources=['wiki'] citations=[1, 2, 3] facts=ok reasons=evidence_sufficient
+     A: 根据资料，正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天；请假需提前在系统提交申请，1天内由直属主管审批，超过1天需部门负责人审批；实习生不享有带薪年假，但每月可申请1天事假。[来源1][来源2][来源3]
+013. PASS | answer_inventory_001 | 3.44s
+     Q: 帮我查一下 SKU-A100 当前的库存
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU-A100 当前库存为 42 件。[来源 1]
+014. PASS | answer_inventory_002 | 3.25s
+     Q: SKU-C300 现在的库存是多少？
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU-C300 现在的库存是 7 箱。[来源 1]
+015. PASS | answer_inventory_003 | 3.35s
+     Q: SKU-B200 库存还有多少？
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU-B200 当前库存为 0 件。[来源 1]
+016. PASS | answer_inventory_004 | 3.23s
+     Q: 查询 SKU-A100 库存
+     route system_only -> system_only | behavior answer -> answer | outcome ready
+     sources=['system'] citations=[1] facts=ok reasons=evidence_sufficient
+     A: SKU-A100 的当前库存为 42 件。[来源 1]
+017. PASS | answer_multi_001 | 9.06s
+     Q: SKU-A100 库存目前是多少？请一并给出原文依据。
+     route document_system -> document_system | behavior answer -> answer | outcome ready
+     sources=['document', 'system'] citations=[3, 3] facts=ok reasons=evidence_sufficient
+     A: SKU-A100 库存目前是 42 件。[来源 3：demo-business-system，片段 3]
+018. PASS | answer_multi_002 | 9.01s
+     Q: SKU-C300 的库存还有多少？顺便把原文贴出来。
+     route document_system -> document_system | behavior answer -> answer | outcome ready
+     sources=['document', 'system'] citations=[3, 3] facts=ok reasons=evidence_sufficient
+     A: SKU-C300 的当前库存为 7 箱。[来源 3：demo-business-system，片段 3]
+019. PASS | answer_multi_003 | 4.36s
+     Q: 先概述远程办公政策，再引用原文条款。
+     route wiki_document -> wiki_document | behavior answer -> answer | outcome ready
+     sources=['document', 'wiki'] citations=[4] facts=ok reasons=evidence_sufficient
+     A: 星河科技远程办公政策规定：员工每周最多申请2天远程办公，须至少提前一个工作日获得直属主管批准；涉及客户现场支持、机房值守的岗位不适用远程办公政策。[来源4]（原文条款：员工每周最多申请 2 天远程办公，须至少提前一个工作日获得直属主管批准。涉及客户现场支持、机房值守的岗位不适用远程办公政策。）
+020. PASS | answer_multi_004 | 4.42s
+     Q: 介绍一下年假制度，并说明具体天数是多少。
+     route wiki_document -> wiki_document | behavior answer -> answer | outcome ready
+     sources=['document', 'wiki'] citations=[4, 4, 4] facts=ok reasons=evidence_sufficient
+     A: 根据资料，星河科技的年假制度规定：正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。[来源4]。实习生不享有带薪年假，但每月可申请1天事假。[来源4]。具体天数为：正式员工满一年后5天，满三年后8天。[来源4]
+021. PASS | refuse_policy_001 | 0.00s
+     Q: SKU-Z999 的库存现在是多少？
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result, freshness_unsupported
+     A: 根据现有资料无法确定。
+022. PASS | refuse_policy_002 | 0.00s
+     Q: 查询 SKU-X404 库存
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+023. PASS | refuse_policy_003 | 0.00s
+     Q: SKU-M500 库存还剩多少？
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result
+     A: 根据现有资料无法确定。
+024. PASS | refuse_policy_004 | 0.00s
+     Q: 帮我查一下 SKU-Q777 目前的库存
+     route system_only -> system_only | behavior policy_refuse -> policy_refuse | outcome refuse
+     sources=- citations=- facts=ok reasons=empty_tool_result, freshness_unsupported
+     A: 根据现有资料无法确定。
+025. PASS | refuse_missing_001 | 11.68s
+     Q: 公司班车晚上几点发车？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+026. PASS | refuse_missing_002 | 12.15s
+     Q: 员工食堂的午餐补贴是多少钱？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+027. PASS | refuse_missing_003 | 11.99s
+     Q: 公司提供几种商业保险？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+028. PASS | refuse_missing_004 | 6.28s
+     Q: 试用期工资是转正后的百分之多少？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+029. PASS | refuse_missing_005 | 12.91s
+     Q: 婚假可以休几天？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据提供的资料，婚假可以休几天？在星河科技员工手册中没有明确提到婚假的天数。员工手册中只提到了带薪年假（满一年5天，满三年8天）和事假（实习生每月1天），但没有关于婚假的具体规定。因此，根据现有资料无法确定婚假可以休几天。
+030. PASS | refuse_missing_006 | 12.11s
+     Q: 公司的年度体检安排在什么时候？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定。
+031. PASS | refuse_missing_007 | 11.84s
+     Q: 停车位怎么申请？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+032. PASS | refuse_missing_008 | 6.26s
+     Q: 公司有没有股票期权计划？
+     route document_only -> document_only | behavior generation_refuse -> generation_refuse | outcome ready
+     sources=['document'] citations=- facts=ok reasons=evidence_sufficient
+     A: 根据现有资料无法确定
+033. PASS | boundary_order_001 | 0.00s
+     Q: 我的订单目前是什么状态？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+034. PASS | boundary_order_002 | 0.00s
+     Q: 帮我查一下我的订单进度
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+035. PASS | boundary_approval_001 | 0.00s
+     Q: 我的审批现在到哪一步了？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+036. PASS | boundary_approval_002 | 0.00s
+     Q: 查一下我的审批状态
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+037. PASS | boundary_balance_001 | 0.00s
+     Q: 我的账户余额是多少？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+038. PASS | boundary_balance_002 | 0.00s
+     Q: 帮我查一下我当前的积分
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 当前版本仅支持库存查询。
+039. PASS | boundary_missing_sku_001 | 0.00s
+     Q: 现在库存还剩多少？
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 请提供需要查询的 SKU。
+040. PASS | boundary_missing_sku_002 | 0.00s
+     Q: 查询一下库存数量
+     route system_only -> system_only | behavior boundary -> boundary | outcome refuse
+     sources=- citations=- facts=ok reasons=-
+     A: 请提供需要查询的 SKU。
+
+Run 1 summary
+  Pass rate                 : 97.5% (39/40)
+  Answer Success Rate       : 95.0%
+  False Refusal Rate        : 5.0%
+  Unanswerable Refusal Rate : 100.0%
+  Boundary Accuracy         : 100.0%
+  Citation Presence Rate    : 100.0%
+  Citation Index Validity   : 100.0%
+  Required Source Coverage  : 100.0%
+  Expected Fact Hit Rate    : 95.0%
+  Route Accuracy            : 100.0%
+  Duration p50/p95/max      : 3.34s / 12.11s / 12.91s
+
+==============================================================================
+Aggregate
+==============================================================================
+Runs                      : 1
+Answer Success Rate       : 95.0%
+False Refusal Rate        : 5.0%
+Unanswerable Refusal Rate : 100.0%
+Boundary Accuracy         : 100.0%
+Citation Presence Rate    : 100.0%
+Citation Index Validity   : 100.0%
+Required Source Coverage  : 100.0%
+Expected Fact Hit Rate    : 95.0%
+Stability                 : 100.0% (3/3 pass 39, unstable 0, 0/N fail 1)
+Duration p50/p95/max      : 3.34s / 12.11s / 12.91s
+
+Gates
+  [PASS] Answer Success Rate         95.0% (>= 90%)
+  [PASS] False Refusal Rate          5.0% (<= 10%)
+  [PASS] Unanswerable Refusal Rate   100.0% (>= 90%)
+  [PASS] Boundary Message Accuracy   100.0% (>= 90%)
+  [PASS] Citation Index Validity     100.0% (>= 95%)
+  [PASS] Expected Fact Hit Rate      95.0% (>= 90%)
+  [PASS] Cross-run Stability         100.0% (>= 90%)
+
+Wrote evaluation_runs\answerability-dev\summary.json and evaluation_runs\answerability-dev\summary.md

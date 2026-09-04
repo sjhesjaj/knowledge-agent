@@ -25,6 +25,18 @@ let localMessageSequence = 0
 
 const orchestrated = ref(false)
 
+// Wiki compilation runs in the background after the upload call returns, so it
+// is deliberately absent from `interactionLocked`: waiting minutes for a model
+// before the user may ask anything would undo the point of doing it in the
+// background at all.
+const wikiJob = ref(null)
+const WIKI_POLL_INTERVAL_MS = 2000
+// `idle` means the backend no longer knows this job — job state is in-memory,
+// so a restart loses it. Terminal, or the timer would poll a job that can never
+// report anything again.
+const WIKI_TERMINAL_STATUSES = ['published', 'ignored', 'failed', 'cancelled', 'idle']
+let wikiPollTimer = null
+
 const interactionLocked = computed(() => busy.value || uploadBusy.value || historyLoading.value)
 const activeTitle = computed(() => (
   conversations.value.find((item) => item.id === activeConversationId.value)?.title || '企业制度问答'
@@ -32,6 +44,42 @@ const activeTitle = computed(() => (
 // Wiki and inventory questions do not need an uploaded document, so the
 // composer must not stay locked behind an empty knowledge base in this mode.
 const canAsk = computed(() => orchestrated.value || status.value.chunk_count > 0)
+
+const WIKI_STATUS_LABELS = {
+  queued: 'Wiki 编译排队中',
+  running: '正在编译 Wiki',
+  published: 'Wiki 已更新',
+  ignored: '文档无需编入 Wiki',
+  failed: 'Wiki 编译失败，继续使用原有 Wiki',
+  cancelled: 'Wiki 编译已取消',
+  idle: 'Wiki 任务状态已丢失，可重新上传',
+}
+
+const WIKI_STAGE_LABELS = {
+  document_decision: '判断文档是否收录',
+  topic_plan: '规划 Wiki 页面',
+}
+
+function wikiStageLabel(stage) {
+  if (!stage) return ''
+  if (WIKI_STAGE_LABELS[stage]) return WIKI_STAGE_LABELS[stage]
+  if (stage.startsWith('page_compilation:')) return `编写页面「${stage.slice('page_compilation:'.length)}」`
+  return stage
+}
+
+const wikiMessage = computed(() => {
+  const job = wikiJob.value
+  if (!job) return ''
+  const label = WIKI_STATUS_LABELS[job.status] || job.status
+  const parts = [label]
+  if (job.total_documents > 1) parts.push(`${job.completed_documents}/${job.total_documents} 个文件`)
+  const stage = wikiStageLabel(job.stage)
+  if (stage) parts.push(stage)
+  if (job.status === 'failed' && job.error) parts.push(job.error)
+  return parts.join(' · ')
+})
+
+const wikiActive = computed(() => ['queued', 'running'].includes(wikiJob.value?.status))
 
 const EVIDENCE_LABELS = { wiki: 'Wiki', document: '原文', system: '实时状态' }
 const STEP_LABELS = { wiki_query: 'Wiki', document_search: '原文检索', system_query: '实时查询' }
@@ -253,11 +301,39 @@ async function upload() {
     files.value = []
     resetConversations()
     notice.value = `已导入 ${result.files.length} 个文件，生成 ${result.chunks} 个知识片段`
+    // Retrieval is already usable; the Wiki catches up in the background.
+    if (result.wiki_job_id) startWikiPolling(result.wiki_job_id)
   } catch (error) {
     notice.value = error.message
   } finally {
     uploadBusy.value = false
   }
+}
+
+function stopWikiPolling() {
+  if (wikiPollTimer) {
+    clearTimeout(wikiPollTimer)
+    wikiPollTimer = null
+  }
+}
+
+function startWikiPolling(jobId) {
+  stopWikiPolling()
+  wikiJob.value = { job_id: jobId, status: 'queued', stage: null, files: [], completed_documents: 0, total_documents: 0 }
+  const poll = async () => {
+    try {
+      const job = await api.wikiStatus(jobId)
+      wikiJob.value = job
+      if (WIKI_TERMINAL_STATUSES.includes(job.status)) {
+        stopWikiPolling()
+        return
+      }
+    } catch {
+      // A dropped poll is not a failed compile; keep watching.
+    }
+    wikiPollTimer = setTimeout(poll, WIKI_POLL_INTERVAL_MS)
+  }
+  wikiPollTimer = setTimeout(poll, WIKI_POLL_INTERVAL_MS)
 }
 
 async function send() {
@@ -311,6 +387,8 @@ async function clearKnowledge() {
     resetConversations()
     files.value = []
     status.value.chunk_count = 0
+    stopWikiPolling()
+    wikiJob.value = null
     notice.value = '知识库已清空'
   } catch (error) {
     notice.value = error.message
@@ -366,6 +444,16 @@ onMounted(() => Promise.allSettled([refreshStatus(), initializeConversations()])
         <button class="primary" :disabled="!files.length || interactionLocked || !status.ollama_connected" @click="upload">
           {{ uploadBusy ? '正在建立索引…' : '建立知识库' }}
         </button>
+        <!-- Background compilation: the composer stays usable throughout. -->
+        <p
+          v-if="wikiMessage"
+          class="wiki-job"
+          :class="{ active: wikiActive, failed: wikiJob?.status === 'failed' }"
+          role="status"
+          aria-live="polite"
+        >
+          <i v-if="wikiActive"></i>{{ wikiMessage }}
+        </p>
       </section>
       <button class="ghost danger" :disabled="!status.chunk_count || interactionLocked" @click="clearKnowledge">清空知识库</button>
     </aside>
