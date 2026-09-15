@@ -199,10 +199,24 @@ class Prepared:
         return self.fixed_answer is None
 
 
+# The one System capability V1 opens is stock. These are the words that name
+# it. `货` earns its place: `现在这边货还够吗` is a stock question that never
+# says `库存`, and answering it with "this version only supports stock queries"
+# tells the caller their question is out of scope when in fact it is the one
+# thing that is in scope - they just did not name a SKU.
+#
+# Breadth is safe here and nowhere else: this runs only after the planner has
+# already selected the System channel and found no SKU, so a policy question
+# about returns never reaches it.
+INVENTORY_TERMS = (
+    "库存", "sku", "货", "存量", "余量", "现货", "备货", "在库", "料号",
+)
+
+
 def _is_inventory_question(question: str) -> bool:
     """Cheap and deliberate: no general intent classifier in V1."""
     lowered = question.lower()
-    return "库存" in question or "sku" in lowered
+    return any(term in lowered for term in INVENTORY_TERMS)
 
 
 def _unavailable(question, plan, chunks, sku, skus, wiki_pages) -> str | None:

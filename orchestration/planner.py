@@ -105,6 +105,58 @@ DIRECT_MARKERS = (
     "hi", "hello", "hey", "thanks", "thank you", "bye", "goodbye", "good morning",
 )
 
+# Leave-taking. A sign-off is a social register in its own right, and people
+# write it compositionally rather than with the two or three fixed farewells a
+# short list would hold: `就到这儿` was there, `聊到这儿` was not, and the
+# planner answered a goodbye by searching the source documents. The pieces
+# below are the recurring shapes - "let us stop here", "talk later", "I am off"
+# - each of which names an end to the conversation and asks for nothing.
+# A sign-off also routinely pairs an acknowledgement with a "nothing further"
+# and a farewell (`明白，暂时没别的需求，回见`). The acknowledgement and the
+# "nothing further" halves were missing, and `回见` was only present in its
+# longer form `回头见`, so the whole message fell through to document search.
+# These stay safe because `_is_direct` still requires *every* clause to ask for
+# nothing: `我不明白年假规定` names a policy and is therefore still a request.
+SOCIAL_CLOSING_MARKERS = (
+    "聊到这儿", "聊到这里", "说到这儿", "说到这里", "谈到这儿", "到此为止",
+    "回头聊", "回头说", "回头联系", "改天说", "改天联系", "下次聊", "下回聊",
+    "有空聊", "有空再聊", "明天再说", "明天再聊", "下次再说",
+    "先忙", "忙去了", "去忙了", "不打扰了", "不打扰你了",
+    "就这样吧", "就先这样", "准备下班", "下班了", "收工", "散会",
+    "回见", "明白", "知道了", "了解了", "清楚了",
+    "没别的", "没其他", "没问题了", "就这些", "先到这", "问完了",
+)
+
+# Thanks, written the way people actually end a conversation. The table held
+# only the full forms (`谢谢`, `多谢`, `感谢`), so the commonest sign-off of all -
+# a bare `谢啦` - carried no social signal whatsoever, and a message made of
+# nothing but thanks and a good wish was searched against the source documents.
+SOCIAL_THANKS_MARKERS = (
+    "谢啦", "谢了", "谢过", "谢谢啦", "谢谢了", "多谢啦", "多谢了",
+    "感谢啦", "感谢了", "太感谢", "非常感谢", "有劳", "费心了",
+)
+
+# Well-wishes. A wish asks for nothing and names no topic, so it can only ever
+# be the social half of a message; `_is_direct` still requires every other
+# clause to ask for nothing, so `祝好，另外年假有几天` stays a real question.
+# `一切顺利` and friends are listed whole - bare `顺利` would swallow
+# `报销流程顺利吗`, which is a genuine question about a process.
+SOCIAL_WISH_MARKERS = (
+    "祝你", "祝您", "祝大家", "祝各位", "祝好", "祝顺利",
+    "一切顺利", "顺顺利利", "万事如意", "工作顺利", "一路顺风", "一路平安",
+    "旅途愉快", "假期愉快", "节日快乐", "新年快乐", "生日快乐",
+    "身体健康", "保重", "多保重", "早点休息", "注意休息", "别太累",
+)
+
+# Time adverbs that only situate a wish or a farewell. Stripped alongside the
+# social markers so `祝你接下来一切顺利` reduces to nothing: without this the
+# leftover `接下来` kept the clause from reading as pure pleasantry. Safe
+# because `_is_social_clause` first requires a social marker to be present, and
+# `接下来的报销流程是什么` has none.
+SOCIAL_TIME_FILLER = (
+    "接下来", "往后", "今后", "以后", "后面", "未来", "这段时间", "最近",
+)
+
 # Social openers, closers, and acknowledgements. Wider than DIRECT_MARKERS on
 # purpose: this table only says "a social register is present", never that the
 # whole message is social. That judgement is made per clause, so a greeting in
@@ -117,7 +169,7 @@ SOCIAL_MARKERS = (
     "先撤", "先走", "就到这儿", "就到这里",
     "hi", "hello", "hey", "thanks", "thank you", "bye", "goodbye",
     "good morning", "good afternoon", "good evening",
-)
+) + SOCIAL_CLOSING_MARKERS + SOCIAL_THANKS_MARKERS + SOCIAL_WISH_MARKERS
 
 # Particles and fillers that carry no request. Stripped only when deciding
 # whether a clause is purely social.
@@ -142,18 +194,35 @@ REQUEST_CUES = (
 )
 
 # Verbs that by themselves request a compiled explanation rather than a clause.
+# Three shapes, all asking for the same thing: summarise (`概括`), walk the whole
+# topic (`过一遍`), or explain it fully (`讲清楚`). The list is closed over the
+# shapes rather than over one word per shape, because a caller picks whichever
+# synonym comes to mind and a page request is a page request either way.
+# `讲清楚`/`说清楚` were tried and removed: they demand clarity about whatever
+# is being asked, not a compiled page, so `引用原文讲清楚盘点口径` is a request
+# for the source text and `先说清楚一点` is not a request at all.
 WIKI_OVERVIEW_VERBS = (
-    "概述", "概览", "综述", "介绍", "梳理", "科普", "总结",
+    "概述", "概览", "总览", "综述", "概括", "介绍", "梳理", "科普",
     "讲讲", "讲一讲", "讲一下", "讲下", "说说", "说一说",
-    "捋一遍", "捋一捋", "捋捋", "了解一下", "介绍下",
+    "捋一遍", "捋一捋", "捋捋", "过一遍", "理一遍", "串一遍",
+    "了解一下", "介绍下",
 )
 
 # Scope words that mark a low-detail request. On their own they are enough:
 # `整体立场是什么` asks for an overview without naming a verb.
+#
+# `整套` and `从头到尾`/`来龙去脉` are the same judgement stated over a span
+# rather than a level of detail: naming the whole of a topic asks for the
+# compiled page, not for one clause out of it. Only quantifiers that say
+# "all of it" qualify - the demonstratives `那套`/`这套` were tried and removed,
+# because they point back at something already named (`我们那套旧系统`) instead
+# of asking for its full extent.
 WIKI_OVERVIEW_SCOPE = (
     "整体", "大方向", "总体", "主要内容", "主要思路",
     "要点", "轮廓", "脉络", "立场", "思路", "有个数", "历史沿革", "影响分析",
     "关系", "大概讲什么", "整体说明",
+    "框架", "全貌", "整套", "全套",
+    "从头到尾", "来龙去脉", "前因后果",
 )
 
 # Hedges, not requests for an overview. `SKU-A100 大概还有多少` softens a live
@@ -161,7 +230,7 @@ WIKI_OVERVIEW_SCOPE = (
 # clause is not already an unambiguous live-value question - see
 # `_clause_signals`.
 WIKI_OVERVIEW_SOFT = (
-    "大概", "大致", "说下", "说一下", "简单说",
+    "大概", "大致", "大体", "说下", "说一下", "简单说",
 )
 
 WIKI_OVERVIEW_STRONG = WIKI_OVERVIEW_VERBS + WIKI_OVERVIEW_SCOPE
@@ -169,39 +238,119 @@ WIKI_OVERVIEW_MARKERS = WIKI_OVERVIEW_STRONG + WIKI_OVERVIEW_SOFT
 
 # Wording, clause, and citation intent: the caller wants the source text itself.
 DOCUMENT_EXACT_MARKERS = (
-    "原文", "条款", "依据", "引用", "页码", "出处", "原话",
+    "原文", "条款", "条文", "依据", "引用", "页码", "出处", "原话",
     "具体怎么写", "明确规定", "怎么写的",
+)
+
+# Demands for precision. `要精确的` and `准确说法` name no document, but they say
+# the caller will not accept a paraphrase - which is exactly the request the
+# source-document path exists to serve. Kept apart from DOCUMENT_EXACT_MARKERS
+# because these words qualify a neighbouring request rather than name a source,
+# and they routinely arrive as a clause of their own (`……，要准确的`).
+DOCUMENT_PRECISION_MARKERS = (
+    "准确", "精确", "精准", "确切", "严格按照",
+    "一字不差", "一字不落", "原封不动", "原样", "逐字",
+)
+
+# How close a stock noun has to sit for a precision marker to be describing it.
+# Deliberately short: this is adjacency (`存量准确数`), not clause-wide scope.
+PRECISION_WINDOW = 4
+
+# Who the rule puts in charge. `超过 1 天要谁签` asks what a document says about
+# approval authority; it is not a question about any particular record, so it
+# belongs to the document path and not to System.
+DOCUMENT_AUTHORITY_MARKERS = (
+    "审批人", "签字人", "批准人", "审批权", "签批权", "经办人", "责任人",
 )
 
 # Cues that turn a nearby exact-citation marker into a refusal of one.
 # `不用抠原文` asks for the opposite of what `原文` alone implies.
 NEGATION_CUES = (
-    "不用", "不需要", "无需", "不必", "不要", "没必要", "不想", "别",
+    "不用", "不需要", "无需", "不必", "不要", "没必要", "不想",
 )
+
+# `别` is a negation only when it stands on its own. As a bare substring it also
+# sits inside `分别`, `级别`, `区别`, `特别`, `类别`, `识别` - and
+# `请分别给：信息安全概述、…` was read as `别给` and lost the Wiki step, because
+# a one-character cue matched the tail of another word.
+#
+# So it counts when nothing Chinese precedes it (clause start, punctuation, a
+# space) or when the character before it is one of the adverbs and pronouns that
+# genuinely lead into it: `先别给我`, `请别列`, `千万别`.
+_BARE_NEGATION_BIE = r"(?:(?<![一-鿿])别|(?<=[先就可请你您我也都还万千])别)"
+_BIE_NEGATION_PATTERN = re.compile(_BARE_NEGATION_BIE)
 
 # How far back a negation may reach. Deliberately short and clipped at the
 # nearest clause delimiter: this is a local window, not sentence-level scope
 # analysis, so `不用讲太宽泛的东西。请直接引用原文` still requests the source.
 NEGATION_WINDOW = 8
 
+# Chinese also negates after the object: `具体条款先别给我` fronts `条款` and puts
+# the refusal on the verb that would have supplied it. A backward-only window
+# reads that as a request for the clause text, i.e. the exact opposite.
+#
+# The scope is narrow on purpose. Only a negated verb of *supply* cancels the
+# marker, so `原文别省略` - which asks for more of the source, not less - is left
+# alone. Anything past a clause delimiter is out of reach, as it is backwards.
+NEGATED_SUPPLY_VERBS = (
+    "给", "发", "列", "提供", "展开", "贴", "附", "抄", "念", "罗列", "复制",
+)
+
+_FORWARD_NEGATION_PATTERN = re.compile(
+    "(?:" + "|".join(NEGATION_CUES) + "|" + _BARE_NEGATION_BIE + ")"
+    + "[^" + re.escape("，。；！？,;!?、\n") + "]{0,3}?"
+    + "(?:" + "|".join(NEGATED_SUPPLY_VERBS) + ")"
+)
+
+# Chinese also declines an object *after* naming it, with no verb of supply at
+# all: `制度概览就免了` names the overview and then waves it away. Neither the
+# backward window (the refusal is to the right) nor the supply-verb pattern
+# (`免` supplies nothing, so there is no verb to negate) sees this, so the
+# planner read `概览` as a request and added the Wiki step the caller had just
+# declined.
+#
+# `免了` needs the lookbehind: `避免了` and `以免了` contain it and mean the
+# opposite of a dismissal. `算了`/`省了` need a leading adverb for the same
+# reason - `打算了` is not a refusal.
+# Three ways to wave a channel away after naming it:
+#
+# - dismissing it outright - `制度概览就免了`;
+# - deferring it - `总览先不用`, where `不用` carries no `了`;
+# - taking it on yourself - `具体条文我等下自己翻`, which declines the clause
+#   just as plainly as `别给我条文` does.
+#
+# The last two were missing, so both channels were still selected.
+_POST_DISMISSAL_PATTERN = re.compile(
+    r"(?<![避以难])免了|免谈|(?:就|都|也|倒|先)(?:算了|省了)"
+    r"|不用了|不必了|不需要了|跳过|略过"
+    r"|(?:先|就|都|也|暂)(?:不用|不必|不需要)"
+    r"|自己(?:翻|看|查|找|读|搜|来)|我来(?:翻|看|查|找|读)"
+)
+
+# Strong: the caller is asking whether a specific case qualifies, which only
+# the source text settles. `要求` was tried here and moved to the policy table:
+# `整体是怎么要求的` is an overview of a topic, not a request for its conditions,
+# and treating it as strong pulled a document step into every such request.
 DOCUMENT_CONDITION_MARKERS = (
-    "条件", "要求", "是否允许", "能否", "适用于",
+    "条件", "是否允许", "能否", "适用于",
 )
 
 # Numeric intent. Ambiguous on its own: it can describe a policy limit or a
 # current system value, so `_extract_signals` resolves it by context.
 DOCUMENT_QUANTITY_MARKERS = (
     "多少", "几天", "比例", "金额", "上限", "下限", "期限", "时限", "标准",
+    "天数", "周期", "次数", "频率",
 )
 
 DOCUMENT_COMPARISON_MARKERS = (
-    "区别", "比较", "差异", "例外", "对比",
+    "区别", "比较", "差异", "例外", "对比", "差别", "差在", "相比", "比起来",
 )
 
 # Context markers only: they say the topic is a policy, not that the caller
 # needs the exact wording.
 DOCUMENT_POLICY_MARKERS = (
     "制度", "政策", "办法", "规则", "规定", "手册", "sop", "公告", "通知", "流程",
+    "要求",
 )
 
 # Version/change intent needs both paths: Wiki synthesizes, documents verify.
@@ -224,20 +373,54 @@ TIME_STATE_MARKERS = (
     "当前", "现在", "实时", "目前",
 )
 
-# Weak: an explicit lookup verb aimed at a system object.
+# Weak: an explicit lookup verb aimed at a system object. `看一眼` and `查一下`
+# are the same act; which one a caller types is a matter of register. Only
+# multi-character forms are listed, so the bare verb inside an unrelated word
+# cannot match.
 SYSTEM_QUERY_VERBS = (
     "查询", "查一下", "查下", "查看", "帮我查",
+    "看一眼", "看一下", "看下", "看看", "瞅一眼",
 )
 
 # Weak: asking for the value or status an object currently holds. `审批进度规定`
 # shows why these stay weak - the same words appear in policy questions.
+#
+# Availability is the same question asked without a number: `库存还有货吗` wants
+# the live count just as `当前库存还有多少` does. These stay weak for the same
+# reason the rest do - `剩余库存管理办法` is still a document question - so a
+# policy noun in the clause continues to outrank them.
 SYSTEM_VALUE_MARKERS = (
     "状态", "多少", "剩余", "进度", "到哪一步",
+    "有货", "缺货", "到货", "没货", "现货", "存量", "余量", "库存量",
+    "还有", "还剩", "剩下", "够不够", "够用", "还够", "够吗",
 )
 
+# `货` and `系统里` name the same things the other entries do - the goods a
+# stock question is about, and the place a live value is read from.
+#
+# `存量`/`余量`/`现货` appear here as well as in SYSTEM_VALUE_MARKERS, and that
+# is deliberate rather than an oversight: they name the object and its value in
+# one word, so `现在的存量` is a complete lookup with no second noun to supply.
+# The pairing rule is unchanged for every ambiguous term.
+#
+# All of these stay as weak as the rest: a policy noun in the clause still
+# wins, which is what keeps `退货办法怎么规定` on the document path.
 SYSTEM_OBJECT_MARKERS = (
     "订单", "库存", "余额", "物流", "审批", "工单", "账户", "积分", "额度",
     "排班", "考勤", "申请记录",
+    "货", "系统里", "系统中", "系统上", "后台",
+    "存量", "余量", "库存量", "现货", "备货", "在库",
+    # `存货` reads as one word, so the ambiguous single `货` never fires on it:
+    # `请给我此时的存货数量` named the stock and still missed System entirely.
+    "存货", "存货量", "货量", "剩余数量", "剩多少",
+)
+
+# The stock nouns specifically. A demand for precision that sits next to one of
+# these is asking for an accurate *reading*, not for the text of a policy - see
+# `_precision_describes_stock`.
+STOCK_NOUNS = (
+    "库存量", "库存", "存货量", "存货", "存量", "余量", "现货", "在库", "备货",
+    "货量", "货",
 )
 
 # Unambiguous state questions that name no object but clearly ask about the
@@ -248,20 +431,29 @@ SYSTEM_STATE_PHRASES = (
 
 FRESHNESS_MARKERS = (
     "当前", "现在", "实时", "目前", "最新", "截至",
+    # `此时`/`眼下`/`这会儿` are the same "as of now" the others name.
+    "此时", "此刻", "眼下", "这会儿", "当下",
 )
 
 # Exposed for introspection, including the vocabulary-hygiene test.
 MARKER_TABLES: dict[str, tuple[str, ...]] = {
     "DIRECT_MARKERS": DIRECT_MARKERS,
     "SOCIAL_MARKERS": SOCIAL_MARKERS,
+    "SOCIAL_CLOSING_MARKERS": SOCIAL_CLOSING_MARKERS,
+    "SOCIAL_THANKS_MARKERS": SOCIAL_THANKS_MARKERS,
+    "SOCIAL_WISH_MARKERS": SOCIAL_WISH_MARKERS,
+    "SOCIAL_TIME_FILLER": SOCIAL_TIME_FILLER,
     "QUESTION_CUES": QUESTION_CUES,
     "REQUEST_CUES": REQUEST_CUES,
     "WIKI_OVERVIEW_VERBS": WIKI_OVERVIEW_VERBS,
     "WIKI_OVERVIEW_SCOPE": WIKI_OVERVIEW_SCOPE,
     "WIKI_OVERVIEW_SOFT": WIKI_OVERVIEW_SOFT,
     "NEGATION_CUES": NEGATION_CUES,
+    "NEGATED_SUPPLY_VERBS": NEGATED_SUPPLY_VERBS,
     "WIKI_OVERVIEW_MARKERS": WIKI_OVERVIEW_MARKERS,
     "DOCUMENT_EXACT_MARKERS": DOCUMENT_EXACT_MARKERS,
+    "DOCUMENT_PRECISION_MARKERS": DOCUMENT_PRECISION_MARKERS,
+    "DOCUMENT_AUTHORITY_MARKERS": DOCUMENT_AUTHORITY_MARKERS,
     "DOCUMENT_CONDITION_MARKERS": DOCUMENT_CONDITION_MARKERS,
     "DOCUMENT_QUANTITY_MARKERS": DOCUMENT_QUANTITY_MARKERS,
     "DOCUMENT_COMPARISON_MARKERS": DOCUMENT_COMPARISON_MARKERS,
@@ -276,8 +468,65 @@ MARKER_TABLES: dict[str, tuple[str, ...]] = {
     "FRESHNESS_MARKERS": FRESHNESS_MARKERS,
 }
 
+# `总结` is a verb *and* a noun, and only the verb asks for an overview.
+# `总结制度变化` requests one; `培训总结提交期限的原文` is asking about a document
+# called a summary, and treating it as a request pulled a Wiki step into a
+# pure source-text question. The verb reading opens the clause or is introduced
+# by an asking word; the noun reading is preceded by its own topic.
+SUMMARY_VERB_PATTERN = re.compile(
+    r"(?:^|[^一-鿿]|[帮请先再来给我])总结|总结(?:一下|下|一遍)"
+)
+
 # `第三条`, `第 12 条`, `第十二条`.
 CLAUSE_NUMBER_PATTERN = re.compile(r"第\s*[0-9〇零一二三四五六七八九十百千]+\s*条")
+
+# `那条`, `这几条`, `那句`, `那一段`. A demonstrative in front of a clause/sentence
+# noun points at one piece of the source text without naming its number, which
+# is how people refer to a clause they have just described in their own words.
+#
+# Only the pronominal reading counts. `条`/`段` are also ordinary measure words,
+# and `这条线` classifies a line rather than quoting one, so the phrase must end
+# the clause or be followed by a particle or pronoun - never by the noun it
+# would otherwise be counting.
+CLAUSE_REFERENCE_PATTERN = re.compile(
+    r"[那这][一几]?\s*[条句段](?![一-鿿])"
+    r"|[那这][一几]?\s*[条句段](?=[的我你您他她它们])"
+)
+
+# `由谁签字`, `谁审批`, `找谁批`. An interrogative about the approving party is a
+# question about the rule, so the verbs are limited to ones that grant or
+# withhold approval. `谁在处理我的订单` is deliberately outside this set: that
+# names a record's current handler, which is a System question.
+AUTHORITY_QUESTION_PATTERN = re.compile(
+    r"谁[^，。；！？,;!?、\n]{0,3}?(?:签字|签批|签|批准|审批|批|审核|审|核准|核|负责|决定|授权|同意|把关)"
+)
+
+# `几天`, `几个工作日`, `多久`, `多长时间`. A duration or measure interrogative
+# asks for a threshold the document sets. The unit is required: bare `几` is an
+# ordinary question cue and says nothing about where the answer lives.
+#
+# The unit must also be a *measure*. The generic classifier `个` was tried and
+# removed: `覆盖哪几个方面` counts topics in an overview, so treating it as a
+# threshold pulled a document step into a plain Wiki request.
+QUANTITY_INTERROGATIVE_PATTERN = re.compile(
+    r"几\s*(?:天|日|小时|分钟|周|个?月|年|个?工作日|次|元|块|件|箱)"
+    r"|多久|多长时间|多少天|多少小时"
+)
+
+# `走完了没`, `批下来了吗`, `办好了没有`. A completion interrogative asks where a
+# specific record currently stands, so it counts as state intent - weakly, like
+# the other state cues, and still subject to the policy-noun override.
+COMPLETION_STATE_PATTERN = re.compile(
+    r"(?:走完|办完|批完|审完|跑完|处理完|办好|批好|完成|结束|通过|下来|到位)"
+    r"\s*(?:了)?\s*(?:没有|没|吗|嘛)"
+)
+
+# A record identifier: an alphabetic prefix joined to a number, as in
+# `APR-3001` or `ORD-1002`. Unlike SKU_PATTERN it cannot identify its own
+# domain, so it never selects System by itself - it only supplies the *which
+# record* half that the state cues leave open. `ABC-123 是什么意思` asks what a
+# token means and names no state, so it stays off the System path.
+RECORD_ID_PATTERN = re.compile(r"(?<![a-z0-9])[a-z]{2,10}[-_]\d{3,8}(?![a-z0-9])")
 
 # A SKU names a specific record in the business system, so it is an
 # unambiguous System object in a way a common noun never is. Matched on the
@@ -420,15 +669,32 @@ def _split_clauses(normalized: str) -> list[str]:
     return clauses or [normalized.strip(_EDGE_PUNCTUATION) or normalized]
 
 
-def _negated_at(text: str, index: int) -> bool:
-    """Is the marker starting at `index` inside a refusal of it?"""
+def _negated_at(text: str, index: int, end: int) -> bool:
+    """Is the marker spanning `[index, end)` inside a refusal of it?
+
+    Both directions are checked. Backwards is the ordinary `不用抠原文`; forwards
+    is `条款先别给我`, where the object comes first and the refusal lands on the
+    verb that would have supplied it.
+    """
     window = text[max(0, index - NEGATION_WINDOW) : index]
     # A negation never reaches across a clause boundary.
     for delimiter in _CLAUSE_DELIMITERS:
         cut = window.rfind(delimiter)
         if cut >= 0:
             window = window[cut + 1 :]
-    return any(cue in window for cue in NEGATION_CUES)
+    if any(cue in window for cue in NEGATION_CUES):
+        return True
+    if _BIE_NEGATION_PATTERN.search(window):
+        return True
+
+    trailing = text[end:]
+    for delimiter in _CLAUSE_DELIMITERS:
+        cut = trailing.find(delimiter)
+        if cut >= 0:
+            trailing = trailing[:cut]
+    if _FORWARD_NEGATION_PATTERN.search(trailing):
+        return True
+    return bool(_POST_DISMISSAL_PATTERN.search(trailing))
 
 
 def _contains_any_unnegated(text: str, markers: tuple[str, ...]) -> bool:
@@ -439,15 +705,23 @@ def _contains_any_unnegated(text: str, markers: tuple[str, ...]) -> bool:
             index = text.find(marker, start)
             if index < 0:
                 break
-            if not _negated_at(text, index):
+            if not _negated_at(text, index, index + len(marker)):
                 return True
             start = index + 1
     return False
 
 
+def _search_unnegated(text: str, pattern: re.Pattern[str]) -> bool:
+    """`pattern.search`, ignoring matches the caller declined."""
+    for match in pattern.finditer(text):
+        if not _negated_at(text, match.start(), match.end()):
+            return True
+    return False
+
+
 def _strip_social(clause: str) -> str:
     residue = clause
-    for marker in SOCIAL_MARKERS:
+    for marker in SOCIAL_MARKERS + SOCIAL_TIME_FILLER:
         residue = residue.replace(marker, "")
     return "".join(ch for ch in residue if ch not in SOCIAL_FILLER).strip(
         _EDGE_PUNCTUATION
@@ -469,11 +743,15 @@ def _has_request_intent(clause: str) -> bool:
     """Does this clause ask for knowledge, source text, or system state?"""
     if _contains_any(clause, WIKI_OVERVIEW_MARKERS):
         return True
+    if SUMMARY_VERB_PATTERN.search(clause):
+        return True
     if _contains_any(clause, VERSION_CHANGE_MARKERS):
         return True
     if _contains_any_unnegated(clause, DOCUMENT_EXACT_MARKERS):
         return True
     for table in (
+        DOCUMENT_PRECISION_MARKERS,
+        DOCUMENT_AUTHORITY_MARKERS,
         DOCUMENT_CONDITION_MARKERS,
         DOCUMENT_COMPARISON_MARKERS,
         DOCUMENT_QUANTITY_MARKERS,
@@ -485,6 +763,8 @@ def _has_request_intent(clause: str) -> bool:
         if _contains_any(clause, table):
             return True
     if CLAUSE_NUMBER_PATTERN.search(clause) or SKU_PATTERN.search(clause):
+        return True
+    if AUTHORITY_QUESTION_PATTERN.search(clause) or QUANTITY_INTERROGATIVE_PATTERN.search(clause):
         return True
     # No topic marker matched, but the caller is still plainly asking something.
     # `公司班车几点发车？` is interrogative; `帮我订一间会议室` is an imperative
@@ -522,28 +802,71 @@ class _ClauseSignals:
     requires_freshness: bool = False
 
 
+def _precision_describes_stock(clause: str) -> bool:
+    """Is `准确` describing a stock reading rather than demanding source text?
+
+    `存量准确数` and `准确库存` ask for the live number to be exact. That is a
+    System request; the caller is not asking what a policy document says. But
+    `报一个准确天数` next to `请引用请假原文` is exactly that demand, so the
+    precision marker only loses its document pull when a stock noun is sitting
+    right beside it - either side, within a few characters, and only when the
+    clause names no document of its own.
+    """
+    if _contains_any(clause, DOCUMENT_POLICY_MARKERS) or _contains_any(
+        clause, DOCUMENT_EXACT_MARKERS
+    ):
+        return False
+    for marker in DOCUMENT_PRECISION_MARKERS:
+        start = clause.find(marker)
+        while start >= 0:
+            window = clause[max(0, start - PRECISION_WINDOW) : start + len(marker) + PRECISION_WINDOW]
+            if _contains_any(window, STOCK_NOUNS):
+                return True
+            start = clause.find(marker, start + 1)
+    return False
+
+
 def _clause_signals(clause: str) -> _ClauseSignals:
-    version_change = _contains_any(clause, VERSION_CHANGE_MARKERS)
+    version_change = _contains_any_unnegated(clause, VERSION_CHANGE_MARKERS)
 
     strong_document = (
         _contains_any_unnegated(clause, DOCUMENT_EXACT_MARKERS)
+        or (
+            _contains_any_unnegated(clause, DOCUMENT_PRECISION_MARKERS)
+            and not _precision_describes_stock(clause)
+        )
+        or _contains_any_unnegated(clause, DOCUMENT_AUTHORITY_MARKERS)
+        or _search_unnegated(clause, CLAUSE_REFERENCE_PATTERN)
+        or _search_unnegated(clause, AUTHORITY_QUESTION_PATTERN)
         or _contains_any(clause, DOCUMENT_CONDITION_MARKERS)
         or _contains_any(clause, DOCUMENT_COMPARISON_MARKERS)
         or bool(CLAUSE_NUMBER_PATTERN.search(clause))
     )
-    quantity_document = _contains_any(clause, DOCUMENT_QUANTITY_MARKERS)
-    policy_context = _contains_any(clause, DOCUMENT_POLICY_MARKERS)
+    quantity_document = _contains_any(
+        clause, DOCUMENT_QUANTITY_MARKERS
+    ) or bool(QUANTITY_INTERROGATIVE_PATTERN.search(clause))
+    policy_context = _contains_any_unnegated(clause, DOCUMENT_POLICY_MARKERS)
 
     has_sku = bool(SKU_PATTERN.search(clause))
     has_system_object = _contains_any(clause, SYSTEM_OBJECT_MARKERS)
     state_phrase = _contains_any(clause, SYSTEM_STATE_PHRASES)
     personal_state = _contains_any(clause, PERSONAL_STATE_MARKERS)
+    # An identifier says *which* record. It is the counterpart of the object
+    # noun, not of the state cue: `ord-1002 现在什么状态` names no object noun
+    # at all, yet it is plainly a lookup.
+    has_record_id = bool(RECORD_ID_PATTERN.search(clause))
     # Any of these alone only hints at a state question; none of them can
     # outweigh policy semantics on its own.
     weak_state_intent = (
         _contains_any(clause, TIME_STATE_MARKERS)
         or _contains_any(clause, SYSTEM_QUERY_VERBS)
         or _contains_any(clause, SYSTEM_VALUE_MARKERS)
+        or bool(COMPLETION_STATE_PATTERN.search(clause))
+        # "As of now" is a live-value cue in its own right: `此时的存货数量`
+        # names the stock and pins it to this moment, with no query verb at all.
+        # It stays weak - the `not policy_context` guard below is what keeps
+        # `现在的订单管理制度怎么规定` on the document path.
+        or _contains_any(clause, FRESHNESS_MARKERS)
     )
 
     if has_sku:
@@ -555,8 +878,9 @@ def _clause_signals(clause: str) -> _ClauseSignals:
         # An explicit personal/state signal keeps System even when the same
         # clause also asks what the policy says.
         needs_system = True
-    elif has_system_object and weak_state_intent and not policy_context:
-        # `帮我查一下账户余额`, `账户余额是多少`, `当前库存还有多少`.
+    elif (has_system_object or has_record_id) and weak_state_intent and not policy_context:
+        # `帮我查一下账户余额`, `账户余额是多少`, `当前库存还有多少`,
+        # `ord-1002 现在什么状态`.
         needs_system = True
     else:
         # `查询订单管理制度` and `现在的订单管理制度怎么规定` land here: the
@@ -575,8 +899,10 @@ def _clause_signals(clause: str) -> _ClauseSignals:
     # in `大概讲什么` it asks for a compiled page. A soft marker therefore
     # counts only when the clause is not already an unambiguous live-value
     # question about something that is not a policy topic.
-    wiki_strong = _contains_any(clause, WIKI_OVERVIEW_STRONG)
-    wiki_soft = _contains_any(clause, WIKI_OVERVIEW_SOFT)
+    wiki_strong = _contains_any_unnegated(clause, WIKI_OVERVIEW_STRONG) or (
+        _search_unnegated(clause, SUMMARY_VERB_PATTERN)
+    )
+    wiki_soft = _contains_any_unnegated(clause, WIKI_OVERVIEW_SOFT)
     if wiki_soft and needs_system and not policy_context:
         wiki_soft = False
     wiki_overview = wiki_strong or wiki_soft
@@ -760,6 +1086,63 @@ def plan_request(
         signals=resolved,
         reason_codes=_order_reasons(reasons + [REASON_FALLBACK_SELECTED]),
         fallback_used=True,
+    )
+
+
+def document_focus(question: str) -> str:
+    """The part of `question` a source-document search should actually read.
+
+    A compound request routinely carries a clause the documents cannot answer:
+    `设备遗失几小时内要上报？Sku-C300 当前存量报我一下` asks a policy question and
+    a live-stock question in one breath. Handed whole to retrieval, the stock
+    clause is decomposed alongside the policy one and is allocated an evidence
+    slot of its own, which it then fills with whatever chunk happens to score
+    highest - a section about working hours, in that example. The policy
+    evidence is not outranked; it is simply crowded out of the budget.
+
+    So System-only clauses are dropped, along with pure pleasantries. Wiki-only
+    clauses are kept: they name the topic, which helps rather than hurts a
+    lexical search.
+
+    Pure text surgery - no plan, no tool, no model, and the same string out for
+    the same string in. When there is nothing to drop the original is returned
+    **unchanged**, so the ordinary single-question path is byte-for-byte what it
+    was before.
+    """
+    if not question or not question.strip():
+        raise ValueError("question must not be blank")
+
+    kept: list[str] = []
+    dropped = False
+    for part in _CLAUSE_SPLIT_PATTERN.split(question):
+        stripped = part.strip()
+        if not stripped:
+            continue
+        clause = _normalize(stripped).strip(_EDGE_PUNCTUATION)
+        if not clause:
+            continue
+        if _is_social_clause(clause) or _is_system_only_clause(clause):
+            dropped = True
+            continue
+        kept.append(stripped.strip(_EDGE_PUNCTUATION) or stripped)
+
+    if not dropped or not kept:
+        # Nothing to remove, or removing everything - either way the caller is
+        # better served by the request it actually made.
+        return question
+    return "，".join(kept)
+
+
+def _is_system_only_clause(clause: str) -> bool:
+    """Does this clause ask the business system, and nothing else?"""
+    signals = _clause_signals(clause)
+    if not signals.needs_system:
+        return False
+    return not (
+        signals.exact_document
+        or signals.policy_forces_document
+        or signals.version_change
+        or signals.wiki_overview
     )
 
 
