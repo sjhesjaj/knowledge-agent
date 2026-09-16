@@ -18,9 +18,24 @@ accumulates. Aliases are one merged logical field.
     score = title_matches * 4 + alias_matches * 3
           + summary_matches * 2 + claim_matches * 1
 
-Ordering is a total order - score descending, then `page_id` ascending, then
-`claim_id` ascending - so ties are fully deterministic. Changing either the
-weights or the tie-break is a visible decision, not an accident.
+That score is what `retrieval_score` reports and what eligibility uses
+(`score > 0`).
+
+Ordering is a total order - each matched term counted **once**, at its
+highest-weighted field and scaled by how few pages contain it, then the score
+above, then `page_id`, then `claim_id`. Ties are fully deterministic. Changing
+the weights, the term scaling, the per-term merge or the tie-break is a visible
+decision, not an accident.
+
+Specificity leads because the page part of the score is added identically to
+every claim on the page, and a handbook says `员工` on nearly every page and
+`年假` on one. Counting both matches alike let a page *titled* with the common
+word win: `概览一下正式员工的年假规定` returned the grievance claim first,
+because `员工` in that page's title scored +4 against the leave claim that
+actually named `年假`. Scaling by rarity fixes that while keeping the field
+weights meaningful - a title match is still worth four claim matches *of the
+same term*, so `员工报销的规定` still puts the page titled `费用报销` first.
+Recall is unchanged; only the order of what was already retrieved moves.
 
 Retrieval is offline and deterministic: no Ollama, no network, no RAG, no
 database, no clock, no randomness.
@@ -29,6 +44,7 @@ database, no clock, no randomness.
 from __future__ import annotations
 
 import json
+import math
 import re
 from pathlib import Path
 from typing import Sequence
@@ -93,6 +109,107 @@ def tokenize(text: str) -> list[str]:
             for start in range(len(run) - 1):
                 add(run[start : start + 2])
     return tokens
+
+
+def _term_specificity(
+    query_terms: Sequence[str], pages: Sequence[WikiPage]
+) -> dict[str, float]:
+    """How much a match on each query term is worth, by how rare the term is.
+
+    A handbook mentions `员工` on nearly every page and `年假` on one. Counting
+    both as one match makes the common word decide the ranking, which is exactly
+    how a page titled `员工建议与申诉` came back ahead of the annual-leave fact.
+
+    This is the usual inverse-document-frequency shape, computed over the pages
+    in this very call - no corpus statistics are stored, and the result stays
+    deterministic and offline. A term in every page still counts, just little.
+    """
+    total = len(pages) or 1
+    specificity: dict[str, float] = {}
+    for term in query_terms:
+        if term in specificity:
+            continue
+        containing = sum(
+            1
+            for page in pages
+            if term in tokenize(page.title)
+            or term in _alias_tokens(page)
+            or term in tokenize(page.summary)
+            or any(term in tokenize(claim.text) for claim in page.claims)
+        )
+        specificity[term] = math.log(1 + total / (1 + containing))
+    return specificity
+
+
+def _weighted_match(
+    query_terms: Sequence[str],
+    field_tokens: frozenset[str],
+    specificity: dict[str, float],
+) -> float:
+    """`_match_count`, but each distinct matched term counts by its specificity."""
+    return sum(
+        specificity.get(term, 0.0)
+        for term in dict.fromkeys(query_terms)
+        if term in field_tokens
+    )
+
+
+def _claim_rank(
+    query_terms: Sequence[str],
+    claim_tokens: frozenset[str],
+    specificity: dict[str, float],
+) -> float:
+    """What *this* claim adds, always counted, never merged into the page's.
+
+    Folding the claim into the page-level maximum destroyed the ranking *within*
+    a page: `CLAIM_WEIGHT` is the smallest weight, so any term that also appeared
+    in the title or summary contributed nothing from the claim, and every claim
+    on the page scored the same - including claims matching no query term at all.
+    Five of twenty questions came back with a tied first place, decided by the
+    order the claims happened to be written in.
+
+    `正式员工和实习生是否都享有带薪年假？` is the case that shows it: the page
+    scores identically for every claim, so only `实习生不享有带薪年假` versus
+    `正式员工…每年享有 5 天带薪年假` can separate them, and it can only do that
+    if the claim is scored on its own terms.
+    """
+    return sum(
+        specificity.get(term, 0.0) * CLAIM_WEIGHT
+        for term in dict.fromkeys(query_terms)
+        if term in claim_tokens
+    )
+
+
+def _merged_rank(
+    query_terms: Sequence[str],
+    fields: Sequence[tuple[frozenset[str], int]],
+    specificity: dict[str, float],
+) -> float:
+    """Score each distinct term **once**, at its highest-weighted field.
+
+    The published score adds the fields up, so one word appearing in the title,
+    the summary and a claim is counted three times - at 4 + 2 + 1, seven times
+    the weight of a claim match. That is a statement about how many places the
+    word occurs, not about how well the page answers the question.
+
+    The compiled Wiki makes it worse: its generated summaries restate the title
+    (`本页涵盖：员工建议与申诉。`), so the title's contribution is doubled by a
+    field carrying no new information. Ranking `老员工到岗三年以后，带薪假期额度
+    有什么变化？`, the grievance page scored 5.68 on `员工` alone while the
+    annual-leave page scored 5.61 on `员工` + `三年` + `带薪` - and lost by 0.07.
+    The hand-written summaries in the static collection do not repeat the title,
+    which is why the same ranking behaved differently on the two paths.
+
+    Taking the best field per term keeps what the weights are for - a title
+    match still outranks a claim match *for the same term* - while a word cannot
+    accumulate weight merely by being repeated across fields.
+    """
+    best: dict[str, int] = {}
+    for tokens, weight in fields:
+        for term in dict.fromkeys(query_terms):
+            if term in tokens and weight > best.get(term, 0):
+                best[term] = weight
+    return sum(specificity.get(term, 0.0) * weight for term, weight in best.items())
 
 
 def _match_count(query_terms: Sequence[str], field_tokens: frozenset[str]) -> int:
@@ -301,29 +418,64 @@ def wiki_query(
     validated_pages = validate_collection(pages)
 
     query_terms = tokenize(question)
-    scored: list[tuple[int, str, str, WikiPage, WikiClaim]] = []
+    specificity = _term_specificity(query_terms, validated_pages)
+    scored: list[tuple[float, float, int, str, str, WikiPage, WikiClaim]] = []
     for page in validated_pages:
-        title_score = _match_count(query_terms, frozenset(tokenize(page.title))) * TITLE_WEIGHT
-        alias_score = _match_count(query_terms, _alias_tokens(page)) * ALIAS_WEIGHT
-        summary_score = (
-            _match_count(query_terms, frozenset(tokenize(page.summary))) * SUMMARY_WEIGHT
-        )
+        title_tokens = frozenset(tokenize(page.title))
+        alias_tokens = _alias_tokens(page)
+        summary_tokens = frozenset(tokenize(page.summary))
+        title_score = _match_count(query_terms, title_tokens) * TITLE_WEIGHT
+        alias_score = _match_count(query_terms, alias_tokens) * ALIAS_WEIGHT
+        summary_score = _match_count(query_terms, summary_tokens) * SUMMARY_WEIGHT
         page_score = title_score + alias_score + summary_score
+        page_fields = (
+            (title_tokens, TITLE_WEIGHT),
+            (alias_tokens, ALIAS_WEIGHT),
+            (summary_tokens, SUMMARY_WEIGHT),
+        )
         for claim in page.claims:
-            claim_score = (
-                _match_count(query_terms, frozenset(tokenize(claim.text))) * CLAIM_WEIGHT
-            )
+            claim_tokens = frozenset(tokenize(claim.text))
+            claim_score = _match_count(query_terms, claim_tokens) * CLAIM_WEIGHT
             total = page_score + claim_score
+            rank_total = _merged_rank(
+                query_terms, page_fields + ((claim_tokens, CLAIM_WEIGHT),), specificity
+            )
+            # The merged rank decides *between pages*. Within one page it is
+            # often identical for every claim - the page part is shared, and a
+            # term already present in the title or summary adds nothing from the
+            # claim - so the claim's own weighted match breaks that tie. It is a
+            # tie-break, not a component: it cannot move a claim past one that
+            # ranked higher, so the cross-page ordering is untouched.
+            claim_rank = _claim_rank(query_terms, claim_tokens, specificity)
             if total > 0:
-                scored.append((total, page.page_id, claim.claim_id, page, claim))
+                scored.append(
+                    (rank_total, claim_rank, total, page.page_id, claim.claim_id, page, claim)
+                )
 
-    # Total order: score descending, then page_id, then claim_id.
-    scored.sort(key=lambda item: (-item[0], item[1], item[2]))
+    # Total order: specificity-weighted relevance first, then the published
+    # score, then page_id, then claim_id.
+    #
+    # The plain match count used to lead, and every match counted the same. But
+    # `员工` occurs in most pages of a company handbook while `年假` occurs in
+    # one, so treating them alike let a page *titled* with the common word beat
+    # the claim that actually stated the fact: asking
+    # `概览一下正式员工的年假规定` returned the grievance claim first, because
+    # `员工` matched its title (+4) and outweighed the leave claim naming `年假`.
+    #
+    # Weighting each matched term by how few pages contain it fixes that without
+    # discarding the field weights - a title match is still worth four times a
+    # claim match *for the same term*, which is why `员工报销的规定` still puts
+    # the page titled `费用报销` first rather than a claim that merely says
+    # `员工`. Eligibility is untouched (`total > 0`), so recall is unchanged, and
+    # `retrieval_score` still reports the documented weighted total.
+    scored.sort(key=lambda item: (-item[0], -item[1], -item[2], item[3], item[4]))
     eligible_count = len(scored)
 
     evidence = tuple(
         _to_evidence(page, claim, score, rank)
-        for rank, (score, _page_id, _claim_id, page, claim) in enumerate(scored[:top_k], start=1)
+        for rank, (
+            _merged, _claim_rank, score, _page_id, _claim_id, page, claim
+        ) in enumerate(scored[:top_k], start=1)
     )
 
     trace_copy = dict(trace) if trace is not None else {}

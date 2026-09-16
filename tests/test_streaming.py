@@ -40,6 +40,18 @@ class OllamaStreamTests(unittest.TestCase):
             return list(rag.answer_stream("question", [], []))
 
     def test_streams_visible_content_and_requires_done(self):
+        """The visible answer is assembled from the chunks and requires `done`.
+
+        The per-chunk list shape (`["Hello", ", world"]`) was relaxed by main
+        agent adjudication in the second acceptance round: the public generator
+        must now emit only after the envelope is fully parsed, `done` has
+        arrived, and the answer has passed delivery validation, so it cannot
+        also hand out partial text as it goes. Everything the assertion was
+        protecting is still checked here - the complete body, the requirement
+        for a `done` marker (below), and error handling (the tests that follow).
+        Chunk-level parsing is still exercised by
+        `test_decodes_escaped_content_across_chunks`.
+        """
         result = self.collect([
             {"message": {"content": "{\n"}},
             {"message": {"content": ' "answer": "'}},
@@ -48,7 +60,7 @@ class OllamaStreamTests(unittest.TestCase):
             {"message": {"content": '"\n}'}},
             {"message": {"content": ""}, "done": True},
         ])
-        self.assertEqual(result, ["Hello", ", world"])
+        self.assertEqual("".join(result), "Hello, world")
 
     def test_decodes_escaped_content_across_chunks(self):
         result = self.collect([
