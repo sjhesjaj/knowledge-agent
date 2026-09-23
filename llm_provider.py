@@ -38,6 +38,8 @@ from typing import Any, Callable, Iterator, Protocol
 
 import requests
 
+import agent_trace
+
 
 ROOT = Path(__file__).resolve().parent
 DEFAULT_DOTENV = ROOT / ".env"
@@ -520,7 +522,8 @@ def get_provider() -> LLMProvider:
     global _provider
     if _provider is None:
         _provider = create_provider(load_config())
-    return _provider
+    # Unchanged object unless a trace run is active; then calls are also recorded.
+    return agent_trace.wrap_provider(_provider)
 
 
 def reset_provider() -> None:

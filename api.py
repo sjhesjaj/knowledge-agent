@@ -5,12 +5,13 @@ from threading import Lock
 from time import perf_counter
 from typing import Literal
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
+import agent_trace
 import chat_orchestration
 import wiki_runtime
 from chat_orchestration import MODE_LEGACY, MODE_ORCHESTRATED
@@ -388,45 +389,95 @@ def clear_knowledge() -> dict:
         knowledge_mutation_lock.release()
 
 
-@app.post("/api/chat")
-def chat(payload: ChatRequest) -> dict:
-    conversation_lock = acquire_conversation(payload.session_id)
-    try:
-        if payload.mode == MODE_ORCHESTRATED:
-            return orchestrated_chat(payload)
+def start_trace_run(payload: ChatRequest, entrypoint: str, *, streaming: bool):
+    """A trace run stored next to the conversations (tests swap `storage`)."""
+    return agent_trace.start_run(
+        storage.path, kind="api", entrypoint=entrypoint, mode=payload.mode,
+        streaming=streaming, question=payload.question, session_id=payload.session_id,
+        client_id=payload.client_id, knowledge_version=knowledge_version,
+    )
 
-        local_chunks, local_history, snapshot_version = state_snapshot(
-            payload.session_id,
-            payload.client_id,
-        )
-        if not local_chunks:
-            raise HTTPException(409, "请先上传文档并建立知识库")
 
-        started = perf_counter()
-        decision = decide_action(payload.question, local_history)
-        tool_name = decision.get("tool", "direct")
-        results: list[tuple[Chunk, float]] = []
-        trace = {"agent_seconds": decision["seconds"], "tool": tool_name}
+def legacy_tool_call(tool_name: str, arguments: dict, call) -> str:
+    """Run one text-returning legacy tool inside a tool_call span."""
+    with agent_trace.span("tool_call", tool_name, input={"arguments": arguments}) as span:
+        reply = call()
+        if span:
+            span.output = {"result": reply}
+    return reply
 
-        if decision["type"] == "direct":
-            reply = decision["content"]
-        elif tool_name == "list_knowledge_sources":
-            reply = list_sources(local_chunks)
-        elif tool_name == "summarize_knowledge_base":
-            reply = summarize_knowledge_base(local_chunks)
-        else:
-            query = decision.get("arguments", {}).get("query") or payload.question
-            results = retrieve_fast(query, local_chunks, trace=trace)
-            answer_started = perf_counter()
-            reply = answer_structured(payload.question, results, local_history)
-            trace["answer_seconds"] = perf_counter() - answer_started
 
-        trace["total_seconds"] = perf_counter() - started
-        sources = [serialize_source(c, s, i) for i, (c, s) in enumerate(results, 1)]
+def traced_commit(snapshot_version, payload, reply, sources, trace) -> None:
+    with agent_trace.span("commit", "commit_exchange",
+                          input={"knowledge_version": snapshot_version, "sources": len(sources)}):
         commit_exchange(snapshot_version, payload, reply, sources, trace)
-        return {"answer": reply, "trace": trace, "sources": sources}
-    finally:
-        conversation_lock.release()
+
+
+@app.post("/api/chat")
+def chat(payload: ChatRequest, response: Response) -> dict:
+    run = start_trace_run(payload, "/api/chat", streaming=False)
+    if run.run_id:
+        response.headers["X-Run-Id"] = run.run_id
+    with run:
+        conversation_lock = acquire_conversation(payload.session_id)
+        try:
+            if payload.mode == MODE_ORCHESTRATED:
+                return orchestrated_chat(payload)
+
+            local_chunks, local_history, snapshot_version = state_snapshot(
+                payload.session_id,
+                payload.client_id,
+            )
+            if not local_chunks:
+                raise HTTPException(409, "请先上传文档并建立知识库")
+
+            started = perf_counter()
+            with agent_trace.span("router", "decide_action", input={
+                "question": payload.question, "history_turns": len(local_history),
+            }) as span:
+                decision = decide_action(payload.question, local_history)
+                if span:
+                    span.output = decision
+            tool_name = decision.get("tool", "direct")
+            results: list[tuple[Chunk, float]] = []
+            trace = {"agent_seconds": decision["seconds"], "tool": tool_name}
+
+            if decision["type"] == "direct":
+                reply = decision["content"]
+            elif tool_name == "list_knowledge_sources":
+                reply = legacy_tool_call(tool_name, decision.get("arguments") or {},
+                                         lambda: list_sources(local_chunks))
+            elif tool_name == "summarize_knowledge_base":
+                reply = legacy_tool_call(tool_name, decision.get("arguments") or {},
+                                         lambda: summarize_knowledge_base(local_chunks))
+            else:
+                query = decision.get("arguments", {}).get("query") or payload.question
+                with agent_trace.span("tool_call", "search_knowledge_base", input={
+                    "arguments": {"query": query}, "chunks": len(local_chunks),
+                }) as span:
+                    results = retrieve_fast(query, local_chunks, trace=trace)
+                    if span:
+                        span.output = {
+                            "results": [serialize_source(c, s, i) for i, (c, s) in enumerate(results, 1)],
+                            "retrieval_trace": dict(trace),
+                        }
+                agent_trace.record("evidence", "retrieved_sources", output={
+                    "sources": [{"source": c.source, "chunk_index": c.index, "score": s} for c, s in results],
+                })
+                answer_started = perf_counter()
+                with agent_trace.span("generation", "answer_structured", input=agent_trace.generation_input(
+                        payload.question, results, local_history)) as span:
+                    reply = answer_structured(payload.question, results, local_history)
+                    if span:
+                        span.output = {"answer": reply}
+                trace["answer_seconds"] = perf_counter() - answer_started
+
+            trace["total_seconds"] = perf_counter() - started
+            sources = [serialize_source(c, s, i) for i, (c, s) in enumerate(results, 1)]
+            traced_commit(snapshot_version, payload, reply, sources, trace)
+            return {"answer": reply, "trace": trace, "sources": sources}
+        finally:
+            conversation_lock.release()
 
 
 def orchestrated_chat(payload: ChatRequest) -> dict:
@@ -442,15 +493,19 @@ def orchestrated_chat(payload: ChatRequest) -> dict:
 
     if prepared.needs_generation:
         answer_started = perf_counter()
-        reply = answer_structured(
-            payload.question, prepared.results_for_answer, local_history
-        )
+        with agent_trace.span("generation", "answer_structured", input=agent_trace.generation_input(
+                payload.question, prepared.results_for_answer, local_history)) as span:
+            reply = answer_structured(
+                payload.question, prepared.results_for_answer, local_history
+            )
+            if span:
+                span.output = {"answer": reply}
         trace["answer_seconds"] = perf_counter() - answer_started
     else:
         reply = prepared.fixed_answer
 
     trace["total_seconds"] = perf_counter() - started
-    commit_exchange(snapshot_version, payload, reply, prepared.sources, trace)
+    traced_commit(snapshot_version, payload, reply, prepared.sources, trace)
     return {
         "answer": reply,
         "trace": trace,
@@ -482,25 +537,30 @@ def orchestrated_stream(payload: ChatRequest, conversation_lock: Lock):
                 )
                 answer_started = perf_counter()
                 reply_parts: list[str] = []
-                for part in answer_stream(
-                    payload.question, prepared.results_for_answer, local_history
-                ):
-                    reply_parts.append(part)
-                    yield sse_event("delta", {"content": part})
-                trace["answer_seconds"] = perf_counter() - answer_started
-                reply = "".join(reply_parts).strip()
-                if not reply:
-                    raise RuntimeError("模型未返回可显示的答案")
+                with agent_trace.span("generation", "answer_stream", input=agent_trace.generation_input(
+                        payload.question, prepared.results_for_answer, local_history)) as span:
+                    for part in answer_stream(
+                        payload.question, prepared.results_for_answer, local_history
+                    ):
+                        reply_parts.append(part)
+                        yield sse_event("delta", {"content": part})
+                    trace["answer_seconds"] = perf_counter() - answer_started
+                    reply = "".join(reply_parts).strip()
+                    if span:
+                        span.output = {"answer": reply}
+                    if not reply:
+                        raise RuntimeError("模型未返回可显示的答案")
             else:
                 reply = prepared.fixed_answer
                 yield sse_event("delta", {"content": reply})
 
             trace["total_seconds"] = perf_counter() - started
-            commit_exchange(snapshot_version, payload, reply, prepared.sources, trace)
+            traced_commit(snapshot_version, payload, reply, prepared.sources, trace)
             yield sse_event("done", {"trace": trace})
-        except Exception:
+        except Exception as exc:
             # Fixed payload: str(exc) is never interpolated, nothing is
             # persisted, and no done event is emitted.
+            agent_trace.fail_current(exc, sse_error_event=True)
             yield sse_event("error", chat_orchestration.STREAM_ERROR_EVENT)
         finally:
             conversation_lock.release()
@@ -508,19 +568,28 @@ def orchestrated_stream(payload: ChatRequest, conversation_lock: Lock):
     return generate
 
 
+def stream_headers(run) -> dict:
+    headers = {"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"}
+    if run.run_id:
+        headers["X-Run-Id"] = run.run_id
+    return headers
+
+
 @app.post("/api/chat/stream")
 def chat_stream(payload: ChatRequest) -> StreamingResponse:
-    conversation_lock = acquire_conversation(payload.session_id)
+    run = start_trace_run(payload, "/api/chat/stream", streaming=True)
+    try:
+        conversation_lock = acquire_conversation(payload.session_id)
+    except BaseException as exc:
+        run.abort(exc)
+        raise
     try:
         if payload.mode == MODE_ORCHESTRATED:
             generate = orchestrated_stream(payload, conversation_lock)
             return StreamingResponse(
-                generate(),
+                run.iterate(generate()),
                 media_type="text/event-stream",
-                headers={
-                    "Cache-Control": "no-cache, no-transform",
-                    "X-Accel-Buffering": "no",
-                },
+                headers=stream_headers(run),
             )
 
         local_chunks, local_history, snapshot_version = state_snapshot(
@@ -529,8 +598,9 @@ def chat_stream(payload: ChatRequest) -> StreamingResponse:
         )
         if not local_chunks:
             raise HTTPException(409, "请先上传文档并建立知识库")
-    except Exception:
+    except Exception as exc:
         conversation_lock.release()
+        run.abort(exc)
         raise
 
     def generate():
@@ -540,7 +610,12 @@ def chat_stream(payload: ChatRequest) -> StreamingResponse:
         sources: list[dict] = []
         try:
             yield sse_event("status", {"phase": "routing", "message": "Agent 正在判断问题类型"})
-            decision = decide_action(payload.question, local_history)
+            with agent_trace.span("router", "decide_action", input={
+                "question": payload.question, "history_turns": len(local_history),
+            }) as span:
+                decision = decide_action(payload.question, local_history)
+                if span:
+                    span.output = decision
             tool_name = decision.get("tool", "direct")
             trace = {"agent_seconds": decision["seconds"], "tool": tool_name}
 
@@ -548,34 +623,49 @@ def chat_stream(payload: ChatRequest) -> StreamingResponse:
                 reply_parts.append(decision["content"])
                 yield sse_event("delta", {"content": decision["content"]})
             elif tool_name == "list_knowledge_sources":
-                reply = list_sources(local_chunks)
+                reply = legacy_tool_call(tool_name, decision.get("arguments") or {},
+                                         lambda: list_sources(local_chunks))
                 reply_parts.append(reply)
                 yield sse_event("delta", {"content": reply})
             elif tool_name == "summarize_knowledge_base":
                 yield sse_event("status", {"phase": "generating", "message": "正在总结知识库"})
-                reply = summarize_knowledge_base(local_chunks)
+                reply = legacy_tool_call(tool_name, decision.get("arguments") or {},
+                                         lambda: summarize_knowledge_base(local_chunks))
                 reply_parts.append(reply)
                 yield sse_event("delta", {"content": reply})
             else:
                 yield sse_event("status", {"phase": "retrieving", "message": "正在检索并重排相关证据"})
                 query = decision.get("arguments", {}).get("query") or payload.question
-                results = retrieve_fast(query, local_chunks, trace=trace)
-                sources = [serialize_source(c, s, i) for i, (c, s) in enumerate(results, 1)]
+                with agent_trace.span("tool_call", "search_knowledge_base", input={
+                    "arguments": {"query": query}, "chunks": len(local_chunks),
+                }) as span:
+                    results = retrieve_fast(query, local_chunks, trace=trace)
+                    sources = [serialize_source(c, s, i) for i, (c, s) in enumerate(results, 1)]
+                    if span:
+                        span.output = {"results": sources, "retrieval_trace": dict(trace)}
+                agent_trace.record("evidence", "retrieved_sources", output={
+                    "sources": [{"source": c.source, "chunk_index": c.index, "score": s} for c, s in results],
+                })
                 yield sse_event("sources", {"sources": sources})
                 yield sse_event("status", {"phase": "generating", "message": "正在基于证据生成答案"})
                 answer_started = perf_counter()
-                for part in answer_stream(payload.question, results, local_history):
-                    reply_parts.append(part)
-                    yield sse_event("delta", {"content": part})
+                with agent_trace.span("generation", "answer_stream", input=agent_trace.generation_input(
+                        payload.question, results, local_history)) as span:
+                    for part in answer_stream(payload.question, results, local_history):
+                        reply_parts.append(part)
+                        yield sse_event("delta", {"content": part})
+                    if span:
+                        span.output = {"answer": "".join(reply_parts).strip()}
                 trace["answer_seconds"] = perf_counter() - answer_started
 
             reply = "".join(reply_parts).strip()
             if not reply:
                 raise RuntimeError("模型未返回可显示的答案")
             trace["total_seconds"] = perf_counter() - started
-            commit_exchange(snapshot_version, payload, reply, sources, trace)
+            traced_commit(snapshot_version, payload, reply, sources, trace)
             yield sse_event("done", {"trace": trace})
         except Exception as exc:
+            agent_trace.fail_current(exc, sse_error_event=True)
             yield sse_event(
                 "error",
                 {"code": "AGENT_STREAM_ERROR", "message": f"Agent 运行失败：{exc}"},
@@ -584,10 +674,7 @@ def chat_stream(payload: ChatRequest) -> StreamingResponse:
             conversation_lock.release()
 
     return StreamingResponse(
-        generate(),
+        run.iterate(generate()),
         media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache, no-transform",
-            "X-Accel-Buffering": "no",
-        },
+        headers=stream_headers(run),
     )

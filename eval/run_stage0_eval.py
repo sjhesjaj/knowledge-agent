@@ -193,10 +193,73 @@ def condense_cases(run_dir: Path, runs: int) -> list[dict]:
                 "required_source_coverage": record["required_source_coverage"],
                 "duration_seconds": round(record["duration_seconds"], 3),
                 "answer": record["answer"],
+                "trace_run_id": record.get("trace_run_id"),
             })
     for entry in per_case.values():
         entry["pass_count"] = sum(r["passed"] for r in entry["runs"])
     return [per_case[key] for key in sorted(per_case)]
+
+
+def install_eval_tracing(evaluate_answerability, rag, trace_db: Path):
+    """Give every evaluated case its own trace run; returns an undo callable.
+
+    Wraps, never edits, the evaluator: `run_case` opens a run tagged with the
+    dataset, case id and run index, and `rag.answer_structured` gets the same
+    generation span the API records. Eval traces keep full text (no truncation).
+    The run id lands in the case record, so a failed case leads to its trace.
+    """
+    import agent_trace
+
+    original_run_case = evaluate_answerability.run_case
+    original_answer = rag.answer_structured
+
+    def traced_run_case(case, chunks, run_index, context):
+        run = agent_trace.start_run(
+            trace_db, kind="eval", entrypoint="eval:evaluate_answerability", mode="orchestrated",
+            streaming=False, question=case["question"], dataset=Path(context["dataset"]).name,
+            dataset_sha256=context["dataset_sha256"], case_id=case["id"], eval_run_index=run_index,
+            truncate=False,
+        )
+        with run:
+            record = original_run_case(case, chunks, run_index, context)
+        record["trace_run_id"] = run.run_id
+        return record
+
+    def traced_answer(question, results, history, **kwargs):
+        with agent_trace.span("generation", "answer_structured",
+                              input=agent_trace.generation_input(question, results, history)) as span:
+            reply = original_answer(question, results, history, **kwargs)
+            if span:
+                span.output = {"answer": reply}
+        return reply
+
+    evaluate_answerability.run_case = traced_run_case
+    rag.answer_structured = traced_answer
+
+    def undo() -> None:
+        evaluate_answerability.run_case = original_run_case
+        rag.answer_structured = original_answer
+
+    return undo
+
+
+def trace_summary(trace_db: Path) -> dict | None:
+    """Counts and the internal overhead diagnostic from this label's trace store."""
+    if not trace_db.exists():
+        return None
+    import sqlite3
+
+    connection = sqlite3.connect(trace_db)
+    try:
+        by_status = dict(connection.execute("SELECT status, COUNT(*) FROM trace_runs GROUP BY status").fetchall())
+        overheads = sorted(row[0] for row in connection.execute(
+            "SELECT trace_overhead_ms FROM trace_runs WHERE trace_overhead_ms IS NOT NULL"))
+        spans = connection.execute("SELECT COUNT(*) FROM trace_spans").fetchone()[0]
+    finally:
+        connection.close()
+    pick = lambda q: overheads[min(int(q * (len(overheads) - 1)), len(overheads) - 1)] if overheads else None
+    return {"runs_by_status": by_status, "spans": spans,
+            "trace_overhead_ms": {"p50": pick(0.5), "p95": pick(0.95), "max": overheads[-1] if overheads else None}}
 
 
 def main() -> int:
@@ -219,8 +282,10 @@ def main() -> int:
     # condensed eval/<label>.json below is what gets committed. Stage 0's own
     # raw runs predate this rule and stay where they were committed, eval/runs/.
     run_dir = ARTIFACTS_DIR / args.label
+    trace_db = run_dir / "traces.sqlite"
     spy = ChatRequestSpy()
     requests.post = spy
+    undo_tracing = install_eval_tracing(evaluate_answerability, rag, trace_db)
     try:
         exit_code = evaluate_answerability.main([
             "--dataset", str(ROOT / args.dataset),
@@ -228,6 +293,7 @@ def main() -> int:
             "--output-dir", str(run_dir),
         ])
     finally:
+        undo_tracing()
         requests.post = spy.original
 
     summary = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))
@@ -255,7 +321,7 @@ def main() -> int:
             "code_sha256": {
                 name: hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
                 for name in ("rag.py", "agent.py", "llm_provider.py", "chat_orchestration.py",
-                             "evaluate_answerability.py")
+                             "evaluate_answerability.py", "agent_trace.py")
                 if (ROOT / name).exists()
             },
             "python": summary["context"]["python_version"],
@@ -269,6 +335,9 @@ def main() -> int:
         },
         "retrieval_config": retrieval_config(rag),
         "observed_llm_requests": spy.report(),
+        # Each case run's trace_run_id resolves in this (git-ignored) store.
+        "trace_db": str(trace_db.relative_to(ROOT)).replace("\\", "/"),
+        "trace_summary": trace_summary(trace_db),
         "per_run_summary": summary["runs"],
         "aggregate": summary["aggregate"],
         "gates": summary["gates"],

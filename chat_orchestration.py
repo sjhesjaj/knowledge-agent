@@ -17,6 +17,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from time import perf_counter
 
+import agent_trace
 import wiki_runtime
 from rag import Chunk
 
@@ -239,7 +240,10 @@ def _prepared_without_execution(plan, message: str) -> Prepared:
 
 def prepare(question: str, chunks: list[Chunk]) -> Prepared:
     """Plan, check availability, execute, and judge - without answering."""
-    plan = plan_request(question)
+    with agent_trace.span("planner", "plan_request", input={"question": question}) as span:
+        plan = plan_request(question)
+        if span:
+            span.output = plan.to_dict()
     skus = extract_skus(question)
     sku = skus[0] if len(skus) == 1 else None
 
@@ -259,16 +263,26 @@ def prepare(question: str, chunks: list[Chunk]) -> Prepared:
     # Read once per request, so a build published mid-request cannot make the
     # availability check and the execution disagree about what the Wiki is.
     wiki_pages = current_wiki_pages()
-    message = _unavailable(question, plan, chunks, sku, skus, wiki_pages)
+    with agent_trace.span("planner", "availability_check", input={
+        "steps": [step.value for step in plan.steps], "chunks": len(chunks),
+        "wiki_pages": len(wiki_pages), "sku_count": len(skus),
+    }) as span:
+        message = _unavailable(question, plan, chunks, sku, skus, wiki_pages)
+        if span:
+            span.output = {"fixed_answer": message}
     if message is not None:
         return _prepared_without_execution(plan, message)
 
     started = perf_counter()
-    if ToolName.SYSTEM_QUERY in plan.steps:
-        with demo_system_connection() as connection:
-            bundle = _execute(question, plan, chunks, connection, sku, wiki_pages)
-    else:
-        bundle = _execute(question, plan, chunks, None, None, wiki_pages)
+    with agent_trace.span("tool_call", "execute_plan",
+                          input={"steps": [step.value for step in plan.steps]}) as span:
+        if ToolName.SYSTEM_QUERY in plan.steps:
+            with demo_system_connection() as connection:
+                bundle = _execute(question, plan, chunks, connection, sku, wiki_pages)
+        else:
+            bundle = _execute(question, plan, chunks, None, None, wiki_pages)
+        if span:
+            agent_trace.safely(_trace_bundle, span, question, chunks, wiki_pages, sku, bundle)
     executor_seconds = perf_counter() - started
 
     decision = bundle.decision
@@ -311,6 +325,55 @@ def _execute(question, plan, chunks, connection, sku, wiki_pages):
         system_request=request,
     )
     return execute_plan(question, plan, context)
+
+
+def _trace_bundle(span, question, chunks, wiki_pages, sku, bundle) -> None:
+    """Record what the executor already knows as tool_call and evidence spans.
+
+    Read-only: nothing here feeds back into the answer. The executor runs its
+    tools inside one call, so per-tool spans are reconstructed afterwards from
+    its own step timings (tools run sequentially, in plan order).
+    """
+    run = span.run
+    defaults = ExecutionContext()
+    arguments = {
+        ToolName.DOCUMENT_SEARCH: {"question": question, "top_k": defaults.document_top_k,
+                                   "chunks": len(chunks)},
+        ToolName.WIKI_QUERY: {"question": question, "top_k": defaults.wiki_top_k,
+                              "wiki_pages": len(wiki_pages)},
+        ToolName.SYSTEM_QUERY: {"operation": SystemOperation.GET_INVENTORY_LEVEL.value,
+                                "parameters": {"sku": sku}, "subject_id": None},
+    }
+    step_seconds = bundle.trace.get("executor_step_seconds", {})
+    exception_types = {item.tool.value: item.exception_type for item in bundle.tool_errors}
+    offset = span.offset_ms
+    tool_spans = {}
+    for tool, result in bundle.results.items():
+        latency = step_seconds.get(tool.value, 0.0) * 1000
+        tool_spans[tool] = run.record(
+            "tool_call", tool.value, parent=span, status=result.status.value,
+            input={"arguments": arguments.get(tool, {})}, output=result.to_dict(),
+            latency_ms=latency, offset_ms=offset,
+            error_type=exception_types.get(tool.value), error_code=result.error_code,
+            error_message=result.error_message,
+            attributes={"timing": "executor_step_seconds", "evidence_count": len(result.evidence)},
+        )
+        offset += latency
+    # Only document_search reaches a model (retrieval rerank/selection), so model
+    # calls made while the plan executed belong under it.
+    document_span = tool_spans.get(ToolName.DOCUMENT_SEARCH)
+    if document_span is not None:
+        for item in run.spans:
+            if item.parent_id == span.span_id and item.stage == agent_trace.LLM_CALL:
+                item.parent_id = document_span.span_id
+    total_ms = bundle.trace.get("executor_total_seconds", 0.0) * 1000
+    policy_ms = max(total_ms - sum(step_seconds.values()) * 1000, 0.0)
+    run.record(
+        "evidence", "evaluate_evidence", output=bundle.decision.to_dict(),
+        latency_ms=policy_ms, offset_ms=span.offset_ms + total_ms - policy_ms,
+        attributes={"timing": "executor_total_minus_steps", "outcome": bundle.decision.outcome.value,
+                    "usable_evidence": len(bundle.decision.usable_evidence)},
+    )
 
 
 def build_trace(prepared: Prepared) -> dict:
