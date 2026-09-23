@@ -14,3 +14,4 @@ tmp/
 RESUME_NOTES.md
 output/
 tools/create_resume_project1_pdf.py
+.env

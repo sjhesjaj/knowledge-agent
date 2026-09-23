@@ -14,9 +14,12 @@ import requests
 import jieba
 from pypdf import PdfReader
 
+import llm_provider
 
+
+# Embeddings and the health check stay on local Ollama; chat goes through llm_provider.
 OLLAMA_URL = "http://localhost:11434"
-CHAT_MODEL = "qwen3:4b"
+CHAT_MODEL = llm_provider.load_config().model
 EMBED_MODEL = "nomic-embed-text"
 CACHE_FILE = Path(".cache/embeddings.json")
 REFUSAL_MARKERS = ("无法确定", "没有相关", "未提及", "资料不足", "无法回答")
@@ -233,15 +236,7 @@ def rerank(question: str, candidates: list[tuple[Chunk, float]], top_k: int = 4)
         {"role": "user", "content": f"问题：{question}\n\n{candidate_text}"},
     ]
     try:
-        response = requests.post(
-            f"{OLLAMA_URL}/api/chat",
-            json={"model": CHAT_MODEL, "messages": messages, "stream": False, "think": False, "format": "json"},
-            timeout=180,
-        )
-        response.raise_for_status()
-        content = response.json()["message"]["content"]
-        if "</think>" in content:
-            content = content.rsplit("</think>", 1)[-1]
+        content = llm_provider.get_provider().chat(messages, response_format="json").content
         ranking = [int(value) for value in json.loads(content)["ranking"]]
         by_index = {chunk.index: chunk for chunk, _ in candidates}
         ordered = [by_index[index] for index in ranking if index in by_index]
@@ -273,15 +268,7 @@ def select_for_subquestions(
         {"role": "user", "content": f"{questions}\n\n{candidate_text}"},
     ]
     try:
-        response = requests.post(
-            f"{OLLAMA_URL}/api/chat",
-            json={"model": CHAT_MODEL, "messages": messages, "stream": False, "think": False, "format": "json"},
-            timeout=180,
-        )
-        response.raise_for_status()
-        content = response.json()["message"]["content"]
-        if "</think>" in content:
-            content = content.rsplit("</think>", 1)[-1]
+        content = llm_provider.get_provider().chat(messages, response_format="json").content
         selections = [int(value) for value in json.loads(content)["selections"]]
         by_index = {chunk.index: chunk for chunk, _ in candidates}
         ordered: list[Chunk] = []
@@ -425,21 +412,8 @@ def retrieve_fast(question: str, chunks: list[Chunk], top_k: int = 4, trace: dic
 
 def answer(question: str, results: list[tuple[Chunk, float]], history: list[dict]) -> str:
     messages = build_answer_messages(question, results, history)
-    response = requests.post(
-        f"{OLLAMA_URL}/api/chat",
-        json={"model": CHAT_MODEL, "messages": messages, "stream": False, "think": False},
-        timeout=180,
-    )
-    response.raise_for_status()
-    content = response.json()["message"]["content"]
-    # 不同 Qwen3/Ollama 版本可能返回完整或残缺的 think 标签。
-    # 如果存在结束标签，最终答案通常位于它后面；否则清除完整标签块。
-    if "</think>" in content:
-        content = content.rsplit("</think>", 1)[-1]
-    else:
-        content = re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL)
-        content = re.sub(r"<think>.*", "", content, flags=re.DOTALL)
-    return content.strip()
+    # think 标签由 provider 统一剥离（见 llm_provider.split_think）。
+    return llm_provider.get_provider().chat(messages).content.strip()
 
 
 def answer_structured(question: str, results: list[tuple[Chunk, float]], history: list[dict]) -> str:
@@ -449,16 +423,7 @@ def answer_structured(question: str, results: list[tuple[Chunk, float]], history
         "type": "object", "required": ["answer"],
         "properties": {"answer": {"type": "string"}},
     }
-    response = requests.post(
-        f"{OLLAMA_URL}/api/chat",
-        json={
-            "model": CHAT_MODEL, "messages": messages, "stream": False,
-            "think": False, "format": schema, "options": {"temperature": 0},
-        },
-        timeout=180,
-    )
-    response.raise_for_status()
-    content = response.json()["message"]["content"]
+    content = llm_provider.get_provider().chat(messages, response_format=schema, temperature=0).content
     try:
         result = json.loads(content)["answer"].strip()
     except (json.JSONDecodeError, KeyError, TypeError):
@@ -476,17 +441,9 @@ def answer_structured(question: str, results: list[tuple[Chunk, float]], history
             },
             {"role": "user", "content": f"问题：{question}\n\n[来源1]\n{top_chunk.text}"},
         ]
-        retry = requests.post(
-            f"{OLLAMA_URL}/api/chat",
-            json={
-                "model": CHAT_MODEL, "messages": retry_messages, "stream": False,
-                "think": False, "format": schema, "options": {"temperature": 0},
-            },
-            timeout=180,
-        )
-        retry.raise_for_status()
+        retry = llm_provider.get_provider().chat(retry_messages, response_format=schema, temperature=0)
         try:
-            retry_result = json.loads(retry.json()["message"]["content"])["answer"].strip()
+            retry_result = json.loads(retry.content)["answer"].strip()
             # 小模型偶发只复述问题。重试结果必须仍是明确拒答，或给出带来源标记的答案；
             # 否则保留首轮正确拒答，避免证据复查反而制造无依据回答。
             result = retry_result if is_valid_evidence_retry(retry_result, question) else original_refusal
@@ -539,102 +496,76 @@ def answer_stream(question: str, results: list[tuple[Chunk, float]], history: li
         "required": ["answer"],
         "properties": {"answer": {"type": "string"}},
     }
-    with requests.post(
-        f"{OLLAMA_URL}/api/chat",
-        json={
-            "model": CHAT_MODEL,
-            "messages": messages,
-            "stream": True,
-            "think": False,
-            "format": schema,
-            "options": {"temperature": 0},
-        },
-        timeout=(10, 180),
-        stream=True,
-    ) as response:
-        response.raise_for_status()
-        full_json = ""
-        prefix_buffer = ""
-        answer_started = False
-        answer_finished = False
-        escaping = False
-        unicode_digits: str | None = None
-        pending_high_surrogate: int | None = None
-        streamed_answer: list[str] = []
-        stream_done = False
+    full_json = ""
+    prefix_buffer = ""
+    answer_started = False
+    answer_finished = False
+    escaping = False
+    unicode_digits: str | None = None
+    pending_high_surrogate: int | None = None
+    streamed_answer: list[str] = []
 
-        for line in response.iter_lines(decode_unicode=True):
-            if not line:
+    # 传输层（NDJSON/SSE、error、done 标记）由 provider 处理，这里只拿到文本增量。
+    for content in llm_provider.get_provider().chat_stream(messages, response_format=schema, temperature=0):
+        full_json += content
+
+        if not answer_started:
+            prefix_buffer += content
+            match = re.search(r'"answer"\s*:\s*"', prefix_buffer)
+            if not match:
                 continue
-            payload = json.loads(line)
-            if payload.get("error"):
-                raise RuntimeError(f"Ollama 流式生成失败：{payload['error']}")
-            if payload.get("done"):
-                stream_done = True
-            content = payload.get("message", {}).get("content", "")
-            if not content:
-                continue
-            full_json += content
+            answer_started = True
+            content = prefix_buffer[match.end():]
+            prefix_buffer = ""
 
-            if not answer_started:
-                prefix_buffer += content
-                match = re.search(r'"answer"\s*:\s*"', prefix_buffer)
-                if not match:
-                    continue
-                answer_started = True
-                content = prefix_buffer[match.end():]
-                prefix_buffer = ""
-
-            visible: list[str] = []
-            for char in content:
-                if answer_finished:
-                    break
-                if unicode_digits is not None:
-                    unicode_digits += char
-                    if len(unicode_digits) == 4:
-                        codepoint = int(unicode_digits, 16)
-                        unicode_digits = None
-                        escaping = False
-                        if 0xD800 <= codepoint <= 0xDBFF:
-                            pending_high_surrogate = codepoint
-                        elif 0xDC00 <= codepoint <= 0xDFFF and pending_high_surrogate is not None:
-                            combined = 0x10000 + ((pending_high_surrogate - 0xD800) << 10) + (codepoint - 0xDC00)
-                            visible.append(chr(combined))
-                            pending_high_surrogate = None
-                        else:
-                            if pending_high_surrogate is not None:
-                                raise RuntimeError("结构化答案包含无效 Unicode 转义")
-                            visible.append(chr(codepoint))
-                    continue
-                if escaping:
-                    if char == "u":
-                        unicode_digits = ""
-                        continue
-                    escapes = {'"': '"', "\\": "\\", "/": "/", "b": "\b", "f": "\f", "n": "\n", "r": "\r", "t": "\t"}
-                    if char not in escapes:
-                        raise RuntimeError("结构化答案包含无效转义")
-                    visible.append(escapes[char])
+        visible: list[str] = []
+        for char in content:
+            if answer_finished:
+                break
+            if unicode_digits is not None:
+                unicode_digits += char
+                if len(unicode_digits) == 4:
+                    codepoint = int(unicode_digits, 16)
+                    unicode_digits = None
                     escaping = False
+                    if 0xD800 <= codepoint <= 0xDBFF:
+                        pending_high_surrogate = codepoint
+                    elif 0xDC00 <= codepoint <= 0xDFFF and pending_high_surrogate is not None:
+                        combined = 0x10000 + ((pending_high_surrogate - 0xD800) << 10) + (codepoint - 0xDC00)
+                        visible.append(chr(combined))
+                        pending_high_surrogate = None
+                    else:
+                        if pending_high_surrogate is not None:
+                            raise RuntimeError("结构化答案包含无效 Unicode 转义")
+                        visible.append(chr(codepoint))
+                continue
+            if escaping:
+                if char == "u":
+                    unicode_digits = ""
                     continue
-                if char == "\\":
-                    escaping = True
-                elif char == '"':
-                    answer_finished = True
-                else:
-                    visible.append(char)
+                escapes = {'"': '"', "\\": "\\", "/": "/", "b": "\b", "f": "\f", "n": "\n", "r": "\r", "t": "\t"}
+                if char not in escapes:
+                    raise RuntimeError("结构化答案包含无效转义")
+                visible.append(escapes[char])
+                escaping = False
+                continue
+            if char == "\\":
+                escaping = True
+            elif char == '"':
+                answer_finished = True
+            else:
+                visible.append(char)
 
-            if visible:
-                delta = "".join(visible)
-                streamed_answer.append(delta)
-                yield delta
+        if visible:
+            delta = "".join(visible)
+            streamed_answer.append(delta)
+            yield delta
 
-        if not stream_done:
-            raise RuntimeError("Ollama 流式响应意外中断")
-        if not answer_started or not answer_finished:
-            raise RuntimeError("Ollama 未返回完整的结构化答案")
-        try:
-            parsed_answer = json.loads(full_json)["answer"]
-        except (json.JSONDecodeError, KeyError, TypeError) as exc:
-            raise RuntimeError("Ollama 返回了无效的结构化答案") from exc
-        if "".join(streamed_answer) != parsed_answer:
-            raise RuntimeError("流式答案校验失败")
+    if not answer_started or not answer_finished:
+        raise RuntimeError("Ollama 未返回完整的结构化答案")
+    try:
+        parsed_answer = json.loads(full_json)["answer"]
+    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+        raise RuntimeError("Ollama 返回了无效的结构化答案") from exc
+    if "".join(streamed_answer) != parsed_answer:
+        raise RuntimeError("流式答案校验失败")

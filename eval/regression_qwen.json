@@ -1,0 +1,2278 @@
+{
+  "label": "regression_qwen",
+  "dataset": "eval_answerability_validation_v1.json",
+  "dataset_sha256": "e4ad670c6dd6512c8ffcf647b967861d9d1bbef44dbc7872d3cfbf96915c6ced",
+  "runs": 3,
+  "evaluator_exit_code": 0,
+  "environment": {
+    "git_commit": "db3653ab484fde183e2ecf08cd1cf76480458588",
+    "git_describe": "stage0-baseline",
+    "git_branch": "stage0-llm-provider",
+    "tracked_files_dirty": [
+      "M .gitignore",
+      " M agent.py",
+      " M rag.py",
+      " M tests/__init__.py"
+    ],
+    "code_sha256": {
+      "rag.py": "2dcdd3c3958b6b7c3c4ed3f46b560c4dad801b322b206294a0cfe92523f31e7a",
+      "agent.py": "ccdc785c843bf757351c72969dcf3b6fc63f0521bfa39605bfe2131ce71c982e",
+      "llm_provider.py": "742a55e48394b140112da8bbe02d6c0e60f024763c5cdca5490f880ea4905bc5",
+      "chat_orchestration.py": "3c5f4f83e17c9e692b8228fd77ddc8c6ee2df65faae2f76048041986d0901e88",
+      "evaluate_answerability.py": "51f36b541169e19256a78560c508428b74f4178479c758998e9b5d36b6c03113"
+    },
+    "python": "3.12.14",
+    "platform": "Windows-11-10.0.26200-SP0",
+    "ollama_version": "0.32.15",
+    "ollama_url": "http://localhost:11434",
+    "llm_provider_config": {
+      "provider": "ollama",
+      "base_url": "http://localhost:11434",
+      "model": "qwen3:4b",
+      "timeout": 180.0,
+      "api_key_set": false
+    },
+    "chat_model": {
+      "name": "qwen3:4b",
+      "digest": "359d7dd4bcdab3d86b87d73ac27966f4dbb9f5efdfcc75d34a8764a09474fae7",
+      "quantization_level": "Q4_K_M",
+      "parameter_size": "4.0B",
+      "family": "qwen3",
+      "format": "gguf",
+      "parameters": "top_p                          0.95\nrepeat_penalty                 1\nstop                           \"<|im_start|>\"\nstop                           \"<|im_end|>\"\ntemperature                    0.6\ntop_k                          20",
+      "weights_blob": "sha256-3e4cb14174460404e7a233e531675303b2fbf7749c02f91864fe311ab6344e4f",
+      "general.basename": "Qwen3",
+      "general.finetune": "Thinking",
+      "general.size_label": "4B"
+    },
+    "embed_model": {
+      "name": "nomic-embed-text",
+      "quantization_level": "F16",
+      "parameter_size": "137M",
+      "family": "nomic-bert",
+      "format": "gguf",
+      "parameters": "num_ctx                        8192",
+      "weights_blob": "sha256-970aa74c0a90ef7482477cf803618e776e173c007bf957f635f1015bfcfef0e6"
+    },
+    "wiki": {
+      "current_json_present": true,
+      "current_json_sha256": "e349bd55ac1bc534a304ab54a742fa036cfde1f8606d1711ab58e0ff59854f61",
+      "published_build_id": "build-0001"
+    }
+  },
+  "retrieval_config": {
+    "split_text": {
+      "size": 220,
+      "overlap": 40
+    },
+    "bm25_rank": {
+      "k1": 1.5,
+      "b": 0.75
+    },
+    "hybrid_retrieve": {
+      "top_k": 4,
+      "rrf_k": 60,
+      "vector_weight": 1.0,
+      "keyword_weight": 1.2
+    },
+    "retrieve_with_rerank": {
+      "top_k": 4,
+      "candidate_k": 8
+    },
+    "retrieve_fast": {
+      "top_k": 4
+    },
+    "bm25_fast_path": {
+      "min_top_score": 3.0,
+      "min_ratio_to_second": 1.5
+    },
+    "embed_model": "nomic-embed-text",
+    "refusal_markers": [
+      "无法确定",
+      "没有相关",
+      "未提及",
+      "资料不足",
+      "无法回答"
+    ]
+  },
+  "observed_llm_requests": {
+    "chat_calls": 133,
+    "embed_calls": 27,
+    "system_prompts": [
+      {
+        "sha256": "38999f71e2bf706108e6ed3ca47bd247e8104db2f1a896d6aa0850fc52ecaf38",
+        "calls": 24,
+        "text": "你是检索重排序器。根据用户问题判断候选片段的相关性。只输出JSON，格式为{\"ranking\":[片段ID,...]}。最能直接回答问题的片段排在最前，不要解释。 /no_think"
+      },
+      {
+        "sha256": "519efb5576916b0c77971f8dc268d150a9f13272321441a484be4894bab019c3",
+        "calls": 3,
+        "text": "你是检索片段选择器。必须为每个子问题选择一个最能直接回答它的候选ID。选择标准不是主题相似，而是片段中必须包含能够直接提取的具体答案；例如询问最晚到岗时间，应选择明确写有到岗时间的片段。只输出JSON，格式为{\"selections\":[片段ID,...]}，数组顺序与问题顺序一致。不要解释。 /no_think"
+      },
+      {
+        "sha256": "b20d9a0b473b5ecb08c453b58c322e23a474f1a5e5e8a60258931b9801686aba",
+        "calls": 24,
+        "text": "你是证据提取器。检查片段是否明确包含问题答案。若包含，直接提取准确答案并标注[来源1]；确实没有才回答根据现有资料无法确定。"
+      },
+      {
+        "sha256": "f3c643ca9fc474b372fb3279116a593a69f905f86aa7431f53ebbcbe04a8ea10",
+        "calls": 82,
+        "text": "你是严谨的企业知识库助手。请直接阅读用户消息中“资料”部分并回答“问题”。只能使用资料里的事实，不得使用外部知识。若资料明确包含答案，必须作答；只有资料确实没有相关信息时才说“根据现有资料无法确定”。最终答案控制在3句话以内，不要展示分析过程、推理步骤或自我检查。在每个关键结论后使用[来源1]这样的编号标注依据。 /no_think"
+      }
+    ],
+    "request_shapes": [
+      {
+        "calls": 24,
+        "format": "json",
+        "model": "qwen3:4b",
+        "options": null,
+        "stream": false,
+        "system_prompt_sha256": "38999f71e2bf706108e6ed3ca47bd247e8104db2f1a896d6aa0850fc52ecaf38",
+        "think": false,
+        "tools": false
+      },
+      {
+        "calls": 3,
+        "format": "json",
+        "model": "qwen3:4b",
+        "options": null,
+        "stream": false,
+        "system_prompt_sha256": "519efb5576916b0c77971f8dc268d150a9f13272321441a484be4894bab019c3",
+        "think": false,
+        "tools": false
+      },
+      {
+        "calls": 24,
+        "format": "schema:75d4773336812270",
+        "model": "qwen3:4b",
+        "options": {
+          "temperature": 0
+        },
+        "stream": false,
+        "system_prompt_sha256": "b20d9a0b473b5ecb08c453b58c322e23a474f1a5e5e8a60258931b9801686aba",
+        "think": false,
+        "tools": false
+      },
+      {
+        "calls": 82,
+        "format": "schema:75d4773336812270",
+        "model": "qwen3:4b",
+        "options": {
+          "temperature": 0
+        },
+        "stream": false,
+        "system_prompt_sha256": "f3c643ca9fc474b372fb3279116a593a69f905f86aa7431f53ebbcbe04a8ea10",
+        "think": false,
+        "tools": false
+      }
+    ]
+  },
+  "per_run_summary": [
+    {
+      "total_cases": 40,
+      "passed": 39,
+      "pass_rate": 0.975,
+      "answer_success_rate": 0.95,
+      "false_refusal_rate": 0.05,
+      "unanswerable_refusal_rate": 1.0,
+      "refusal_mechanism_match": 1.0,
+      "boundary_accuracy": 1.0,
+      "citation_presence_rate": 1.0,
+      "citation_index_validity": 1.0,
+      "required_source_coverage": 1.0,
+      "expected_fact_hit_rate": 0.95,
+      "expected_fact_group_hit_rate": 0.9166666666666666,
+      "route_accuracy": 1.0,
+      "production_marker_refusal_gap": 0,
+      "question_restatements": 0,
+      "duration_p50": 2.8430828000055044,
+      "duration_p95": 10.214060619998055,
+      "duration_max": 10.483343400002923,
+      "duration_total": 146.66181140001572
+    },
+    {
+      "total_cases": 40,
+      "passed": 39,
+      "pass_rate": 0.975,
+      "answer_success_rate": 0.95,
+      "false_refusal_rate": 0.05,
+      "unanswerable_refusal_rate": 1.0,
+      "refusal_mechanism_match": 1.0,
+      "boundary_accuracy": 1.0,
+      "citation_presence_rate": 1.0,
+      "citation_index_validity": 1.0,
+      "required_source_coverage": 1.0,
+      "expected_fact_hit_rate": 0.95,
+      "expected_fact_group_hit_rate": 0.9166666666666666,
+      "route_accuracy": 1.0,
+      "production_marker_refusal_gap": 0,
+      "question_restatements": 0,
+      "duration_p50": 2.8290871000062907,
+      "duration_p95": 10.176207484999031,
+      "duration_max": 10.50832390000869,
+      "duration_total": 146.04932570001984
+    },
+    {
+      "total_cases": 40,
+      "passed": 39,
+      "pass_rate": 0.975,
+      "answer_success_rate": 0.95,
+      "false_refusal_rate": 0.05,
+      "unanswerable_refusal_rate": 1.0,
+      "refusal_mechanism_match": 1.0,
+      "boundary_accuracy": 1.0,
+      "citation_presence_rate": 1.0,
+      "citation_index_validity": 1.0,
+      "required_source_coverage": 1.0,
+      "expected_fact_hit_rate": 0.95,
+      "expected_fact_group_hit_rate": 0.9166666666666666,
+      "route_accuracy": 1.0,
+      "production_marker_refusal_gap": 0,
+      "question_restatements": 0,
+      "duration_p50": 2.789288799998758,
+      "duration_p95": 10.33437180499168,
+      "duration_max": 10.431454399993527,
+      "duration_total": 145.90941799996654
+    }
+  ],
+  "aggregate": {
+    "pass_rate": 0.975,
+    "answer_success_rate": 0.9499999999999998,
+    "false_refusal_rate": 0.05000000000000001,
+    "unanswerable_refusal_rate": 1.0,
+    "refusal_mechanism_match": 1.0,
+    "boundary_accuracy": 1.0,
+    "citation_presence_rate": 1.0,
+    "citation_index_validity": 1.0,
+    "required_source_coverage": 1.0,
+    "expected_fact_hit_rate": 0.9499999999999998,
+    "expected_fact_group_hit_rate": 0.9166666666666666,
+    "route_accuracy": 1.0,
+    "run_count": 3,
+    "stable_pass": 39,
+    "stable_fail": 1,
+    "unstable": 0,
+    "stability_rate": 1.0,
+    "stable_pass_rate": 0.975,
+    "unstable_ids": [],
+    "stable_fail_ids": [
+      "answer_document_h008"
+    ],
+    "duration_p50": 2.82798344999901,
+    "duration_p95": 10.290434555011597,
+    "duration_max": 10.50832390000869
+  },
+  "gates": [
+    {
+      "name": "Answer Success Rate",
+      "value": 0.9499999999999998,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": true
+    },
+    {
+      "name": "False Refusal Rate",
+      "value": 0.05000000000000001,
+      "direction": "max",
+      "threshold": 0.1,
+      "passed": true
+    },
+    {
+      "name": "Unanswerable Refusal Rate",
+      "value": 1.0,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": true
+    },
+    {
+      "name": "Boundary Message Accuracy",
+      "value": 1.0,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": true
+    },
+    {
+      "name": "Citation Index Validity",
+      "value": 1.0,
+      "direction": "min",
+      "threshold": 0.95,
+      "passed": true
+    },
+    {
+      "name": "Expected Fact Hit Rate",
+      "value": 0.9499999999999998,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": true
+    },
+    {
+      "name": "Cross-run Stability",
+      "value": 1.0,
+      "direction": "min",
+      "threshold": 0.9,
+      "passed": true
+    }
+  ],
+  "cases": [
+    {
+      "id": "answer_document_h001",
+      "question": "请假超过一天需要谁审批？",
+      "category": "document",
+      "expected_behavior": "answer",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.858,
+          "answer": "根据资料[来源 1]，请假超过一天需要部门负责人审批。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.703,
+          "answer": "根据资料，请假超过一天需要部门负责人审批。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.724,
+          "answer": "根据资料，请假超过一天需要部门负责人审批。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_document_h002",
+      "question": "绩效考核多久进行一次？",
+      "category": "document",
+      "expected_behavior": "answer",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.814,
+          "answer": "绩效考核每季度进行一次。[来源 1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.82,
+          "answer": "绩效考核每季度进行一次。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.737,
+          "answer": "绩效考核每季度进行一次。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_document_h003",
+      "question": "工资是每月几号发放？",
+      "category": "document",
+      "expected_behavior": "answer",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.01,
+          "answer": "根据资料，工资是每月10号发放上一个自然月的工资。[来源 1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.01,
+          "answer": "根据资料，工资是每月10号发放上一个自然月的工资。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.941,
+          "answer": "根据资料，工资是每月10号发放上一个自然月的工资。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_document_h004",
+      "question": "试用期员工应在期满前多少个工作日提交转正材料？",
+      "category": "document",
+      "expected_behavior": "answer",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.972,
+          "answer": "试用期员工应在期满前 10 个工作日提交转正材料。[来源 1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.932,
+          "answer": "试用期员工应在期满前 10 个工作日提交转正材料。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.003,
+          "answer": "试用期员工应在期满前 10 个工作日提交转正材料。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_document_h005",
+      "question": "调休应该在多少个月内使用？",
+      "category": "document",
+      "expected_behavior": "answer",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.828,
+          "answer": "调休应在3个月内使用。[来源1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.683,
+          "answer": "调休应在3个月内使用[来源1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.661,
+          "answer": "调休应在3个月内使用[来源1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_document_h006",
+      "question": "绩效结果分为几档？",
+      "category": "document",
+      "expected_behavior": "answer",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 8.033,
+          "answer": "绩效结果分为 A、B、C、D 四档。[来源 1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 7.667,
+          "answer": "绩效结果分为 A、B、C、D 四档。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 7.998,
+          "answer": "绩效结果分为 A、B、C、D 四档。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_document_h007",
+      "question": "员工申诉应在结果公布后多少个工作日内提交？",
+      "category": "document",
+      "expected_behavior": "answer",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.691,
+          "answer": "员工申诉应在结果公布后5个工作日内提交。[来源1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.723,
+          "answer": "员工申诉应在结果公布后5个工作日内提交。[来源1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.749,
+          "answer": "员工申诉应在结果公布后5个工作日内提交。[来源1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_document_h008",
+      "question": "目前的制度里，核心协作时间是几点到几点？",
+      "category": "document",
+      "expected_behavior": "answer",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": false,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "document_only",
+          "model_called": false,
+          "all_facts_hit": false,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.004,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 2,
+          "passed": false,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "document_only",
+          "model_called": false,
+          "all_facts_hit": false,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.005,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 3,
+          "passed": false,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "document_only",
+          "model_called": false,
+          "all_facts_hit": false,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.005,
+          "answer": "根据现有资料无法确定。"
+        }
+      ],
+      "pass_count": 0
+    },
+    {
+      "id": "answer_inventory_h001",
+      "question": "SKU-A100 现在还有多少库存？",
+      "category": "system",
+      "expected_behavior": "answer",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.828,
+          "answer": "SKU-A100 现在有 42 件库存。[来源 1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.811,
+          "answer": "SKU-A100 现在有 42 件库存。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.757,
+          "answer": "SKU-A100 现在有 42 件库存。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_inventory_h002",
+      "question": "帮我查一下 SKU-C300 的库存",
+      "category": "system",
+      "expected_behavior": "answer",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.756,
+          "answer": "SKU-C300 的当前库存为 7 箱。[来源 1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.798,
+          "answer": "SKU-C300 的当前库存为 7 箱。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.778,
+          "answer": "SKU-C300 的当前库存为 7 箱。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_inventory_h003",
+      "question": "SKU-B200 目前的库存是多少？",
+      "category": "system",
+      "expected_behavior": "answer",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.773,
+          "answer": "SKU-B200 目前的库存为 0 件。[来源 1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.838,
+          "answer": "SKU-B200 目前的库存为 0 件。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.801,
+          "answer": "SKU-B200 目前的库存为 0 件。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_inventory_h004",
+      "question": "查询 SKU-C300 库存",
+      "category": "system",
+      "expected_behavior": "answer",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.784,
+          "answer": "SKU-C300 的当前库存为 7 箱。[来源 1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.796,
+          "answer": "SKU-C300 的当前库存为 7 箱。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "system_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 2.773,
+          "answer": "SKU-C300 的当前库存为 7 箱。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_multi_h001",
+      "question": "SKU-B200 的库存现在是多少？请附原文条款。",
+      "category": "multi_channel",
+      "expected_behavior": "answer",
+      "expected_route": "document_system",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_system",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 7.64,
+          "answer": "SKU-B200 的当前库存为 0 件。[来源 3：demo-business-system，片段 3]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_system",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 7.888,
+          "answer": "SKU-B200 的当前库存为 0 件。[来源 3：demo-business-system，片段 3]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_system",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 7.538,
+          "answer": "SKU-B200 的当前库存为 0 件。[来源 3：demo-business-system，片段 3]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_multi_h002",
+      "question": "请先给出原文依据，再说明 SKU-C300 当前库存。",
+      "category": "multi_channel",
+      "expected_behavior": "answer",
+      "expected_route": "document_system",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_system",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 8.224,
+          "answer": "SKU sku-c300 的当前库存为 7 箱。[来源 5：demo-business-system，片段 5]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_system",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 7.945,
+          "answer": "SKU sku-c300 的当前库存为 7 箱。[来源 5：demo-business-system，片段 5]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "document_system",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 8.341,
+          "answer": "SKU sku-c300 的当前库存为 7 箱。[来源 5：demo-business-system，片段 5]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_multi_h003",
+      "question": "介绍一下信息安全，并引用原文条款。",
+      "category": "multi_channel",
+      "expected_behavior": "answer",
+      "expected_route": "wiki_document",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_document",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.428,
+          "answer": "根据资料，星河科技员工手册中信息安全条款规定：内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务。敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具。[来源1][来源4]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_document",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.465,
+          "answer": "根据资料，星河科技员工手册中信息安全条款规定：内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务。敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具。[来源1][来源4]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_document",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.345,
+          "answer": "根据资料，星河科技员工手册中信息安全条款规定：内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务。敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具。[来源1][来源4]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_multi_h004",
+      "question": "介绍一下账号与权限，并说明高权限账号多少天复核一次。",
+      "category": "multi_channel",
+      "expected_behavior": "answer",
+      "expected_route": "wiki_document",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_document",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.329,
+          "answer": "系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。[来源1]（或[来源4]）"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_document",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.442,
+          "answer": "系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。[来源1]（或[来源4]）"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_document",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.339,
+          "answer": "系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。[来源1]（或[来源4]）"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_wiki_h001",
+      "question": "概述一下远程办公政策",
+      "category": "wiki",
+      "expected_behavior": "answer",
+      "expected_route": "wiki_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.095,
+          "answer": "员工每周最多申请2天远程办公，须至少提前一个工作日获得直属主管批准。涉及客户现场支持、机房值守的岗位不适用远程办公政策。[来源1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.114,
+          "answer": "员工每周最多申请2天远程办公，须至少提前一个工作日获得直属主管批准。涉及客户现场支持、机房值守的岗位不适用远程办公政策。[来源1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.107,
+          "answer": "员工每周最多申请2天远程办公，须至少提前一个工作日获得直属主管批准。涉及客户现场支持、机房值守的岗位不适用远程办公政策。[来源1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_wiki_h002",
+      "question": "介绍一下信息安全",
+      "category": "wiki",
+      "expected_behavior": "answer",
+      "expected_route": "wiki_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.729,
+          "answer": "根据资料，信息安全要求包括：内部资料不得上传至未经公司批准的公共网盘或外部AI服务，敏感文件对外发送前需获得部门负责人批准并使用公司指定加密工具；系统账号仅限本人使用，不得共享密码，高权限账号每90天复核一次；设备故障应联系IT服务台，遗失设备需在2小时内报告直属主管和信息技术部门。[来源1][来源2][来源3]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.806,
+          "answer": "根据资料，信息安全要求包括：内部资料不得上传至未经公司批准的公共网盘或外部AI服务，敏感文件对外发送前需获得部门负责人批准并使用公司指定加密工具；系统账号仅限本人使用，不得共享密码，高权限账号每90天复核一次；设备故障应联系IT服务台，遗失设备需在2小时内报告直属主管和信息技术部门。[来源1][来源2][来源3]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.729,
+          "answer": "根据资料，信息安全要求包括：内部资料不得上传至未经公司批准的公共网盘或外部AI服务，敏感文件对外发送前需获得部门负责人批准并使用公司指定加密工具；系统账号仅限本人使用，不得共享密码，高权限账号每90天复核一次；设备故障应联系IT服务台，遗失设备需在2小时内报告直属主管和信息技术部门。[来源1][来源2][来源3]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_wiki_h003",
+      "question": "梳理一下年假的整体安排",
+      "category": "wiki",
+      "expected_behavior": "answer",
+      "expected_route": "wiki_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.491,
+          "answer": "正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。实习生不享有带薪年假，但每月可申请1天事假。请假应提前在系统提交申请，1天以内由直属主管审批，超过1天还需部门负责人审批。[来源1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.392,
+          "answer": "正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。实习生不享有带薪年假，但每月可申请1天事假。请假应提前在系统提交申请，1天以内由直属主管审批，超过1天还需部门负责人审批。[来源1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.383,
+          "answer": "正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。实习生不享有带薪年假，但每月可申请1天事假。请假应提前在系统提交申请，1天以内由直属主管审批，超过1天还需部门负责人审批。[来源1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "answer_wiki_h004",
+      "question": "介绍一下账号共享方面的规定",
+      "category": "wiki",
+      "expected_behavior": "answer",
+      "expected_route": "wiki_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.137,
+          "answer": "系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。[来源 1]"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.212,
+          "answer": "系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。[来源 1]"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "answer",
+          "actual_route": "wiki_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 3.209,
+          "answer": "系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。[来源 1]"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "boundary_approval_h001",
+      "question": "帮我查看一下我的审批进度",
+      "category": "unsupported_system",
+      "expected_behavior": "boundary",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "boundary_approval_h002",
+      "question": "我当前的审批是什么状态？",
+      "category": "unsupported_system",
+      "expected_behavior": "boundary",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "boundary_balance_h001",
+      "question": "我的账户余额还有多少？",
+      "category": "unsupported_system",
+      "expected_behavior": "boundary",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "boundary_balance_h002",
+      "question": "查询我的积分余额",
+      "category": "unsupported_system",
+      "expected_behavior": "boundary",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "boundary_missing_sku_h001",
+      "question": "查一下现在的库存",
+      "category": "missing_sku",
+      "expected_behavior": "boundary",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "请提供需要查询的 SKU。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "请提供需要查询的 SKU。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "请提供需要查询的 SKU。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "boundary_missing_sku_h002",
+      "question": "库存现在还有多少？",
+      "category": "missing_sku",
+      "expected_behavior": "boundary",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "请提供需要查询的 SKU。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "请提供需要查询的 SKU。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "请提供需要查询的 SKU。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "boundary_order_h001",
+      "question": "查一下我的订单状态",
+      "category": "unsupported_system",
+      "expected_behavior": "boundary",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "当前版本仅支持库存查询。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "boundary_order_h002",
+      "question": "我的订单到哪一步了？",
+      "category": "unsupported_system",
+      "expected_behavior": "boundary",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "boundary",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.0,
+          "answer": "当前版本仅支持库存查询。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_missing_h001",
+      "question": "公司的年会一般在几月举办？",
+      "category": "missing_evidence",
+      "expected_behavior": "generation_refuse",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.288,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.092,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 9.572,
+          "answer": "根据现有资料无法确定"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_missing_h002",
+      "question": "食堂早餐几点开始供应？",
+      "category": "missing_evidence",
+      "expected_behavior": "generation_refuse",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.483,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.508,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.431,
+          "answer": "根据现有资料无法确定"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_missing_h003",
+      "question": "员工子女教育补贴有多少？",
+      "category": "missing_evidence",
+      "expected_behavior": "generation_refuse",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.21,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.164,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.331,
+          "answer": "根据现有资料无法确定"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_missing_h004",
+      "question": "公司健身房的开放时间是什么时候？",
+      "category": "missing_evidence",
+      "expected_behavior": "generation_refuse",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 5.388,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 5.313,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 5.22,
+          "answer": "根据现有资料无法确定"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_missing_h005",
+      "question": "陪产假可以休几天？",
+      "category": "missing_evidence",
+      "expected_behavior": "generation_refuse",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.109,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.017,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.277,
+          "answer": "根据现有资料无法确定"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_missing_h006",
+      "question": "试用期最长是几个月？",
+      "category": "missing_evidence",
+      "expected_behavior": "generation_refuse",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 7.549,
+          "answer": "根据提供的资料，试用期最长是几个月？\n\n在[来源1]中，星河科技员工手册（演示资料）的转正流程部分提到：'试用期员工应在期满前 10 个工作日提交转正总结。' 但该片段并未明确说明试用期的最长期限是几个月。因此，根据现有资料无法确定试用期最长是几个月。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 7.465,
+          "answer": "根据提供的资料，试用期最长是几个月？\n\n在[来源1]中，星河科技员工手册（演示资料）的转正流程部分提到：'试用期员工应在期满前 10 个工作日提交转正总结。' 但该片段并未明确说明试用期的最长期限是几个月。因此，根据现有资料无法确定试用期最长是几个月。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": true,
+          "citation_indices_valid": true,
+          "required_source_coverage": true,
+          "duration_seconds": 7.595,
+          "answer": "根据提供的资料，试用期最长是几个月？\n\n在[来源1]中，星河科技员工手册（演示资料）的转正流程部分提到：'试用期员工应在期满前 10 个工作日提交转正总结。' 但该片段并未明确说明试用期的最长期限是几个月。因此，根据现有资料无法确定试用期最长是几个月。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_missing_h007",
+      "question": "公司是否提供住房公积金补充缴纳？",
+      "category": "missing_evidence",
+      "expected_behavior": "generation_refuse",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.002,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.399,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.396,
+          "answer": "根据现有资料无法确定。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_missing_h008",
+      "question": "团建活动的预算标准是多少？",
+      "category": "missing_evidence",
+      "expected_behavior": "generation_refuse",
+      "expected_route": "document_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.201,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.032,
+          "answer": "根据现有资料无法确定"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "generation_refuse",
+          "actual_route": "document_only",
+          "model_called": true,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 10.164,
+          "answer": "根据现有资料无法确定"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_policy_h001",
+      "question": "SKU-Y321 的库存现在是多少？",
+      "category": "unknown_sku",
+      "expected_behavior": "policy_refuse",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_policy_h002",
+      "question": "查询 SKU-K808 库存",
+      "category": "unknown_sku",
+      "expected_behavior": "policy_refuse",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_policy_h003",
+      "question": "SKU-D009 库存还剩多少？",
+      "category": "unknown_sku",
+      "expected_behavior": "policy_refuse",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        }
+      ],
+      "pass_count": 3
+    },
+    {
+      "id": "refuse_policy_h004",
+      "question": "帮我查一下 SKU-P111 目前的库存",
+      "category": "unknown_sku",
+      "expected_behavior": "policy_refuse",
+      "expected_route": "system_only",
+      "runs": [
+        {
+          "run": 1,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 2,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        },
+        {
+          "run": 3,
+          "passed": true,
+          "actual_behavior": "policy_refuse",
+          "actual_route": "system_only",
+          "model_called": false,
+          "all_facts_hit": true,
+          "has_citation": false,
+          "citation_indices_valid": false,
+          "required_source_coverage": true,
+          "duration_seconds": 0.001,
+          "answer": "根据现有资料无法确定。"
+        }
+      ],
+      "pass_count": 3
+    }
+  ]
+}

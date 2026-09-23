@@ -1,0 +1,318 @@
+{
+  "baseline": "eval/baseline_qwen.json",
+  "regression": "eval/regression_qwen.json",
+  "verdict_no_regression": true,
+  "aggregate": [
+    {
+      "metric": "passed_cases",
+      "baseline": [
+        39,
+        39,
+        39
+      ],
+      "regression": [
+        39,
+        39,
+        39
+      ],
+      "allowed": [
+        38,
+        40
+      ],
+      "inside": true
+    },
+    {
+      "metric": "pass_rate",
+      "baseline": [
+        0.975,
+        0.975,
+        0.975
+      ],
+      "regression": [
+        0.975,
+        0.975,
+        0.975
+      ],
+      "allowed": [
+        0.95,
+        1.0
+      ],
+      "inside": true
+    },
+    {
+      "metric": "answer_success_rate",
+      "baseline": [
+        0.95,
+        0.95,
+        0.95
+      ],
+      "regression": [
+        0.95,
+        0.95,
+        0.95
+      ],
+      "allowed": [
+        0.8999999999999999,
+        1.0
+      ],
+      "inside": true
+    },
+    {
+      "metric": "false_refusal_rate",
+      "baseline": [
+        0.05,
+        0.05,
+        0.05
+      ],
+      "regression": [
+        0.05,
+        0.05,
+        0.05
+      ],
+      "allowed": [
+        0.0,
+        0.1
+      ],
+      "inside": true
+    },
+    {
+      "metric": "unanswerable_refusal_rate",
+      "baseline": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "regression": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "allowed": [
+        0.9166666666666666,
+        1.0
+      ],
+      "inside": true
+    },
+    {
+      "metric": "refusal_mechanism_match",
+      "baseline": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "regression": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "allowed": [
+        0.9166666666666666,
+        1.0
+      ],
+      "inside": true
+    },
+    {
+      "metric": "boundary_accuracy",
+      "baseline": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "regression": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "allowed": [
+        0.875,
+        1.0
+      ],
+      "inside": true
+    },
+    {
+      "metric": "citation_presence_rate",
+      "baseline": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "regression": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "allowed": [
+        0.95,
+        1.0
+      ],
+      "inside": true
+    },
+    {
+      "metric": "citation_index_validity",
+      "baseline": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "regression": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "allowed": [
+        0.95,
+        1.0
+      ],
+      "inside": true
+    },
+    {
+      "metric": "required_source_coverage",
+      "baseline": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "regression": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "allowed": [
+        0.95,
+        1.0
+      ],
+      "inside": true
+    },
+    {
+      "metric": "expected_fact_hit_rate",
+      "baseline": [
+        0.95,
+        0.95,
+        0.95
+      ],
+      "regression": [
+        0.95,
+        0.95,
+        0.95
+      ],
+      "allowed": [
+        0.8999999999999999,
+        1.0
+      ],
+      "inside": true
+    },
+    {
+      "metric": "expected_fact_group_hit_rate",
+      "baseline": [
+        0.9166666666666666,
+        0.9166666666666666,
+        0.9166666666666666
+      ],
+      "regression": [
+        0.9166666666666666,
+        0.9166666666666666,
+        0.9166666666666666
+      ],
+      "allowed": [
+        0.8666666666666666,
+        0.9666666666666667
+      ],
+      "inside": true
+    },
+    {
+      "metric": "route_accuracy",
+      "baseline": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "regression": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "allowed": [
+        0.975,
+        1.0
+      ],
+      "inside": true
+    }
+  ],
+  "flips": {
+    "hard_regression": [],
+    "hard_improvement": [],
+    "behaviour_flip": [],
+    "soft_flip": [],
+    "missing": []
+  },
+  "requests": {
+    "system_prompts_identical": true,
+    "no_new_system_prompts": true,
+    "system_prompts_only_in_baseline": [],
+    "system_prompts_only_in_regression": [],
+    "request_shapes_identical": true,
+    "no_new_request_shapes": true,
+    "shape_call_counts": [
+      {
+        "shape": {
+          "format": "json",
+          "model": "qwen3:4b",
+          "options": null,
+          "stream": false,
+          "system_prompt_sha256": "38999f71e2bf706108e6ed3ca47bd247e8104db2f1a896d6aa0850fc52ecaf38",
+          "think": false,
+          "tools": false
+        },
+        "baseline_calls": 24,
+        "regression_calls": 24
+      },
+      {
+        "shape": {
+          "format": "json",
+          "model": "qwen3:4b",
+          "options": null,
+          "stream": false,
+          "system_prompt_sha256": "519efb5576916b0c77971f8dc268d150a9f13272321441a484be4894bab019c3",
+          "think": false,
+          "tools": false
+        },
+        "baseline_calls": 3,
+        "regression_calls": 3
+      },
+      {
+        "shape": {
+          "format": "schema:75d4773336812270",
+          "model": "qwen3:4b",
+          "options": {
+            "temperature": 0
+          },
+          "stream": false,
+          "system_prompt_sha256": "b20d9a0b473b5ecb08c453b58c322e23a474f1a5e5e8a60258931b9801686aba",
+          "think": false,
+          "tools": false
+        },
+        "baseline_calls": 24,
+        "regression_calls": 24
+      },
+      {
+        "shape": {
+          "format": "schema:75d4773336812270",
+          "model": "qwen3:4b",
+          "options": {
+            "temperature": 0
+          },
+          "stream": false,
+          "system_prompt_sha256": "f3c643ca9fc474b372fb3279116a593a69f905f86aa7431f53ebbcbe04a8ea10",
+          "think": false,
+          "tools": false
+        },
+        "baseline_calls": 82,
+        "regression_calls": 82
+      }
+    ],
+    "chat_calls": [
+      133,
+      133
+    ]
+  }
+}
