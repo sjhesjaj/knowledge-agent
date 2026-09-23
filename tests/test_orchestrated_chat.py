@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 
 import api
 import chat_orchestration
+import wiki_runtime
 from chat_orchestration import (
     MESSAGE_DIRECT,
     MESSAGE_MULTIPLE_SKU,
@@ -56,6 +57,13 @@ class OrchestratedChatTests(unittest.TestCase):
             side_effect=lambda question, chunks, top_k=4, trace=None: [
                 (chunks[0], 3.5)
             ] if chunks else [],
+        ).start()
+        # The default runtime reads the developer's real data/wiki; a published
+        # build there would replace the committed sample and WIKI_PAGES patches.
+        # An empty, per-test root means "no build yet", as on a fresh checkout.
+        patch.object(
+            wiki_runtime, "RUNTIME",
+            wiki_runtime.WikiRuntime(root=Path(self.temp_directory.name) / "wiki"),
         ).start()
         self.addCleanup(patch.stopall)
 

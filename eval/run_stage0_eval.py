@@ -12,6 +12,9 @@ baseline needs in order to be reproducible and comparable later:
   same prompts and parameters as the baseline;
 - every case's result in every run, for flip analysis in `compare_stage0.py`.
 
+Outputs: the evaluator's raw run files go to `eval/artifacts/<label>/`
+(git-ignored); the condensed, committed record is `eval/<label>.json`.
+
 Usage:
     .venv\\Scripts\\python.exe eval\\run_stage0_eval.py --label baseline_qwen --runs 3
 """
@@ -34,6 +37,7 @@ sys.path.insert(0, str(ROOT))
 import requests  # noqa: E402
 
 DATASET = "eval_answerability_validation_v1.json"
+ARTIFACTS_DIR = ROOT / "eval" / "artifacts"
 
 
 def sha256_text(text: str) -> str:
@@ -211,7 +215,10 @@ def main() -> int:
     except requests.RequestException as exc:
         ollama_version = f"unavailable: {exc}"
 
-    run_dir = ROOT / "eval" / "runs" / args.label
+    # Raw evaluator output is large and git-ignored (see eval/README.md); the
+    # condensed eval/<label>.json below is what gets committed. Stage 0's own
+    # raw runs predate this rule and stay where they were committed, eval/runs/.
+    run_dir = ARTIFACTS_DIR / args.label
     spy = ChatRequestSpy()
     requests.post = spy
     try:

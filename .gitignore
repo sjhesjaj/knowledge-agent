@@ -14,4 +14,9 @@ tmp/
 RESUME_NOTES.md
 output/
 tools/create_resume_project1_pdf.py
+# Local secrets: never commit .env or its variants; the template stays tracked.
 .env
+.env.*
+!.env.example
+# Raw eval run output (per-run dumps, console logs). Condensed results stay in eval/.
+eval/artifacts/
