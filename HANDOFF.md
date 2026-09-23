@@ -1,3 +1,7 @@
+# 交接文档：Stage 0（LLMProvider）+ Stage 1（Agent Trace）
+
+> 本文件按阶段累积。**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
+
 # Stage 0 交接：统一 LLMProvider（本地 Ollama/Qwen + DeepSeek API）
 
 - 日期：2026-09-23
@@ -510,3 +514,211 @@ OK
 - **TD5 · 真实调用测试没有显式开关**（原来的 R11）：只要 `.env` 里有 Key，常规测试就会联网。
 
 按要求在这里停止，没有进入 Trace 阶段。
+
+---
+
+## 10. Stage 1 — Agent Trace
+
+- 分支：`stage0-llm-provider`（在 Stage 0 之后继续提交，本地，**未 push**）
+- 实现 commit：`8899d66184a5017ff713ae4b9b18fc15436a8b65`
+- 本节所在的 docs commit 在它之后
+- 目标：一个 Agent 请求或 Eval case 失败时，**只看持久化的 Trace**，就能还原它经过了哪些阶段、调用了什么工具、拿到了什么证据、消耗了多少 Token 和时间，以及具体在哪一步出的错
+- 按要求在此停止，**没有进入 Stage 2（Eval / Badcase 分类）**
+
+### 10.1 数据模型
+
+两张新表。API 的 Trace 存在 `api.storage.path`（默认 `data/knowledge_agent.db`）；Eval 的 Trace 存在 `eval/artifacts/<label>/traces.sqlite`。表在第一次使用时创建（`IF NOT EXISTS`），`storage.py` 没有改。
+
+**`trace_runs`**：一个请求或一个 Eval case 对应一行。
+
+| 字段 | 含义 |
+|---|---|
+| `run_id` | uuid4 hex；API 通过响应头 `X-Run-Id` 返回 |
+| `schema_version`、`kind`（api/eval）、`entrypoint`、`mode`、`streaming` | 请求形态。流式和非流式共用这张表，用 `streaming` 区分 |
+| `session_id`、`client_id`、`question` | 请求输入 |
+| `status` | `running` / `completed` / `failed`。**completed 只表示请求正常结束，不代表答案正确** |
+| `failed_stage`、`failed_span_id` | failed_stage 取最外层的业务阶段（router/planner/tool_call/evidence/generation/commit；如果异常发生在所有阶段之外，就是 `request`）；具体失败位置看 `failed_span_id` 指向的子 span |
+| `error_type`、`error_message`、`error_traceback` | 导致请求中断的异常；已脱敏；消息截断到 1000 字，traceback 截断到 4000 字（保留尾部） |
+| `started_at`、`finished_at`、`duration_ms` | 时间 |
+| `git_commit`、`git_dirty` | 进程启动后第一次用到时获取，之后缓存 |
+| `provider`、`model` | 实际使用的 Provider |
+| `prompt_hashes_json` | 本次运行实际用到的 system prompt 的 sha256 列表（只是汇总；逐次调用的信息在 llm_call span 里）。可以和 Stage 0 基线的哈希直接对比 |
+| `retriever_config_json` | chunk、BM25、RRF、top_k、candidate_k、快速路径阈值、embed 模型、执行器的 top_k |
+| `dataset`、`dataset_sha256`、`case_id`、`eval_run_index` | 只有 Eval 有 |
+| `knowledge_version` | API 请求开始时的知识库版本 |
+| `llm_calls`、`prompt_tokens`、`completion_tokens`、`llm_latency_ms`、`span_count`、`error_span_count` | 汇总 |
+| `trace_overhead_ms` | recorder 自己计时的开销，**只用于内部诊断**（原因见 §10.7） |
+| `attributes_json` | 其他事实，例如 `sse_error_event` |
+
+**`trace_spans`**：一个步骤对应一行。字段有 `span_id`、`run_id`、`parent_span_id`、`seq`、`stage`、`name`、`status`（ok/empty/error）、`offset_ms`、`latency_ms`、`input_json`、`output_json`、`error_type`、`error_code`、`error_message`、`error_traceback`，以及只有 llm_call 才有的 `provider`、`model`、`prompt_tokens`、`completion_tokens`，最后是 `attributes_json`。
+
+| stage / name | 记录的内容 |
+|---|---|
+| `router` / `decide_action`（legacy） | 输入：问题、历史轮数。输出：type、tool、arguments、seconds。走 LLM 分支时下面挂一个 llm_call |
+| `planner` / `plan_request` | 输出 `Plan.to_dict()`（route、steps、signals、reason_codes、fallback_used） |
+| `planner` / `availability_check` | 输入：steps、chunks 数、wiki 页数、SKU 数。输出：固定答案或 null |
+| `tool_call` / `execute_plan` | 执行器整体，下面挂每个工具的子 span |
+| `tool_call` / `document_search`、`wiki_query`、`system_query` | name、arguments、result（`ToolResult.to_dict()`，包括 evidence 和检索 trace）、latency（执行器记录的单步耗时）、status、error_code、error_type（执行器捕获的异常类名） |
+| `tool_call` / `search_knowledge_base`、`list_knowledge_sources`、`summarize_knowledge_base`（legacy） | arguments 和结果 |
+| `evidence` / `evaluate_evidence`（legacy 模式是 `retrieved_sources`） | `PolicyDecision.to_dict()`：outcome、usable_evidence、missing_tools、tool_failures、reason_codes |
+| `generation` / `answer_structured`、`answer_stream` | 输入：问题、证据来源、历史轮数。输出：答案 |
+| `llm_call` / 调用方函数名（`answer_structured`、`rerank`、`select_for_subquestions`、`decide_action`…） | 逻辑 messages；有适配时还有实际发送的 messages；`logical_prompt_sha256`、`effective_prompt_sha256`、`system_prompt_sha256`、`prompt_adaptations`；content、reasoning、tool_calls、finish_reason；**Stage 0 Provider 给出的 prompt/completion token** 和 latency。流式还有 `delta_count` 和 `first_delta_ms` |
+| `commit` / `commit_exchange` | 知识库版本和来源数。知识库版本冲突导致的 409 会在这里记为失败 |
+
+用 `python -m agent_trace --db <库> list [--status failed]` 列出运行记录，用 `show <run_id> [--json]` 把一个 run 还原成文本树。
+
+### 10.2 决策是怎么落实的（对照你给的 11 条约束）
+
+1. **存储位置**：API 的 Trace 跟着 `api.storage.path` 走，测试把 storage 换成临时库，Trace 也就跟着进临时库，所以测试不会污染真实库（已确认：跑完全量测试后，真实库里依然没有 `trace_*` 表）。Eval 的 Trace 写到 `eval/artifacts/<label>/traces.sqlite`，已被 gitignore。
+2. **统一的 sanitizer**：key 名匹配 `api_key`、`authorization`、`token`、`password`、`secret`、`client_secret`、`private_key`、`subject_id`、`cookie` 等的字段会被脱敏。`prompt_tokens`、`max_tokens` 这类 token 计数字段不受影响。文本里形如 `sk-…`、`Bearer …` 的值，以及进程已知的 DeepSeek Key 的原值，都会被替换掉。普通业务参数（例如 SKU）保留真实值。**执行器没有改**，所以工具报错时只有它给出的脱敏信息（error_code 和异常类名）。
+3. **非工具异常**：记录 error_type、截断后的 message 和 traceback，写库之前统一脱敏。
+4. **status 取值**：`running | completed | failed`。工具出错、系统正常给出拒答的请求记为 completed，同时计入 `error_span_count`。
+5. **`TRACE_ENABLED`**：默认开启；设为 `0/false/no/off` 时不写任何行、也不返回 header，业务行为不变（有测试覆盖）。
+6. **`run_id` 只通过 `X-Run-Id` header 返回**，HTTPException 的响应也带；响应体、SSE 事件和客户端 trace 一个字节都没变（原有的隐私测试照常通过）。
+7. **大文本截断**：API 的 Trace 里每个字符串最多 4000 字、每个列表最多 50 项；Eval 的 Trace 完整保留（`truncate=False`）。
+8. **failed_stage 取最外层业务阶段**，具体位置看 `failed_span_id`。**失败点按"导致中断的那个异常对象"来匹配，而且这个异常必须一路逃出了该 span 的所有祖先**。被调用方处理掉的错误（例如 rerank 失败后降级）仍然记为 error span，但不会被认定为失败点。这条规则是在一次真实运行中发现问题后改的，见 §10.9 R1。
+9. **每个 llm_call** 都记录 logical/effective prompt 的哈希和 prompt adaptation；run 级别的 `prompt_hashes` 只做汇总。
+10. **开销以 200 次 mock A/B 为主要指标**，`trace_overhead_ms` 只用于诊断。
+11. **没有扩大范围**：没有 Dashboard，没有接 Langfuse/OTel，没有做 Badcase 分类，没有改 Prompt、Retriever 参数和业务决策。
+
+另外两条设计原则：
+
+- **Trace 绝不能让请求失败**：开始记录和写库时的错误都会被记日志后吞掉；recorder 在请求过程中执行的代码（`_trace_bundle`、`_prompt_facts`、`_record_response`）都包在 `agent_trace.safely()` 里。有测试覆盖。
+- **流式接口**：Starlette 每次调用 sync generator 的 `next()` 时都会重新复制 context，在生成器里 `set` 的 contextvar 过了第一个 `yield` 就会丢失（我写了一个探测脚本验证过：`step1 v=None`）。所以流式 generator 由 `Run.iterate()` 驱动，每次 `next()` 都在同一个 Context 里执行。客户端提前断开时，run 会被记为 failed，错误类型是 `ClientDisconnected`。
+
+### 10.3 改动的文件
+
+| 文件 | 改动 |
+|---|---|
+| `agent_trace.py`（新增） | recorder、SQLite 存储、sanitizer、provider 包装层、`Run.iterate`、CLI |
+| `api.py` | 4 个入口各开一个 run，记录 router、tool_call、evidence、generation、commit，并设置 `X-Run-Id`；业务逻辑没变（忽略空白后 +131/−24 行，大部分是 `with` 缩进） |
+| `chat_orchestration.py` | 在 `prepare()` 里对 planner、availability、execute_plan 做记录，并加了 `_trace_bundle()`。只读，决策不变 |
+| `llm_provider.py` | `get_provider()` 在有活动 run 时返回包装过的 provider，没有 run 时返回原对象（+3 行） |
+| `eval/run_stage0_eval.py` | 每个 case 开一个 eval run，写入 `trace_run_id`、`trace_db`、`trace_summary`；`code_sha256` 里加上了 `agent_trace.py`。评测器本身没改 |
+| `eval/trace_overhead.py`（新增） | TRACE 开/关的 A/B 基准 |
+| `eval/README.md` | 补充 Trace 产物的说明，以及如何从失败 case 的 `trace_run_id` 查到 Trace |
+| `tests/test_agent_trace.py`（新增） | 28 个测试 |
+| `eval/stage1_trace_qwen.json`、`eval/stage1_trace_comparison.json`、`eval/stage1_trace_overhead.json`（新增） | 回归结果、对比结论、开销数据 |
+
+**没有改的**：`orchestration/*`、`rag.py`、`agent.py`、`storage.py`、`evaluate_answerability.py`、`wiki_*`、前端、所有 Prompt、所有检索参数。
+
+### 10.4 新增测试（`tests/test_agent_trace.py`，28 个，全部 mock，不联网）
+
+所有断言都通过**新开的 SQLite 连接**读取，不看内存里的对象。
+
+| 场景 | 测试 |
+|---|---|
+| 普通成功请求 | `test_plain_request_replays_every_stage_from_sqlite`：阶段顺序、元数据、tool 参数和结果、evidence、llm_call 的 token 和哈希、`X-Run-Id` 与库中记录一致、响应体的 key 不变 |
+| 多步 Tool Calling | `test_multi_step_tool_calls_are_recorded_in_order`（先 document_search 再 system_query，SKU 保留真实值，subject_id 为 null）、`test_wiki_and_document_route_records_both_tools` |
+| Tool 失败 | `test_tool_exception_is_an_error_span_in_a_completed_run`（run 为 completed，error span 数为 1，evidence 显示 refuse + tool_error）、`test_executor_programmer_error_fails_the_run_at_tool_call`（failed，failed_stage=tool_call，有 traceback） |
+| 生成阶段失败 | `test_model_failure_fails_the_run_at_generation`（Bearer token 已脱敏）、`test_error_handled_inside_a_tool_is_not_blamed_for_a_later_failure`（复现 §10.9 R1 的真实场景）、`test_commit_conflict_fails_at_commit` |
+| Streaming | `test_streaming_run_uses_the_same_model`、`test_stream_failure_mid_generation_is_finalized`、`test_legacy_stream_is_traced` |
+| legacy 模式 | 规则路由、LLM 路由（router 下挂 llm_call）、锁冲突返回的 409 响应也带 `X-Run-Id` |
+| 开关和健壮性 | `TRACE_ENABLED=0` 时不写任何行、业务不变；写库失败时请求照常完成；recorder 自身出 bug 时请求照常完成；没有活动 run 时 provider 不被包装；CLI 能还原 |
+| recorder 单元测试 | sanitizer（3 个）、截断（API 截断、Eval 完整）、finish 幂等以及外层 stage 的判定、按异常对象身份匹配失败点、跨线程池的流式 generator、流提前关闭记为 failed、关闭开关时返回 null run |
+
+### 10.5 全量测试结果（在 `8899d66` 的代码上）
+
+```
+.\.venv\Scripts\python.exe -m py_compile agent.py api.py app.py rag.py storage.py llm_provider.py agent_trace.py chat_orchestration.py
+py_compile exit=0
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover
+Ran 693 tests in 24.126s
+OK
+```
+
+665 个原有测试 + 28 个新测试。`.env` 里配有 DeepSeek Key，所以 2 个真实调用测试也一起跑了。跑完之后真实的 `data/knowledge_agent.db` 里仍然只有 `knowledge_chunks`、`conversations`、`messages`、`sqlite_sequence`、`app_meta` 这几张表。
+
+### 10.6 validation_v1 回归（带 Trace，和 Stage 0 的 `regression_qwen.json` 对比）
+
+```
+.\.venv\Scripts\python.exe -X utf8 eval\run_stage0_eval.py --label stage1_trace_qwen --runs 3
+.\.venv\Scripts\python.exe -X utf8 eval\compare_stage0.py eval\regression_qwen.json eval\stage1_trace_qwen.json
+```
+
+- **VERDICT: NO REGRESSION**：3 次运行都是 39/40，12 项指标每一次都落在允许区间内；逐题：硬回归 0、行为翻转 0、硬改善 0、软翻转 0；system prompt 和请求形态完全一致，没有出现新的。完整结果在 `eval/stage1_trace_comparison.json`。
+- `/api/chat` 调用次数是 133 对 135，多出来的 2 次都是 rerank（24 → 26）。**原因是只用 Trace 查出来的**：`answer_multi_h001` 在第 1、2 次运行时，`select_for_subquestions` 让模型返回了不在候选集里的 ID（`["6","3"]`）或空列表，触发了已有的降级逻辑，多调一次 rerank。这个调用本来就没设 temperature，属于模型输出的随机波动，和 instrumentation 无关；这个 case 的判定结果也没变。
+- Trace 覆盖情况：120 次 case 运行都有各自不同的 `trace_run_id`，Trace 库里 120 个 run 全部是 completed，共 755 个 span，库文件 1.5MB（Eval 不截断，平均每个 run 约 12.5KB）。
+- `code_sha256`（rag、agent、llm_provider、chat_orchestration、evaluate_answerability、agent_trace）和 `8899d66` 中的文件逐一一致。
+- 端到端耗时仅供参考，因为 LLM 本身的波动会淹没 Trace 的开销：p50 / p95 / max 在 Stage 0 是 2.83 / 10.29 / 10.51 秒，Stage 1 是 2.80 / 10.37 / 11.72 秒。
+
+### 10.7 Instrumentation 开销（主要指标：TRACE 开/关 A/B，每组 200 次）
+
+`eval/trace_overhead.py`：真实的请求路径（FastAPI → planner → executor → evidence → answer_structured/answer_stream → provider → SQLite commit），只把检索和模型换成瞬间返回的 mock；两组请求逐个交替执行，每组先预热 20 次。
+
+| 场景 | 关闭 平均 / p50 / p95 | 开启 平均 / p50 / p95 | 平均差值（95% CI） | p50 差值 | p95 差值 |
+|---|---|---|---|---|---|
+| orchestrated `/api/chat` | 26.03 / 22.79 / 44.60 ms | 45.38 / 43.38 / 60.05 ms | **+19.35 ms** [+17.97, +20.74] | +20.59 | +15.45 |
+| orchestrated `/api/chat/stream` | 27.27 / 24.43 / 48.41 ms | 46.85 / 44.54 / 63.75 ms | **+19.58 ms** [+18.07, +21.08] | +20.12 | +15.33 |
+
+- **怎么理解**：每个请求固定多出约 20ms。在 mock 请求上，这相当于 +74%；在真实请求上（validation 的 p50 是 2.8 秒），大约是 **+0.7%**。
+- **时间花在哪里**（用 cProfile 看的）：几乎全部花在每个请求多出来的 2 次 SQLite 事务上（启动时插入 run，结束时写入 span 并更新 run），每次 connect、commit、close 合起来约 5ms（Windows 上 WAL 在最后一个连接关闭时会做 checkpoint）。Python 这边的 span、sanitize 和哈希每个请求不到 1ms。
+- recorder 自计时的 `trace_overhead_ms`（p50 9.0 / p95 13.1 ms）比 A/B 测出来的差值小，因为 Trace 写入会让 WAL 变大，拖慢随后会话存储关闭连接时的 checkpoint，而这部分时间算在了存储层头上。**所以它只能作为诊断，不能当开销指标。**
+- 按要求只做测量，不做优化；优化方向记在 §10.10。
+
+### 10.8 Trace 样例（真实请求：真实 API、真实检索、真实 Qwen，用的是临时库）
+
+**成功的 run**（document_system 路线，两个工具）：
+
+```
+run 1f8305f785ad4b59811cfdcaf248172c  completed
+  api /api/chat mode=orchestrated streaming=False  2026-09-23T10:43:07.912+00:00  4752.8ms
+  commit=5baf106ace40+dirty  provider=ollama/qwen3:4b  llm_calls=1 tokens=489+109
+  question: 请假制度原文怎么写的，另外 SKU-A100 还有多少库存？
+    · [planner] plan_request ok 0.1ms
+    · [planner] availability_check ok 0.0ms
+    · [tool_call] execute_plan ok 392.6ms
+      · [tool_call] document_search ok 391.9ms
+      · [tool_call] system_query ok 0.1ms
+    · [evidence] evaluate_evidence ok 0.1ms
+    · [generation] answer_structured ok 4144.8ms
+      · [llm_call] answer_structured ok 4144.7ms tokens=489+109
+    · [commit] commit_exchange ok 12.4ms
+```
+
+答案：`…请假应提前在系统提交申请…[来源 1] SKU-A100 当前库存为 42 件。[来源 5]`。这些样例是在代码提交之前生成的，所以 commit 显示为 `5baf106+dirty`。
+
+**失败的 run**：chat provider 指向一个不存在的端口，embedding 仍然走真实的 Ollama，于是出现真实的 `ConnectionError`。
+
+```
+run 5a51d396f01e4255a3852403c083f5dc  failed  failed_stage=generation
+  api /api/chat mode=orchestrated streaming=False  2026-09-23T10:43:12.569+00:00  6201.5ms
+  commit=5baf106ace40+dirty  provider=ollama/qwen3:4b  llm_calls=2 tokens=0+0
+  question: 年假最多可以休多少天
+  error: ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=1): Max retries exceeded with url: /api/chat (Caused by NewConnectionError(...[WinError 10061]...))
+    · [planner] plan_request ok 0.1ms
+    · [planner] availability_check ok 0.0ms
+    · [tool_call] execute_plan ok 4133.2ms
+      · [tool_call] document_search ok 4133.1ms
+        ✗ [llm_call] rerank error 2041.2ms tokens=None+None error=ConnectionError
+    · [evidence] evaluate_evidence ok 0.0ms
+    ✗ [generation] answer_structured error 2047.7ms error=ConnectionError
+      ✗ [llm_call] answer_structured error 2045.8ms tokens=None+None error=ConnectionError  <= failed here
+```
+
+这棵树本身就能说明发生了什么：检索阶段的 rerank 连不上模型，但 `rag.rerank` 捕获了异常并降级为未重排的候选，所以 `document_search` 仍然是 ok；证据判定通过之后，真正让请求中断的是生成阶段的模型调用。`failed_span_id` 指向的 span 里保存了完整的 traceback（已截断和脱敏）。客户端收到的是 500。
+
+### 10.9 实现过程中发现的问题
+
+- **R1（已修复）**：第一版实现是"第一个出现异常的 span 就是失败点"。在上面这个真实的失败请求里，它把已经被 `rag.rerank` 处理掉的 rerank 错误误判成了失败点（`failed_stage=tool_call`）。mock 测试没发现这个问题，因为测试里检索是 mock 的，根本没走到 rerank。修复后改为：在 run 失败时，按"导致中断的那个异常对象"匹配，并且要求这个异常逃出了该 span 的所有祖先。同时补了 API 层和 recorder 层两个回归测试。**修复之后重跑了全量测试、validation、A/B 基准和样例，§10.5–§10.8 的数字都来自最终代码。**
+- **R2（已修复）**：检查 diff 时发现，recorder 在请求过程中执行的代码（`_trace_bundle`、`_prompt_facts`、`_record_response`）如果自己出错，会让请求失败。现在这几处都包在 `agent_trace.safely()` 里，并加了测试。
+
+### 10.10 已知限制、风险和 Tech Debt
+
+- **L1 · 未处理异常导致的 500 响应不带 `X-Run-Id`**（HTTPException 的 404/409 会带）。遇到这种情况，用 `python -m agent_trace list --status failed`，或按 session_id 和时间去 `trace_runs` 里查。
+- **L2 · 没有保留期限，也没有清理机制**：API 的 Trace 会一直增长。基准测试里一共发了 880 个请求（其中 440 个开了 Trace，另外还有全部请求的会话记录），库文件是 4.1MB，也就是每个 API run 最多约 9KB。以后需要一个清理策略。
+- **L3 · 进程被直接杀掉时**，run 会一直停在 `running`，没有 finished_at。这本身也是一个可以查到的事实。
+- **L4 · 每个工具的 span 是事后重建的**：执行器在一次调用里跑完所有工具，所以工具 span 的 offset 是按执行器记录的单步耗时累加出来的（工具按顺序执行）；evidence span 的耗时是用总耗时减去各工具耗时推算的（`attributes.timing` 里标明了推算方式）。执行器运行期间发生的 llm_call 都挂在 `document_search` 下面，因为在当前代码里只有它会调用模型；**如果以后别的工具也开始调模型，这条归属规则就要改**（TD4）。
+- **L5 · llm_call 的 name 是直接调用方的函数名**（通过 `sys._getframe` 取）；流式 llm_call 的 latency 包含了 consumer 在两个 delta 之间占用的时间。
+- **L6 · 工具错误只有执行器给出的脱敏信息**（异常类名和固定的 message），这是执行器的设计决定的，本阶段按要求没有改执行器。
+- **L7 · sanitizer 基于 key 名和值的模式匹配**：问题和答案里的业务文本不会被脱敏（这是有意的，因为要还原请求就需要它们）；Eval 的 Trace 保存了完整的 prompt 和证据（已 gitignore）。
+- **L8 · Wiki 后台编译不在 Trace 范围内**，因为它不属于任何一个请求，而且不走 Provider。
+- **L9 · 在 legacy 流式接口里**，"模型未返回可显示的答案"这个 RuntimeError 是在所有 span 之外抛出的，所以 `failed_stage=request`；orchestrated 流式的同一个检查放在 generation span 里面，因此会记为 generation。
+- **L10 · `messages.trace_json`（客户端 trace）和新的 Trace 没有直接关联**：`messages` 表里没有 run_id，只能靠 session_id 和时间对上。
+- **L11 · `git_commit` 在进程里只取一次**；代码改了但服务没重启时，记录的 commit 会过时。`git_dirty` 只看已跟踪的文件。
+- **TD1**（沿用 Stage 0）：拆分 `llm_provider.py`。
+- **TD2 · 写入开销的优化方向（本阶段不做）**：复用 SQLite 连接、把开始行和结束行合并成一次写入、改成后台异步写入、调整 checkpoint 策略。依据是 §10.7 的 cProfile 结论。
+- **TD3 · `agent_trace.py` 大约 1000 行**，可以拆成 store、recorder、sanitize、provider 包装层和 CLI 几个部分。
+- **TD4 · llm_call 的归属规则**（见 L4）：更准确的做法是在执行器里给每个工具开一个 span，但那需要改执行器。
+
+按要求在这里停止，没有进入 Stage 2。
