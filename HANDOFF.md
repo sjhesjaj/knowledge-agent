@@ -22,7 +22,7 @@
 | 8 | 单元测试 mock、不联网；真实调用测试没有 Key 时跳过 | ✅ 完成 | 33 个 mock 测试；2 个真实调用测试没有 Key 时 `skipIf` 跳过 |
 | 9 | 一个清晰的 commit | ✅ 完成 | 实现只有一个 commit `416fd0d`，HANDOFF 另外一个 docs commit |
 
-基线里本来就有 1 个失败的测试，不是 Stage 0 引入的，本阶段也没有修（见 §7 R5）。
+基线里本来就有 1 个失败的测试，不是 Stage 0 引入的。它已在后续的 housekeeping 中通过测试隔离修复（§8.2）；housekeeping 之后，全量 665 个测试全部通过。
 
 ## 1. 修改的文件
 
@@ -379,13 +379,13 @@ Answer   : 正式员工入职满一年后每年享有5天带薪年假，工作�
 
 **R1 · API Key 已暴露（需要你处理）。** 过程中出现过两个 DeepSeek Key：一个贴在了聊天里，另一个一度写在 `.env.example` 里（在提交之前，已原样改名为 `.env`，并用不含 Key 的模板重新生成了 `.env.example`；上面的扫描确认 git 历史里没有它）。两个 Key 都已经出现在对话记录里，**建议都去 DeepSeek 控制台轮换**。
 
-**R2 · `wip/openviking-poc` 分支上的 `.gitignore` 里没有 `.env`。** 如果切换到那个分支，`.env` 会显示为未跟踪文件，有被误加进提交的风险。合并 POC 前应先把 `.env` 规则带过去。
+**R2 · ~~`wip/openviking-poc` 分支上的 `.gitignore` 里没有 `.env`。~~ 已在 housekeeping 中解决（§8.1）**：那个分支已补上 `.env` / `.env.*` / `!.env.example`（commit `8463f33`）。
 
 **R3 · POC 以后合并时会和 Stage 0 冲突。** POC 修改过 `rag.answer`、`answer_structured`、`answer_stream`、`build_answer_messages`（加了 `user_memory` 参数），这些正是 Stage 0 改动过的调用点。另外，`scripts/openviking_probe.py` 靠修改 `rag.CHAT_MODEL` 来切换模型、靠 patch `requests.post` 来打开 think；Stage 0 之后前者对 chat 调用已经不起作用（要改用 `OLLAMA_CHAT_MODEL` 配置加 `reset_provider()`）。
 
 **R4 · `wiki_maintenance/ollama_compiler.py` 没有迁移（遗留项，按你的决定）。** Wiki 编译仍然直接请求 Ollama，模型写死为 `qwen3:4b`。所以 `LLM_PROVIDER=deepseek` 时，后台 Wiki 维护**仍然用本地 Qwen**。它已经有 `WikiModel` 注入接口，后续可以写一个适配器接到 Provider 上。
 
-**R5 · 基线里本来就失败的测试。** `tests.test_orchestrated_chat.FixedAnswerTests.test_missing_wiki_is_a_fixed_answer` 在 `stage0-baseline` 上就失败。原因是测试把 `WIKI_PAGES` 置空了，但本地 gitignored 的 `data/wiki/current.json`（build-0001）被 `wiki_runtime` 优先读取，覆盖了置空的效果。这是依赖环境的测试缺陷，不在 Stage 0 范围内，没有修。
+**R5 · ~~基线里本来就失败的测试。~~ 已在 housekeeping 中解决（§8.2）。** `tests.test_orchestrated_chat.FixedAnswerTests.test_missing_wiki_is_a_fixed_answer` 在 `stage0-baseline` 上就失败。原因是测试把 `WIKI_PAGES` 置空了，但本地 gitignored 的 `data/wiki/current.json`（build-0001）被 `wiki_runtime` 优先读取，覆盖了置空的效果。§3 里的测试输出保留的是修复之前的原文。
 
 **R6 · DeepSeek 模式的覆盖面很窄。**
 - 真实调用只验证了 `answer_structured` 这一条路径（1 条 Query 加 2 个真实调用测试）。
@@ -411,3 +411,102 @@ Answer   : 正式员工入职满一年后每年享有5天带薪年假，工作�
 - 基线 harness（`eval/run_stage0_eval.py`）是打 tag 之后才写的，没有包含在 tag 的代码树里。它不改任何产品代码，也不改评测逻辑，只做被动记录。
 
 **R13 · 本机 Ollama 的奇怪状态。** `ollama list` 没有列出 `qwen3:4b`，但 `/api/show` 和本地 manifest 都在，Eval 也正常使用了它。精确的 digest 和权重 blob 已经记录在基线里，将来可以核对。
+
+## 8. Stage 0 housekeeping（进入 Stage 1 之前）
+
+本节只做清理，不扩展功能，**没有改动任何生产代码**（`rag.py`、`agent.py`、`llm_provider.py`、`api.py`、`chat_orchestration.py`、`wiki_runtime.py` 都没动），也没有删除或移动任何真实数据。
+
+| 分支 | commit | 内容 |
+|---|---|---|
+| `wip/openviking-poc` | `8463f338085c21bddbd3109c4b0f7d715de0f896` | 只改 `.gitignore`：忽略 `.env`、`.env.*`，保留 `.env.example` 可提交 |
+| `stage0-llm-provider` | `225d228fee12b838dca334e453678b11bf73154e` | 测试隔离、`.gitignore`、eval artifacts 规则 |
+| `stage0-llm-provider` | 本文件更新所在的 docs commit | HANDOFF §0 / §7 R2、R5 / §8 / §9 |
+
+### 8.1 .gitignore 规则
+
+两个分支现在都有下面这组规则：
+
+```gitignore
+# Local secrets: never commit .env or its variants; the template stays tracked.
+.env
+.env.*
+!.env.example
+```
+
+`stage0-llm-provider` 上另外加了：
+
+```gitignore
+# Raw eval run output (per-run dumps, console logs). Condensed results stay in eval/.
+eval/artifacts/
+```
+
+`git check-ignore --no-index` 的核对结果：
+
+| 路径 | 结果 |
+|---|---|
+| `.env`、`.env.local`、`.env.production` | 忽略 |
+| `.env.example` | 不忽略 |
+| `eval/artifacts/x/run-1.json`、`eval/artifacts/x.console.txt` | 忽略 |
+| `eval/runs/baseline_qwen/run-1.json`、`eval/baseline_qwen.json`、`eval/README.md` | 不忽略 |
+
+Stage 0 已提交的 `eval/runs/` 下 10 个文件仍然被跟踪。
+
+### 8.2 修复 `test_missing_wiki_is_a_fixed_answer`：怎么隔离的
+
+- **根因**：`chat_orchestration.current_wiki_pages()` 优先读取 `wiki_runtime.RUNTIME.published_pages()`，这个模块级单例的根目录是真实的 `data/wiki`。本机上那里有一个已发布的 build-0001，它覆盖了测试里 `patch.object(chat_orchestration, "WIKI_PAGES", ())` 的效果。换一台没有本地 Wiki build 的机器（比如 CI），这个测试就会通过，所以它是一个依赖环境的测试缺陷。
+- **修复方式**：在 `OrchestratedChatTests.setUp` 里执行 `patch.object(wiki_runtime, "RUNTIME", wiki_runtime.WikiRuntime(root=<本测试的临时目录>/wiki))`。
+  - 这个目录不存在，等同于"还没有发布过 build"，也就是全新 checkout 的状态。
+  - `_has_published_build()` 只检查文件是否存在，不会创建目录；临时目录在 `tearDown` 时清理，patch 通过 `addCleanup(patch.stopall)` 恢复。
+  - 用的是仓库里已有的隔离写法，和 `test_upload_upsert.py`、`test_cross_document_supersede.py`、`test_wiki_runtime.py` 一样。
+- **作用范围**：`OrchestratedChatTests` 和继承它的 7 个测试类（RouteScenario、FixedAnswer、EmptyKnowledgeBase、LegacyCompatibility、Stream、ConcurrencyAndVersion、Isolation）。没有做全局替换，因为 `ImportPurityTests` 要断言全局 `RUNTIME` 指向默认目录。
+- **确认影响范围**：写了一个只用于诊断的 runner，把整个测试套件放在空的临时 Wiki 根目录下跑。除了诊断脚本本身预期会触发的 `ImportPurityTests`，唯一受影响的就是这个目标测试。也就是说，全套件只有它依赖本地 `data/wiki`。
+- **数据没有被改动**：修复前后 `data/wiki/current.json` 的 sha256 都是 `e349bd55ac1bc534…`，目录下都是 4 个文件。
+
+### 8.3 Eval artifacts 规则
+
+- 写在 `eval/README.md` 里。
+- **进 Git**：`eval/<label>.json`（环境、配置、prompt 哈希、每次运行的 summary、aggregate、gates、每个 case 每次运行的结果）、对比结论、冒烟记录、脚本。
+- **不进 Git**：`eval/artifacts/`，也就是评测器的原始 `run-N.json` / `summary.*` 和控制台日志。
+- `eval/run_stage0_eval.py` 的原始输出目录从 `eval/runs/<label>` 改成了 `eval/artifacts/<label>`，condensed 的 `eval/<label>.json` 不变。用 `--runs 1` 实际跑了一次核对（39/40）：原始文件落在 `eval/artifacts/` 下且被忽略，condensed 文件照常生成。这次核对的产物是一次性的，核对后已删除，没有提交。
+- **历史例外**：Stage 0 已提交的 `eval/runs/**` 和 `eval/*.console.txt` 保留在原处，没有移动或改写。
+
+### 8.4 测试结果（在 `225d228` 上，`.env` 已配置 DeepSeek Key）
+
+```
+py_compile exit=0
+unittest discover exit=0
+Ran 665 tests in 16.782s
+OK
+```
+```
+.\.venv\Scripts\python.exe -X utf8 -m unittest tests.test_orchestrated_chat tests.test_llm_provider tests.test_llm_provider_live
+Ran 67 tests in 3.407s
+OK
+```
+修复之后单独跑目标测试：`Ran 1 test ... OK`；单独跑 `tests.test_orchestrated_chat`：`Ran 32 tests ... OK`。
+
+### 8.5 diff 摘要（`git diff --stat 34663aa 225d228`）
+
+```
+ .gitignore                      |  5 +++++
+ eval/README.md                  | 21 +++++++++++++++++++++
+ eval/run_stage0_eval.py         |  9 ++++++++-
+ tests/test_orchestrated_chat.py |  8 ++++++++
+ 4 files changed, 42 insertions(+), 1 deletion(-)
+```
+
+## 9. Tech Debt
+
+- **TD1 · 拆分 `llm_provider.py`（本阶段按要求不重构）。** 这个文件现在 528 行，把几类职责放在了一起。将来可以拆成：
+  - `llm/config.py`：`LLMConfig`、`load_config`、`.env` 解析、`LLMConfigError`
+  - `llm/types.py`：`LLMResponse`、`ToolCall`、`LLMStream`、`LLMProvider` Protocol
+  - `llm/providers/ollama.py`、`llm/providers/openai_compatible.py`：两个实现，以及 `split_think`、`adapt_json_prompt` 这类只属于某个 provider 的适配逻辑
+  - `llm/__init__.py`：`get_provider` / `reset_provider` / `create_provider`，保持现有的导入路径兼容
+
+  拆分时要注意：两个 provider 必须继续在调用时直接使用 `requests.post`，现有测试是 patch 全局 `requests.post` 的。
+- **TD2 · Wiki 编译器接入 Provider**（原来的 R4）：给 `WikiModel` 写一个接到 `llm_provider` 的适配器，替代写死的 `OllamaWikiModel`。
+- **TD3 · Embedding 与 chat 的配置不统一**（原来的 R9）：`rag.OLLAMA_URL` 仍然是写死的常量，`OLLAMA_BASE_URL` 只影响 chat 调用。
+- **TD4 · `run_stage0_eval.py` 只支持 answerability 评测器**，而且名字带着 Stage 0。以后如果要评测别的数据集或 provider，可以把它泛化，并同步更新 `eval/README.md`。
+- **TD5 · 真实调用测试没有显式开关**（原来的 R11）：只要 `.env` 里有 Key，常规测试就会联网。
+
+按要求在这里停止，没有进入 Trace 阶段。
