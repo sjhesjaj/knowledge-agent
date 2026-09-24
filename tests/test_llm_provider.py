@@ -394,6 +394,18 @@ class BusinessLayerTests(unittest.TestCase):
         self.assertEqual(reply, "年假为5天。[来源1]")
         self.assertEqual(post.call_args.kwargs["json"]["response_format"], {"type": "json_object"})
 
+    def test_rag_extraction_sees_the_raw_model_text(self):
+        # Main's extract_answer_text parses the JSON envelope *before* stripping
+        # think shells, so a literal "<think>" inside an answer must reach it intact.
+        answer = "年假为5天。标签写作<think>，不是思考内容。[来源1]"
+        body = ollama_body(json.dumps({"answer": answer}, ensure_ascii=False))
+        with patch.object(llm_provider.requests, "post", return_value=FakeResponse(body)):
+            response = OllamaProvider().chat(MESSAGES, response_format=SCHEMA)
+            self.assertEqual(json.loads(response.raw_content)["answer"], answer)
+            self.assertNotEqual(response.content, response.raw_content)  # content keeps the old semantics
+            reply = rag.answer_structured("年假几天？", self.RESULTS, [])
+        self.assertIn("<think>", reply)
+
     def test_answer_strips_qwen_think_through_the_provider(self):
         with patch.object(llm_provider.requests, "post",
                           return_value=FakeResponse(ollama_body("<think>分析</think>\n年假为5天。[来源1]"))):

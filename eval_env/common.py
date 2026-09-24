@@ -108,6 +108,32 @@ def ollama_model_info(model: str) -> dict:
 # --------------------------------------------------------------------------
 
 
+def _fast_path_thresholds(rag) -> dict:
+    """BM25 fast-path thresholds: named constants (current rag) or, for older code, its source."""
+    score, ratio = getattr(rag, "BM25_CONFIDENT_SCORE", None), getattr(rag, "BM25_CONFIDENT_RATIO", None)
+    if score is None or ratio is None:
+        found = re.search(r"first >= ([\d.]+) and \(second == 0 or first / second >= ([\d.]+)\)",
+                          inspect.getsource(rag.retrieve_fast))
+        score, ratio = (float(found.group(1)), float(found.group(2))) if found else (None, None)
+    return {"min_top_score": score, "min_ratio_to_second": ratio}
+
+
+def _retrieval_budget(rag, defaults) -> dict:
+    """Retrieval budget knobs present in this version of rag (absent ones are omitted)."""
+    budget = {name: getattr(rag, name) for name in ("MAX_SUB_QUESTIONS", "PADDING_SCORE_RATIO") if hasattr(rag, name)}
+    for name in ("fit_to_budget", "cover_merged_clauses", "drop_padding_results"):
+        if hasattr(rag, name) and defaults(getattr(rag, name)):
+            budget[name] = defaults(getattr(rag, name))
+    return budget
+
+
+def _wiki_weights() -> dict:
+    from orchestration import wiki_adapter
+
+    return {name: getattr(wiki_adapter, name) for name in
+            ("TITLE_WEIGHT", "ALIAS_WEIGHT", "SUMMARY_WEIGHT", "CLAIM_WEIGHT") if hasattr(wiki_adapter, name)}
+
+
 def retriever_config() -> dict:
     import rag
     from orchestration import ExecutionContext
@@ -116,8 +142,6 @@ def retriever_config() -> dict:
         return {name: p.default for name, p in inspect.signature(function).parameters.items()
                 if p.default is not inspect.Parameter.empty and p.default is not None}
 
-    thresholds = re.search(r"first >= ([\d.]+) and \(second == 0 or first / second >= ([\d.]+)\)",
-                           inspect.getsource(rag.retrieve_fast))
     context = ExecutionContext()
     return {
         "split_text": defaults(rag.split_text),
@@ -125,8 +149,9 @@ def retriever_config() -> dict:
         "hybrid_retrieve": defaults(rag.hybrid_retrieve),
         "retrieve_with_rerank": defaults(rag.retrieve_with_rerank),
         "retrieve_fast": defaults(rag.retrieve_fast),
-        "bm25_fast_path": {"min_top_score": float(thresholds.group(1)) if thresholds else None,
-                           "min_ratio_to_second": float(thresholds.group(2)) if thresholds else None},
+        "bm25_fast_path": _fast_path_thresholds(rag),
+        "retrieval_budget": _retrieval_budget(rag, defaults),
+        "wiki_weights": _wiki_weights(),
         "executor": {"document_top_k": context.document_top_k, "wiki_top_k": context.wiki_top_k},
         "refusal_markers": list(rag.REFUSAL_MARKERS),
     }

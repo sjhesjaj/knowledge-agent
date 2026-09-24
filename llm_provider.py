@@ -78,6 +78,11 @@ class LLMResponse:
     finish_reason: str | None = None
     # Each entry records how the effective prompt differs from the caller's.
     prompt_adaptations: tuple[dict, ...] = ()
+    # The model's text exactly as returned. `content` has inline <think> text
+    # removed; callers that own their own extraction order (rag's
+    # extract_answer_text parses the JSON envelope *before* stripping think
+    # shells, so a literal "<think>" inside an answer survives) read this.
+    raw_content: str = ""
 
 
 class LLMStream:
@@ -187,7 +192,8 @@ class OllamaProvider:
         response.raise_for_status()
         data = response.json()
         message = data["message"]
-        content, inline_reasoning = split_think(message.get("content") or "")
+        raw_content = message.get("content") or ""
+        content, inline_reasoning = split_think(raw_content)
         calls = tuple(
             ToolCall(
                 name=(call.get("function") or {}).get("name"),
@@ -205,6 +211,7 @@ class OllamaProvider:
             reasoning=_join_reasoning(message.get("thinking"), inline_reasoning),
             tool_calls=calls,
             finish_reason=data.get("done_reason"),
+            raw_content=raw_content,
         )
 
     def chat_stream(self, messages, *, response_format=None, temperature=None, max_tokens=None) -> LLMStream:
@@ -344,7 +351,8 @@ class OpenAICompatibleProvider:
         data = response.json()
         choice = data["choices"][0]
         message = choice["message"]
-        content, inline_reasoning = split_think(message.get("content") or "")
+        raw_content = message.get("content") or ""
+        content, inline_reasoning = split_think(raw_content)
         calls = []
         for call in message.get("tool_calls") or []:
             function = call.get("function") or {}
@@ -367,6 +375,7 @@ class OpenAICompatibleProvider:
             tool_calls=tuple(calls),
             finish_reason=choice.get("finish_reason"),
             prompt_adaptations=adaptations,
+            raw_content=raw_content,
         )
 
     def chat_stream(self, messages, *, response_format=None, temperature=None, max_tokens=None) -> LLMStream:
