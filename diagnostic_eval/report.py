@@ -71,7 +71,11 @@ def diagnose_eval(eval_json: str | Path, labels_path: str | Path | None, *,
 
 def eval_context(record: dict) -> DiagnosisContext:
     """What the evaluated run actually read, from the eval file's environment record."""
-    wiki = (record.get("environment") or {}).get("wiki") or {}
+    environment = record.get("environment") or {}
+    pinned = ((environment.get("eval_environment") or {}).get("corpus") or {}).get("wiki") or {}
+    if pinned.get("corpus_id"):
+        return DiagnosisContext(wiki_corpus=pinned["corpus_id"])  # a versioned environment (Stage 2.1+)
+    wiki = environment.get("wiki") or {}
     if "published_build_id" not in wiki:
         return DiagnosisContext()  # not recorded: labels are taken at face value
     build = wiki.get("published_build_id")
