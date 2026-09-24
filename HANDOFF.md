@@ -1,6 +1,6 @@
-# 交接文档：Stage 0（LLMProvider）· Stage 1（Agent Trace）· Stage 2（Diagnostic Eval）· Stage 2.1（Eval Environment）
+# 交接文档：Stage 0（LLMProvider）· Stage 1（Agent Trace）· Stage 2（Diagnostic Eval）· Stage 2.1（Eval Environment）· Stage 2.5（Qwen vs DeepSeek）
 
-> 本文件按阶段累积。**Stage 2.1 — Eval Environment 见 §12**（环境 `eval-env-v1`，baseline commit `ffdac42`）；**Stage 2 — Diagnostic Eval 见 §11**（实现 commit `3f1ff97`）；**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
+> 本文件按阶段累积。**Stage 2.5 — Qwen vs DeepSeek 见 §13**（结果 commit `75cce92`）；**Stage 2.1 — Eval Environment 见 §12**（环境 `eval-env-v1`，baseline commit `ffdac42`）；**Stage 2 — Diagnostic Eval 见 §11**（实现 commit `3f1ff97`）；**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
 
 # Stage 0 交接：统一 LLMProvider（本地 Ollama/Qwen + DeepSeek API）
 
@@ -1093,4 +1093,139 @@ primary: {'planning_error': 3}   unattributed: none   secondary: {'evidence_erro
 - **R7 · API（产品）本身仍然使用本机的 `data/wiki`**，这是产品设计，本阶段不改。环境固定只作用于 Eval。
 - **R8 · 只有一个环境**：没有为 build-0001 建环境。如果以后想在编译出来的 Wiki 上做评测，需要为它单独写一份 overlay，并在 `published_build` 类型的环境里运行。
 
-按要求在这里停止：Stage 2 和 2.1 都没有修改 Agent 行为，也没有进入 Agent 优化阶段。
+---
+
+## 13. Stage 2.5 — Qwen vs DeepSeek Diagnostic Baseline
+
+- 分支：`stage0-llm-provider`（本地，**未 push**）
+- 本阶段只做模型对照实验。**没有修改** Agent、Prompt、Retriever、Diagnostic Eval、`eval_env` 或 eval-env-v1；没有读取 blind_v2；没有根据结果去改 Agent。
+
+| commit | 内容 |
+|---|---|
+| `58f2611759133f7be41706b05033382d14276e92` | 实验 runner（`eval/model_comparison.py`）及其测试；两组实验都在这个 commit 上运行 |
+| `75cce9295278ee2c9e256f9171bb2684d87efb2e` | 实验结果：两组的 eval 结果、诊断报告、对照报告 |
+| 本节所在的 docs commit | HANDOFF §13 |
+
+### 13.1 实验控制
+
+- **环境**：eval-env-v1（manifest `a6ecd2b4…`），整个实验只做**一次**干净 tree 的校验。进入第二组之前，runner 会检查 tree 上的变化是不是**只有**第一组自己的输出文件，否则中止实验。
+- **两组完全相同的部分**（逐项核对过）：git commit `58f2611`，dirty 为 false；Agent 代码的 sha256；Retriever 配置 hash；**索引指纹**（两组用的是同一批 embedding 向量，而且和 Env V1 baseline 一致）；数据集、语料、标签、embedding digest。
+- **唯一的变量**：provider/model。一组是 `ollama / qwen3:4b`（digest `359d7dd4…`，Q4_K_M），另一组是 `deepseek / deepseek-flash`（响应里返回的 model 也是 `deepseek-flash`）。**DeepSeek 的思考模式由 Provider 固定关闭**。
+- **切换方式**：设置 `LLM_PROVIDER` 并调用 `llm_provider.reset_provider()`；`rag.CHAT_MODEL` 这个记录用的常量也同步改成对应的模型名。
+- **成本数据**：runner 在最外层包了一层 `requests.post`，记录每次 chat 调用的原始 usage（包括 DeepSeek 的 `prompt_cache_hit_tokens` 和 `prompt_cache_miss_tokens`），以及调用时间。价格取自官方文档（2026-09-24 查证）：deepseek-flash 非高峰时段每 1M token，输入缓存命中 $0.003、未命中 $0.15、输出 $0.6，高峰时段价格翻倍。
+- **运行顺序**：Qwen 3 轮（05:13–05:21 UTC），然后 DeepSeek 3 轮（05:21–05:25 UTC）。
+
+### 13.2 Qwen 3 轮结果（`eval/stage25_qwen_env_v1.json`）
+
+| 指标 | 值 |
+|---|---|
+| 每轮通过数 | 39 / 39 / 39 |
+| pass rate / answer success / false refusal | 97.5% / 95.0% / 5.0%（3 轮完全相同） |
+| 跨轮稳定性 | 100%（39 题 3/3 通过，1 题 0/3 失败，没有不稳定的 case） |
+
+和 Env V1 baseline（`38afa41`）的结果完全一致；两次运行之间的 Agent 代码和索引指纹也完全相同。
+
+### 13.3 DeepSeek 3 轮结果（`eval/stage25_deepseek_env_v1.json`）
+
+| 指标 | 值 |
+|---|---|
+| 每轮通过数 | 39 / 39 / 39 |
+| pass rate / answer success / false refusal | 97.5% / 95.0% / 5.0%（3 轮完全相同） |
+| 跨轮稳定性 | 100%（39 题 3/3 通过，1 题 0/3 失败，没有不稳定的 case） |
+
+### 13.4 诊断对照（现有的 Diagnostic Eval 对每一个 case-run 都做了诊断，下表按轮次汇总）
+
+| | Qwen | DeepSeek |
+|---|---|---|
+| primary routing / planning / tool / retrieval / evidence / generation | 0 / **3** / 0 / 0 / 0 / 0 | 0 / **3** / 0 / 0 / 0 / 0 |
+| secondary effects | 3（evidence_error） | 3（evidence_error） |
+| latent issues | 0 | 0 |
+| unattributed | 0 | 0 |
+| 每一轮 | 各 1 个 planning_error primary，加 1 个 evidence_error secondary | 相同 |
+
+诊断报告在 `eval/diagnostics/stage25_{qwen,deepseek}_env_v1.diagnostic.{json,md}`。
+
+### 13.5 case 级转移（Qwen → DeepSeek，每边各 3 轮）
+
+| 转移类型 | 数量 |
+|---|---:|
+| stable pass（两边都是 3/3） | 39 |
+| fixed（0/3 → 3/3） | 0 |
+| newly failed（3/3 → 0/3） | 0 |
+| unchanged failure（两边都是 0/3） | 1：`answer_document_h008`（两边的行为都是 `policy_refuse`） |
+| unstable（任意一边部分通过） | 0 |
+
+### 13.6 Latency、token、调用次数和成本
+
+| | Qwen（本地） | DeepSeek |
+|---|---|---|
+| 每个 task 的耗时（平均 / p95） | 3.69 / 10.48 秒 | 1.73 / 5.52 秒 |
+| 每个 task 的 LLM 耗时（平均） | 3.20 秒 | 1.24 秒 |
+| prompt / completion token 总数 | 52,211 / 4,386 | 57,764 / 3,200 |
+| 每个 task 的 prompt / completion token | 435.1 / 36.5 | 481.4 / 26.7 |
+| DeepSeek 缓存命中 / 未命中 token | — | 21,750 / 36,014（命中率 37.6%） |
+| LLM 调用总数（每个 task） | 132（1.10） | 134（1.12） |
+| tool 调用总数（每个 task） | 108（0.90） | 108（0.90） |
+| API 成本合计 | $0（本地运行，硬件成本不计） | **$0.00739** |
+| 每个 task 的成本 | $0 | **$0.0000616**（120 个 task-run） |
+| 每个成功 task 的成本 | $0 | **$0.0000631**（117 个通过） |
+
+- **成本的计算口径**：按列表价乘以记录下来的 usage（按缓存命中/未命中分别计价，按调用时间区分高峰和非高峰）。134 次调用全部落在非高峰时段；有 1 次预热调用不计入 task 成本。这个数字**没有和账单核对过**。
+- **token 数只作描述**：两个模型用的是各自的 tokenizer，token 数不能拿来比较上下文大小，也不能说明任何上下文优化的效果。
+- **latency 的差异**包含了本机硬件和网络两方面的因素（Qwen 在本机 GPU/CPU 上推理，DeepSeek 走网络）。它反映的是这台机器上这次运行的情况，不是两个模型的固有速度。
+
+### 13.7 Prompt adaptation（必须如实说明）
+
+- 两组的**逻辑 prompt** 完全相同，因为 Agent 代码和输入都相同。但 **DeepSeek 实际发送的 prompt 和 Qwen 并不是字节级相同的**：DeepSeek 不支持用 JSON Schema 约束输出，所以 schema 类请求会改为 `json_object`，并在 system 消息末尾追加一段 JSON Schema 说明。
+- DeepSeek 组中，有 **105 次调用**的实际 prompt 与逻辑 prompt 不同，原因全部是 `schema_not_supported_by_json_object`（这 105 次就是回答生成和证据复查调用）。其余 29 次 rerank/select 调用的 prompt 本来就包含 "JSON"，所以没有被改动。
+- Qwen 组的实际 prompt 与逻辑 prompt 不同的次数是 0。
+- 每一次调用的逻辑 prompt hash、实际 prompt hash 和 adaptation 记录都保存在 Trace 的 llm_call span 里。
+
+### 13.8 h008 的 Trace 对比（第 1 轮）
+
+```
+qwen      run 22e6ef4b…  completed  provider=ollama/qwen3:4b        llm_calls=0 tokens=0+0  25.6ms
+deepseek  run 22397653…  completed  provider=deepseek/deepseek-flash llm_calls=0 tokens=0+0  14.6ms
+  · [planner] plan_request ok
+  · [planner] availability_check ok
+  · [tool_call] execute_plan ok
+      · [tool_call] document_search ok
+  · [evidence] evaluate_evidence ok
+  （两组都没有 generation span，也没有 llm_call span）
+```
+
+两组在每一步上都完全一致：route 是 `document_only`，**`requires_freshness=True`**；检索到 `chunk:1`（工作时间）、`chunk:17`、`chunk:4`、`chunk:7`；Evidence Policy 判定 `refuse` / `freshness_unsupported`；答案都是"根据现有资料无法确定。"；**两边都没有调用模型**。
+
+这说明 h008 的失败**和模型无关**：它在调用任何 LLM 之前就已经被 Planner 的 signal 和 Evidence Policy 决定了，所以换模型不可能改变它。诊断结论（planning_error）在两组中完全相同。
+
+### 13.9 实验结论
+
+1. **在 eval-env-v1 / validation_v1 上，把 Qwen 换成 DeepSeek，官方结果没有任何变化**：6 轮全部是 39/40，40 个 case 里没有一个发生转移，诊断分布也完全相同。
+2. **这个数据集没法区分这两个模型**：唯一的失败（h008）发生在模型被调用之前；其余 39 题两个模型都能稳定答对。所以可以说"在这 40 题上，两个模型在正确率上没有差异"，但**不能**据此得出"两个模型能力相当"。validation_v1 是已经被看过的回归集，模型差异更可能体现在更难、没被看过的数据上（按要求，本阶段不读 blind_v2）。
+3. **能观察到的差异在效率上**：这台机器上 DeepSeek 的 task 耗时约为 Qwen 的 47%（p95 约 53%），代价是每个 task 约 $0.00006 的 API 成本。
+4. **诊断链路对换模型是稳健的**：同一个失败在两种模型下被归到了同一个阶段、同一条规则，secondary 也相同，没有因为换模型而出现 unattributed 或 latent。
+5. **需要改进的是 Planner 的时效 signal，而不是模型**（这是诊断给出的方向，本阶段不做任何修改）。
+
+### 13.10 测试
+
+新增 `tests/test_model_comparison.py`（3 个测试），覆盖高峰时段的判定（周末和窗口边界）、按缓存命中/未命中拆分并区分高峰计价（没有缓存拆分时成本记为未知，不做估算），以及 case 转移分类（部分通过的 case 单独记为 unstable，不会被塞进那四类）。
+
+```
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover
+Ran 765 tests in 25.951s
+OK
+```
+
+### 13.11 风险和限制
+
+- **R1 · 结论只适用于 validation_v1**：这个数据集已经被看过，而且已经到了"天花板"（39/40）。它不能说明两个模型在更难的问题上会怎样。
+- **R2 · 实际发送的 prompt 不是字节级相同**（见 §13.7），比较的是"在同一个 Agent 下的两个 provider"，而不是"完全相同输入下的两个模型"。
+- **R3 · 每组只跑了 3 轮**。两组都完全稳定，但 3 轮对于检测低概率的波动是不够的。
+- **R4 · 成本是按列表价估算的**，没有和 DeepSeek 的账单核对；中国法定节假日这个非高峰例外没有建模（这次所有调用都在工作日的非高峰时段）。
+- **R5 · eval_env 的 metadata 在 DeepSeek 组有两处缺口**（本阶段按要求没有修改 eval_env，记为 TD）：
+  - `environment.chat_model` 是拿 `deepseek-flash` 去 Ollama 查的信息，结果全是空值，没有意义。实际的模型身份请看 `llm_provider_config`、Trace 里的 provider/model，以及 usage 日志里 DeepSeek 响应返回的 `model`。
+  - `observed_llm_requests` 只统计了 Ollama 的 `/api/chat`，所以 DeepSeek 组显示 0 次 chat 调用。DeepSeek 的调用完整记录在 `eval/artifacts/stage25_deepseek_env_v1/llm_usage.jsonl` 里（135 次，全部带缓存拆分），以及 Trace 里（134 次 case 内调用）。
+- **R6 · latency 取决于这台机器和当时的网络**，换一台机器数字会不一样。
+- **TD6 · 可以在 eval_env 里按 provider 区分记录模型信息，并把监听范围扩展到 OpenAI 兼容接口**。这属于 eval_env 的改进，本阶段没有做。
+
+按要求在这里停止：Stage 2、2.1 和 2.5 都没有修改 Agent 行为；没有根据 Stage 2.5 的结果去改 Agent。
