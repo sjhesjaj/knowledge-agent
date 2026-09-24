@@ -121,6 +121,9 @@ def environment_diff(old_path: Path, new_path: Path) -> dict:
                   else "answer_changed" if "answers" in changed else "unchanged")
         rows.append({"id": case_id, "category": b.get("category"), "change": change, "changed_fields": changed,
                      **{name: {"old": x, "new": y} for name, (x, y) in fields.items() if name in changed or name == "pass_count"},
+                     # A fact, not a judgement: how much the text already varies inside each side's own runs.
+                     "distinct_answers_within_runs": {"old": len(fields["answers"][0]), "new": len(fields["answers"][1])},
+                     "wiki_evidence_used": "wiki" in set(fields["source_types"][0]) | set(fields["source_types"][1]),
                      "attribution": "environment_change" if change != "unchanged" else None})
     counts: dict = {}
     for row in rows:
@@ -146,8 +149,11 @@ def diff_markdown(diff: dict) -> str:
              f"- old wiki: `{env['old']['wiki']}` (commit {str(env['old']['git_commit'])[:12]})",
              f"- new wiki: `{env['new']['wiki']}` in `{env['new']['env_id']}` (commit {env['new']['git_commit'][:12]})",
              f"- passed per run: old {diff['passed_per_run']['old']} -> new {diff['passed_per_run']['new']}",
-             f"- cases: {diff['change_counts']}", "", "| case | change | pass (old -> new) | what changed |",
-             "|---|---|---|---|"]
+             f"- cases: {diff['change_counts']}", "",
+             "`distinct answers` counts different answer texts within each side's own runs; `wiki` says whether "
+             "either side used wiki evidence. Both are facts shown for context; the attribution stays environment_change.",
+             "", "| case | change | pass (old -> new) | distinct answers (old / new) | wiki | what changed |",
+             "|---|---|---|---|---|---|"]
     for row in diff["cases"]:
         if row["change"] == "unchanged":
             continue
@@ -158,7 +164,9 @@ def diff_markdown(diff: dict) -> str:
                 details.append(f"{name}: {row[name]['old']} -> {row[name]['new']}")
         if "answers" in row:
             details.append("answer text differs")
+        distinct = row.get("distinct_answers_within_runs", {})
         lines.append(f"| `{row['id']}` | {row['change']} | {passes.get('old')} -> {passes.get('new')} | "
+                     f"{distinct.get('old')} / {distinct.get('new')} | {'yes' if row.get('wiki_evidence_used') else 'no'} | "
                      f"{'; '.join(details)} |")
     unchanged = [row["id"] for row in diff["cases"] if row["change"] == "unchanged"]
     lines += ["", f"Unchanged ({len(unchanged)}): " + ", ".join(f"`{c}`" for c in unchanged)]
