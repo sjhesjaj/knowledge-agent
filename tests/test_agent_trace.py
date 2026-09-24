@@ -450,6 +450,19 @@ class SwitchAndRobustnessTests(TraceTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["answer"], "年假为 5 天。[来源 1]")
 
+    def test_failed_finalize_write_never_fails_the_request(self):
+        with patch.object(agent_trace.TraceStore, "finalize", side_effect=sqlite3.OperationalError("disk I/O error")), \
+                self.assertLogs("agent_trace", level="ERROR") as logs:
+            with patch.object(requests, "post", return_value=ollama_answer("年假为 5 天。[来源 1]")):
+                plain = self.post("年假最多可以休多少天", "s-finalize")
+            with patch.object(requests, "post", return_value=ollama_stream("年假为 5 天。[来源 1]")):
+                streamed = self.post("年假最多可以休多少天", "s-finalize-stream", stream=True)
+        self.assertEqual((plain.status_code, plain.json()["answer"]), (200, "年假为 5 天。[来源 1]"))
+        self.assertEqual(self.sse_events(streamed)[-1][0], "done")
+        self.assertTrue(all("could not finalize" in line for line in logs.output))
+        # The start row exists; the run simply never reached its final state.
+        self.assertEqual(self.run_row(plain.headers["X-Run-Id"])["status"], "running")
+
     def test_a_bug_in_trace_recording_never_fails_the_request(self):
         with patch.object(chat_orchestration, "_trace_bundle", side_effect=RuntimeError("recorder bug")), \
                 patch.object(agent_trace, "_prompt_facts", side_effect=RuntimeError("recorder bug")), \
@@ -476,6 +489,61 @@ class SwitchAndRobustnessTests(TraceTestCase):
         for fragment in ("completed", "[planner] plan_request", "[tool_call] document_search",
                          "[llm_call] answer_structured", "tokens=120+30", "[commit] commit_exchange"):
             self.assertIn(fragment, text)
+
+
+class SecretLeakTests(TraceTestCase):
+    """End to end: a real DeepSeek-shaped provider with a key, then scan every stored byte."""
+
+    KEY = "sk-livekeyABCDEF1234567890xyz"
+    PLAIN_SECRET = "plain-secret-value-9f8e7d"  # no sk- shape: caught only by literal redaction
+
+    def setUp(self):
+        super().setUp()
+        provider = llm_provider.OpenAICompatibleProvider(
+            base_url="https://api.example.test", model="deepseek-flash", api_key=self.KEY)
+        patch.object(llm_provider, "_provider", provider).start()
+        patch.object(agent_trace, "_known_secrets", (self.PLAIN_SECRET,)).start()
+
+    def stored_text(self) -> str:
+        rows = self.query("SELECT * FROM trace_runs") + self.query("SELECT * FROM trace_spans")
+        return json.dumps(rows, ensure_ascii=False)
+
+    def assert_no_secrets(self):
+        text = self.stored_text()
+        for secret in (self.KEY, self.PLAIN_SECRET, "Bearer " + self.KEY[:12]):
+            self.assertNotIn(secret, text)
+        self.assertIn(agent_trace.REDACTED, text)
+
+    def test_successful_deepseek_request_stores_no_key(self):
+        body = {"model": "deepseek-flash", "usage": {"prompt_tokens": 40, "completion_tokens": 9},
+                "choices": [{"finish_reason": "stop", "message": {
+                    "role": "assistant", "content": json.dumps({"answer": "年假为 5 天。[来源 1]"}, ensure_ascii=False)}}]}
+        question = f"年假最多可以休多少天？我的 key 是 {self.KEY}，口令 {self.PLAIN_SECRET}"
+        with patch.object(requests, "post", return_value=FakeResponse(body)) as post:
+            response = self.post(question, "s-leak-ok")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.KEY, post.call_args.kwargs["headers"]["Authorization"])  # it really was sent
+        run = self.run_row(response.headers["X-Run-Id"])
+        self.assertEqual((run["provider"], run["model"]), ("deepseek", "deepseek-flash"))
+        llm = next(s for s in self.spans(run["run_id"]) if s["stage"] == "llm_call")
+        self.assertEqual(json.loads(llm["attributes_json"])["prompt_adaptations"][0]["reason"],
+                         "schema_not_supported_by_json_object")
+        self.assert_no_secrets()
+
+    def test_provider_error_echoing_the_key_is_redacted(self):
+        class Unauthorized(FakeResponse):
+            text = '{"error": {"message": "Invalid key sk-livekeyABCDEF1234567890xyz"}}'
+
+            def raise_for_status(self):
+                raise requests.HTTPError("401 Client Error: Unauthorized")
+
+        with patch.object(requests, "post", return_value=Unauthorized()):
+            response = self.post("年假最多可以休多少天", "s-leak-err")
+        self.assertEqual(response.status_code, 500)
+        run = self.run_for_session("s-leak-err")
+        self.assertEqual((run["failed_stage"], run["error_type"]), ("generation", "HTTPError"))
+        self.assertIn("Invalid key", run["error_message"])
+        self.assert_no_secrets()
 
 
 # --------------------------------------------------------------------------

@@ -721,4 +721,31 @@ run 5a51d396f01e4255a3852403c083f5dc  failed  failed_stage=generation
 - **TD3 · `agent_trace.py` 大约 1000 行**，可以拆成 store、recorder、sanitize、provider 包装层和 CLI 几个部分。
 - **TD4 · llm_call 的归属规则**（见 L4）：更准确的做法是在执行器里给每个工具开一个 span，但那需要改执行器。
 
+### 10.11 补充验收（2026-09-24）
+
+执行指令里列出的 10 项验收要求，逐条对照测试的结果如下。有两项原先覆盖不足，这次补了 3 个测试。**生产代码没有任何改动**，所以 §10.6 的 validation 回归和 §10.7 的 overhead 结果仍然对应 `8899d66`，有效，不需要重跑。
+
+| # | 要求 | 测试（`tests/test_agent_trace.py`） |
+|---|---|---|
+| 1 | orchestrated 普通成功请求 | `test_plain_request_replays_every_stage_from_sqlite` |
+| 2 | 多 Tool 成功请求 | `test_multi_step_tool_calls_are_recorded_in_order`、`test_wiki_and_document_route_records_both_tools` |
+| 3 | Tool error 后正常拒答 | `test_tool_exception_is_an_error_span_in_a_completed_run` |
+| 4 | Tool 异常导致请求失败 | `test_executor_programmer_error_fails_the_run_at_tool_call` |
+| 5 | Generation / LLM 失败 | `test_model_failure_fails_the_run_at_generation`、`test_error_handled_inside_a_tool_is_not_blamed_for_a_later_failure`、`test_commit_conflict_fails_at_commit` |
+| 6 | Streaming 成功与中途失败 | `test_streaming_run_uses_the_same_model`、`test_stream_failure_mid_generation_is_finalized`、`test_legacy_stream_is_traced`、`test_stream_closed_early_is_a_failed_run` |
+| 7 | Legacy 路径 | `test_rule_routed_legacy_request`、`test_model_routed_legacy_request_records_the_router_llm_call`、`test_lock_contention_is_recorded_with_the_run_id_header`、`test_legacy_stream_is_traced` |
+| 8 | Trace disabled | `test_trace_disabled_writes_nothing_and_changes_nothing`、`test_disabled_tracing_returns_a_null_run` |
+| 9 | Trace 自身写库失败不影响业务 | `test_unwritable_trace_store_never_fails_the_request`（开始时写 run 失败）、**新增** `test_failed_finalize_write_never_fails_the_request`（结束时写库失败，流式和非流式都测；run 停留在 `running`，这本身也是一个可以查到的事实）、`test_a_bug_in_trace_recording_never_fails_the_request` |
+| 10 | Trace 不包含 API Key 等敏感信息 | sanitizer 单元测试 3 个，以及**新增**端到端测试 `SecretLeakTests`：用带 Key 的 DeepSeek provider 发出真实形态的请求（先断言 Key 确实出现在发出去的 `Authorization` 头里），然后扫描两张表的全部内容——Key、问题里用户自己打出来的 Key、一个不是 `sk-` 格式、只能靠字面匹配脱敏的口令，都不出现，同时能看到 `[REDACTED]`；另一个用例里 provider 返回的 401 错误体里回显了 Key，error_message 和 traceback 中都已脱敏 |
+
+测试结果：
+
+```
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover
+Ran 696 tests in 20.303s
+OK
+```
+
+696 = 665 个原有测试 + 31 个 Trace 测试。本节和补充的测试在同一个 commit 里。
+
 按要求在这里停止，没有进入 Stage 2。
