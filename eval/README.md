@@ -8,6 +8,8 @@
 | 对比结论 | `eval/stage0_comparison.json`（以及以后的同类文件） | `compare_stage0.py` 的输出 |
 | 冒烟 / 真实调用记录 | `eval/deepseek_smoke.json` | 逻辑与实际 prompt 的差异、token、耗时；不含请求头和 Key |
 | Trace 开销 A/B | `eval/stage1_trace_overhead.json` | `trace_overhead.py` 的结果（TRACE on/off 各 200 次 mock 请求） |
+| 诊断标签 overlay | `eval/diagnostic_labels/<dataset>.labels.json` | Stage 2 起。人工编写，锁定数据集 sha256 和它所针对的 wiki 语料；冻结数据集本身不改 |
+| 诊断报告 | `eval/diagnostics/<label>.diagnostic.json` / `.md` | `python -m diagnostic_eval --eval eval/<label>.json --labels <overlay>` 的输出：case 级阶段诊断，以及 root cause 分布 |
 | 脚本 | `eval/*.py` | harness、对比、冒烟、开销基准 |
 
 每个 case 的每次运行在 `eval/<label>.json` 里都带有 `trace_run_id`。某个 case 失败时，用这个 id 去对应 label 的 Trace 库里查：
