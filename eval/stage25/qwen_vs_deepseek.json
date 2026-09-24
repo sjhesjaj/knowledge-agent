@@ -1,0 +1,422 @@
+{
+  "experiment": {
+    "stage": "2.5",
+    "question": "Qwen vs DeepSeek on eval-env-v1; the LLM provider/model is the only variable",
+    "env_id": "eval-env-v1",
+    "environment_manifest_sha256": "a6ecd2b4ae9dbede1285ece99da8fd840b300665ef5a882df0c642d30cc0c78f",
+    "runs_per_arm": 3,
+    "git": {
+      "commit": "58f2611759133f7be41706b05033382d14276e92",
+      "dirty": false
+    },
+    "verification": "one clean verification for the whole experiment; before each later arm the tree differed only by the earlier arms' output files",
+    "deepseek_thinking": "disabled (pinned by OpenAICompatibleProvider)",
+    "pricing": {
+      "model": "deepseek-flash",
+      "source": "https://api-docs.deepseek.com/quick_start/pricing",
+      "checked": "2026-09-24",
+      "per_million_usd": {
+        "off_peak": {
+          "input_cache_hit": 0.003,
+          "input_cache_miss": 0.15,
+          "output": 0.6
+        },
+        "peak": {
+          "input_cache_hit": 0.006,
+          "input_cache_miss": 0.3,
+          "output": 1.2
+        }
+      },
+      "peak_hours_utc": "01:00-04:00 and 06:00-10:00, Monday-Friday (Chinese public holidays are off-peak; not modelled)"
+    }
+  },
+  "arms": {
+    "qwen": {
+      "arm": "qwen",
+      "label": "stage25_qwen_env_v1",
+      "provider": {
+        "provider": "ollama",
+        "base_url": "http://localhost:11434",
+        "model": "qwen3:4b",
+        "timeout": 180.0,
+        "api_key_set": false
+      },
+      "per_run": [
+        {
+          "run": 1,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        },
+        {
+          "run": 2,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        },
+        {
+          "run": 3,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        }
+      ],
+      "mean": {
+        "passed": 39.0,
+        "pass_rate": 0.975,
+        "answer_success_rate": 0.9499999999999998,
+        "false_refusal_rate": 0.05000000000000001
+      },
+      "stability": {
+        "stability_rate": 1.0,
+        "stable_pass": 39,
+        "stable_fail": 1,
+        "unstable": 0,
+        "unstable_ids": [],
+        "stable_fail_ids": [
+          "answer_document_h008"
+        ]
+      },
+      "diagnostic_aggregate": {
+        "official_failed": 3,
+        "primary_errors": {
+          "routing_error": 0,
+          "planning_error": 3,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 0,
+          "generation_error": 0
+        },
+        "unattributed": {
+          "missing_trace": 0,
+          "environment_failure": 0,
+          "rule_inconclusive": 0,
+          "label_gap": 0
+        },
+        "secondary_effects": {
+          "routing_error": 0,
+          "planning_error": 0,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 3,
+          "generation_error": 0
+        },
+        "latent_issues": {
+          "routing_error": 0,
+          "planning_error": 0,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 0,
+          "generation_error": 0
+        }
+      },
+      "diagnostic_per_run": {
+        "1": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        },
+        "2": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        },
+        "3": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        }
+      },
+      "latency_s": {
+        "task_mean": 3.6883416666666666,
+        "task_p95": 10.477,
+        "llm_mean_per_task": 3.2042872616657405
+      },
+      "tokens": {
+        "prompt_total": 52211,
+        "completion_total": 4386,
+        "prompt_per_task": 435.09166666666664,
+        "completion_per_task": 36.55,
+        "deepseek_cache_hit_tokens": null,
+        "deepseek_cache_miss_tokens": null
+      },
+      "calls": {
+        "llm_calls_total": 132,
+        "llm_calls_per_task": 1.1,
+        "tool_calls_total": 108,
+        "tool_calls_per_task": 0.9,
+        "usage_records": 132,
+        "warmup_or_untraced_calls": 1
+      },
+      "cost_usd": null,
+      "prompt_adaptations": {
+        "calls_with_effective_prompt_differing": 0,
+        "by_reason": {}
+      }
+    },
+    "deepseek": {
+      "arm": "deepseek",
+      "label": "stage25_deepseek_env_v1",
+      "provider": {
+        "provider": "deepseek",
+        "base_url": "https://api.deepseek.com",
+        "model": "deepseek-flash",
+        "timeout": 180.0,
+        "api_key_set": true
+      },
+      "per_run": [
+        {
+          "run": 1,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        },
+        {
+          "run": 2,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        },
+        {
+          "run": 3,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        }
+      ],
+      "mean": {
+        "passed": 39.0,
+        "pass_rate": 0.975,
+        "answer_success_rate": 0.9499999999999998,
+        "false_refusal_rate": 0.05000000000000001
+      },
+      "stability": {
+        "stability_rate": 1.0,
+        "stable_pass": 39,
+        "stable_fail": 1,
+        "unstable": 0,
+        "unstable_ids": [],
+        "stable_fail_ids": [
+          "answer_document_h008"
+        ]
+      },
+      "diagnostic_aggregate": {
+        "official_failed": 3,
+        "primary_errors": {
+          "routing_error": 0,
+          "planning_error": 3,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 0,
+          "generation_error": 0
+        },
+        "unattributed": {
+          "missing_trace": 0,
+          "environment_failure": 0,
+          "rule_inconclusive": 0,
+          "label_gap": 0
+        },
+        "secondary_effects": {
+          "routing_error": 0,
+          "planning_error": 0,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 3,
+          "generation_error": 0
+        },
+        "latent_issues": {
+          "routing_error": 0,
+          "planning_error": 0,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 0,
+          "generation_error": 0
+        }
+      },
+      "diagnostic_per_run": {
+        "1": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        },
+        "2": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        },
+        "3": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        }
+      },
+      "latency_s": {
+        "task_mean": 1.7291333333333334,
+        "task_p95": 5.522,
+        "llm_mean_per_task": 1.2426633266669038
+      },
+      "tokens": {
+        "prompt_total": 57764,
+        "completion_total": 3200,
+        "prompt_per_task": 481.3666666666667,
+        "completion_per_task": 26.666666666666668,
+        "deepseek_cache_hit_tokens": 21750,
+        "deepseek_cache_miss_tokens": 36014
+      },
+      "calls": {
+        "llm_calls_total": 134,
+        "llm_calls_per_task": 1.1166666666666667,
+        "tool_calls_total": 108,
+        "tool_calls_per_task": 0.9,
+        "usage_records": 134,
+        "warmup_or_untraced_calls": 1
+      },
+      "cost_usd": {
+        "total": 0.00738735,
+        "per_task": 6.156125e-05,
+        "per_successful_task": 6.313974358974359e-05,
+        "task_runs": 120,
+        "successful_task_runs": 117,
+        "calls_priced": 134,
+        "calls_at_peak": 0,
+        "basis": "list price x recorded usage (cache hit/miss split, peak by call time); not reconciled with the invoice"
+      },
+      "prompt_adaptations": {
+        "calls_with_effective_prompt_differing": 105,
+        "by_reason": {
+          "schema_not_supported_by_json_object": 105
+        }
+      }
+    }
+  },
+  "transitions": {
+    "definitions": {
+      "stable_pass": "3/3 in both",
+      "fixed": "0/3 qwen -> 3/3 deepseek",
+      "newly_failed": "3/3 qwen -> 0/3 deepseek",
+      "unchanged_failure": "0/3 in both",
+      "unstable": "any other combination (partial pass on either side)"
+    },
+    "counts": {
+      "stable_pass": 39,
+      "unchanged_failure": 1,
+      "fixed": 0,
+      "newly_failed": 0,
+      "unstable": 0
+    },
+    "cases": [
+      {
+        "id": "answer_document_h008",
+        "category": "document",
+        "transition": "unchanged_failure",
+        "qwen_pass": "0/3",
+        "deepseek_pass": "0/3",
+        "qwen_behaviours": [
+          "policy_refuse"
+        ],
+        "deepseek_behaviours": [
+          "policy_refuse"
+        ]
+      }
+    ]
+  },
+  "h008": {
+    "qwen": {
+      "trace_run_id": "22e6ef4b8d8445729f53ce9edcf44354",
+      "passes": "0/3",
+      "answer": "根据现有资料无法确定。",
+      "signals": {
+        "is_direct": false,
+        "needs_wiki": false,
+        "needs_document": true,
+        "needs_system": false,
+        "requires_freshness": true,
+        "requires_exact_citation": false
+      },
+      "route": "document_only",
+      "evidence_outcome": "refuse",
+      "evidence_reasons": [
+        "freshness_unsupported"
+      ],
+      "retrieved": [
+        "chunk:1",
+        "chunk:17",
+        "chunk:4",
+        "chunk:7"
+      ],
+      "llm_calls": 0,
+      "provider": "ollama",
+      "model": "qwen3:4b",
+      "tree": "run 22e6ef4b8d8445729f53ce9edcf44354  completed\n  eval eval:eval-env-v1 mode=orchestrated streaming=False  2026-09-24T05:13:52.366+00:00  25.6ms\n  commit=58f261175913  provider=ollama/qwen3:4b  llm_calls=0 tokens=0+0\n  question: 目前的制度里，核心协作时间是几点到几点？\n  eval: eval_answerability_validation_v1.json case=answer_document_h008 run=1\n    · [planner] plan_request ok 0.1ms\n    · [planner] availability_check ok 0.0ms\n    · [tool_call] execute_plan ok 4.1ms\n      · [tool_call] document_search ok 4.0ms\n    · [evidence] evaluate_evidence ok 0.0ms"
+    },
+    "deepseek": {
+      "trace_run_id": "22397653ce154b918c1826d1ac662333",
+      "passes": "0/3",
+      "answer": "根据现有资料无法确定。",
+      "signals": {
+        "is_direct": false,
+        "needs_wiki": false,
+        "needs_document": true,
+        "needs_system": false,
+        "requires_freshness": true,
+        "requires_exact_citation": false
+      },
+      "route": "document_only",
+      "evidence_outcome": "refuse",
+      "evidence_reasons": [
+        "freshness_unsupported"
+      ],
+      "retrieved": [
+        "chunk:1",
+        "chunk:17",
+        "chunk:4",
+        "chunk:7"
+      ],
+      "llm_calls": 0,
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "tree": "run 22397653ce154b918c1826d1ac662333  completed\n  eval eval:eval-env-v1 mode=orchestrated streaming=False  2026-09-24T05:21:17.093+00:00  14.6ms\n  commit=58f261175913  provider=deepseek/deepseek-flash  llm_calls=0 tokens=0+0\n  question: 目前的制度里，核心协作时间是几点到几点？\n  eval: eval_answerability_validation_v1.json case=answer_document_h008 run=1\n    · [planner] plan_request ok 0.1ms\n    · [planner] availability_check ok 0.0ms\n    · [tool_call] execute_plan ok 4.6ms\n      · [tool_call] document_search ok 4.5ms\n    · [evidence] evaluate_evidence ok 0.0ms"
+    }
+  },
+  "notes": {
+    "tokens": "Token counts come from each provider's own tokenizer and are descriptive only; they are not comparable as context size and say nothing about context optimisation.",
+    "prompts": "DeepSeek's effective prompts are not byte-identical to Qwen's: schema requests are sent as json_object with an appended JSON Schema instruction (see prompt_adaptations). Logical prompts are identical by construction.",
+    "cost": "Qwen runs locally; its API cost is 0 and hardware is not costed."
+  }
+}
