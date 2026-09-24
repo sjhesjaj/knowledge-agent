@@ -50,5 +50,20 @@ class TransitionTests(unittest.TestCase):
                          {"b": "fixed", "c": "newly_failed", "d": "unchanged_failure", "e": "unstable"})
 
 
+class SeriesTests(unittest.TestCase):
+    def test_series_use_separate_labels_and_directories(self):
+        old, new = mc.arms_for("stage25"), mc.arms_for("pmi")
+        self.assertEqual([a["label"] for a in old], ["stage25_qwen_env_v1", "stage25_deepseek_env_v1"])
+        self.assertEqual([a["label"] for a in new], ["pmi_qwen_env_v1", "pmi_deepseek_env_v1"])
+        self.assertNotEqual(mc.SERIES["stage25"]["out_dir"], mc.SERIES["pmi"]["out_dir"])
+        self.assertEqual(mc.SERIES["pmi"]["kind"], "post-main-integration baseline")
+
+    def test_existing_reports_are_never_rewritten(self):
+        from eval_env.environment import EnvironmentRefused
+
+        with self.assertRaisesRegex(EnvironmentRefused, "never overwritten"):
+            mc.build_report("stage25")
+
+
 if __name__ == "__main__":
     unittest.main()

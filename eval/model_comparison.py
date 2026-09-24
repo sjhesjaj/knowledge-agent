@@ -1,7 +1,12 @@
 """Stage 2.5: a controlled model comparison inside one pinned eval environment.
 
-    python eval/model_comparison.py run    --env eval-env-v1 --runs 3
-    python eval/model_comparison.py report
+    python eval/model_comparison.py run    --env eval-env-v1 --runs 3 [--series stage25|pmi]
+    python eval/model_comparison.py report [--series stage25|pmi]
+
+A *series* names one experiment: its labels and output directory. `stage25` is
+the original Stage 2.5 run; `pmi` is the post-main-integration re-baseline, whose
+report also compares each arm with its Stage 2.5 counterpart (a code change,
+not an environment or model change).
 
 The single experimental variable is the LLM provider/model. Everything else -
 dataset, corpus, labels, embeddings, retriever, agent workflow and the code
@@ -34,12 +39,21 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-OUT_DIR = ROOT / "eval" / "stage25"
 ARTIFACTS = ROOT / "eval" / "artifacts"
-ARMS = (
-    {"arm": "qwen", "label": "stage25_qwen_env_v1", "provider": "ollama"},
-    {"arm": "deepseek", "label": "stage25_deepseek_env_v1", "provider": "deepseek"},
-)
+SERIES = {
+    "stage25": {"out_dir": ROOT / "eval" / "stage25", "prefix": "stage25", "kind": "stage-2.5 model comparison",
+                "title": "Stage 2.5 — Qwen vs DeepSeek on eval-env-v1", "previous": None},
+    "pmi": {"out_dir": ROOT / "eval" / "post_main_integration", "prefix": "pmi",
+            "kind": "post-main-integration baseline",
+            "title": "Post-main-integration baseline — Qwen vs DeepSeek on eval-env-v1",
+            "previous": "stage25"},
+}
+
+
+def arms_for(series: str) -> tuple:
+    prefix = SERIES[series]["prefix"]
+    return ({"arm": "qwen", "label": f"{prefix}_qwen_env_v1", "provider": "ollama"},
+            {"arm": "deepseek", "label": f"{prefix}_deepseek_env_v1", "provider": "deepseek"})
 # https://api-docs.deepseek.com/quick_start/pricing, checked 2026-09-24. USD per 1M tokens.
 DEEPSEEK_PRICING = {
     "model": "deepseek-flash",
@@ -111,23 +125,24 @@ def usage_recorder(arm: str, sink: list):
         requests.post = original
 
 
-def run_experiment(env_id: str, runs: int) -> Path:
+def run_experiment(env_id: str, runs: int, series: str = "stage25") -> Path:
     import llm_provider
     import rag
     from eval_env import __main__ as env_cli
     from eval_env import common
     from eval_env.environment import ENVIRONMENTS_DIR, EnvironmentRefused, verify_environment
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
-    experiment_path = OUT_DIR / "experiment.json"
+    out_dir = SERIES[series]["out_dir"]
+    out_dir.mkdir(parents=True, exist_ok=True)
+    experiment_path = out_dir / "experiment.json"
     if experiment_path.exists():
-        raise EnvironmentRefused("the Stage 2.5 experiment already ran; results are never overwritten")
+        raise EnvironmentRefused(f"the {series} experiment already ran; results are never overwritten")
     llm_provider.load_config("deepseek")  # fail before anything runs if DeepSeek is not configured
     verified = verify_environment(ENVIRONMENTS_DIR / env_id)  # clean tree, reference run
     produced: list[str] = []
     arm_records = []
 
-    for arm in ARMS:
+    for arm in arms_for(series):
         # The only tree change allowed since verification: earlier arms' own outputs.
         changes = sorted(line[3:].strip() for line in common.git_state()["changes"])
         unexpected = [path for path in changes if path not in produced]
@@ -158,7 +173,8 @@ def run_experiment(env_id: str, runs: int) -> Path:
     llm_provider.reset_provider()
 
     experiment = {
-        "stage": "2.5", "question": "Qwen vs DeepSeek on eval-env-v1; the LLM provider/model is the only variable",
+        "series": series, "baseline_kind": SERIES[series]["kind"],
+        "question": "Qwen vs DeepSeek on eval-env-v1; the LLM provider/model is the only variable",
         "env_id": env_id, "environment_manifest_sha256": verified.manifest_sha256, "runs_per_arm": runs,
         "git": {k: verified.git[k] for k in ("commit", "dirty")},
         "verification": "one clean verification for the whole experiment; before each later arm the tree differed "
@@ -329,21 +345,84 @@ def h008_comparison(records: dict) -> dict:
     return out
 
 
-def build_report() -> dict:
+def code_change_diff(old: dict, new: dict, old_diag: dict, new_diag: dict, attribution: str) -> dict:
+    """Same environment and model, different code: case-level changes between two runs."""
+    def primaries(diag):
+        out: dict = {}
+        for entry in diag["cases"]:
+            if not entry["official_passed"]:
+                label = entry["primary_error"] or f"unattributed:{entry['unattributed']['kind']}"
+                out.setdefault(entry["case_id"], []).append(label)
+        return out
+
+    old_p, new_p = primaries(old_diag), primaries(new_diag)
+    old_cases, new_cases = ({c["id"]: c for c in r["cases"]} for r in (old, new))
+    rows, counts = [], {}
+    for cid in sorted(old_cases):
+        a, b = old_cases[cid], new_cases[cid]
+        beh_a, beh_b = sorted({r["actual_behavior"] for r in a["runs"]}), sorted({r["actual_behavior"] for r in b["runs"]})
+        ans_a, ans_b = sorted({r["answer"] for r in a["runs"]}), sorted({r["answer"] for r in b["runs"]})
+        if a["pass_count"] != b["pass_count"]:
+            change = "pass_count_changed"
+        elif beh_a != beh_b:
+            change = "behaviour_changed"
+        elif ans_a != ans_b:
+            change = "answer_changed"
+        else:
+            change = "unchanged"
+        counts[change] = counts.get(change, 0) + 1
+        if change != "unchanged":
+            rows.append({"id": cid, "category": b["category"], "change": change,
+                         "pass": f"{a['pass_count']}/{old['runs']} -> {b['pass_count']}/{new['runs']}",
+                         "behaviours": [beh_a, beh_b], "distinct_answers": [len(ans_a), len(ans_b)],
+                         "primary": [old_p.get(cid), new_p.get(cid)], "attribution": attribution})
+    return {"attribution": attribution, "counts": counts, "cases": rows,
+            "passed_per_run": [[r["passed"] for r in old["per_run_summary"]], [r["passed"] for r in new["per_run_summary"]]]}
+
+
+def build_report(series: str = "stage25") -> dict:
     from diagnostic_eval.report import diagnose_eval, write_report
 
-    experiment = json.loads((OUT_DIR / "experiment.json").read_text(encoding="utf-8"))
+    out_dir = SERIES[series]["out_dir"]
+    written = [out_dir / "qwen_vs_deepseek.json", out_dir / "qwen_vs_deepseek.md"]
+    written += [ROOT / "eval" / "diagnostics" / f"{arm['label']}.diagnostic{ext}"
+                for arm in arms_for(series) for ext in (".json", ".md")]
+    existing = [str(path.relative_to(ROOT)) for path in written if path.exists()]
+    if existing:
+        # Reports are results too: a later code version must never rewrite an earlier series.
+        from eval_env.environment import EnvironmentRefused
+
+        raise EnvironmentRefused(f"report outputs already exist and are never overwritten: {existing}")
+    experiment = json.loads((out_dir / "experiment.json").read_text(encoding="utf-8"))
     labels = ROOT / "eval" / "environments" / experiment["env_id"] / "labels" / "validation_v1.labels.json"
-    records, metrics = {}, {}
+    records, metrics, diagnostics = {}, {}, {}
     for arm in experiment["arms"]:
         record = json.loads((ROOT / arm["output"]).read_text(encoding="utf-8"))
         diagnostic = diagnose_eval(ROOT / arm["output"], labels)
+        diagnostics[arm["arm"]] = diagnostic
         write_report(diagnostic, ROOT / "eval" / "diagnostics" / f"{arm['label']}.diagnostic.json")
         usage = [json.loads(line) for line in (ROOT / arm["usage_log"]).read_text(encoding="utf-8").splitlines() if line]
         records[arm["arm"]] = record
         metrics[arm["arm"]] = arm_metrics(arm, record, diagnostic, usage)
+    previous = SERIES[series]["previous"]
+    versus_previous = {}
+    if previous:
+        from diagnostic_eval.report import diagnose_eval as _diagnose
+
+        for arm in experiment["arms"]:
+            old_label = f"{SERIES[previous]['prefix']}_{arm['arm']}_env_v1"
+            old_path = ROOT / "eval" / f"{old_label}.json"
+            old = json.loads(old_path.read_text(encoding="utf-8"))
+            old_commit, new_commit = old["environment"]["git"]["commit"], records[arm["arm"]]["environment"]["git"]["commit"]
+            versus_previous[arm["arm"]] = {
+                "old": old_label, "new": arm["label"], "old_commit": old_commit, "new_commit": new_commit,
+                **code_change_diff(old, records[arm["arm"]], _diagnose(old_path, labels), diagnostics[arm["arm"]],
+                                   f"code_change: {old_commit[:7]} -> {new_commit[:7]} (main integration); "
+                                   "same environment, same model"),
+            }
     report = {
         "experiment": {k: v for k, v in experiment.items() if k != "arms"},
+        "versus_previous_series": versus_previous,
         "arms": {name: {k: v for k, v in m.items() if k != "_traces"} for name, m in metrics.items()},
         "transitions": transitions(records["qwen"], records["deepseek"]),
         "h008": h008_comparison(records),
@@ -356,17 +435,18 @@ def build_report() -> dict:
             "cost": "Qwen runs locally; its API cost is 0 and hardware is not costed.",
         },
     }
-    (OUT_DIR / "qwen_vs_deepseek.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
-    (OUT_DIR / "qwen_vs_deepseek.md").write_text(markdown(report), encoding="utf-8")
+    (out_dir / "qwen_vs_deepseek.json").write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    (out_dir / "qwen_vs_deepseek.md").write_text(markdown(report, SERIES[series]["title"]), encoding="utf-8")
     return report
 
 
-def markdown(report: dict) -> str:
+def markdown(report: dict, title: str = "Stage 2.5 — Qwen vs DeepSeek on eval-env-v1") -> str:
     q, d = report["arms"]["qwen"], report["arms"]["deepseek"]
     fmt = lambda v, p=1: "-" if v is None else f"{v * 100:.{p}f}%"
     num = lambda v, p=2: "-" if v is None else f"{v:.{p}f}"
     lines = [
-        "# Stage 2.5 — Qwen vs DeepSeek on eval-env-v1", "",
+        f"# {title}", "",
+        f"- series `{report['experiment'].get('series', 'stage25')}` — {report['experiment'].get('baseline_kind', 'stage-2.5 model comparison')}",
         f"- environment `{report['experiment']['env_id']}` (manifest `{report['experiment']['environment_manifest_sha256'][:16]}…`), "
         f"commit `{report['experiment']['git']['commit'][:12]}`, {report['experiment']['runs_per_arm']} runs per arm",
         f"- only variable: provider/model — qwen `{q['provider']['model']}` (ollama) vs deepseek `{d['provider']['model']}`; "
@@ -430,6 +510,16 @@ def markdown(report: dict) -> str:
                   f"- route `{h['route']}`, requires_freshness `{h['signals']['requires_freshness']}`, "
                   f"evidence `{h['evidence_outcome']}` {h['evidence_reasons']}, llm_calls {h['llm_calls']}",
                   f"- retrieved {h['retrieved']}", f"- answer: {h['answer']}", ""]
+    for arm_name, diff in report.get("versus_previous_series", {}).items():
+        lines += ["", f"## {arm_name}: {diff['old']} -> {diff['new']} (code change, same env and model)", "",
+                  f"> {diff['attribution']}", "",
+                  f"- passed per run: {diff['passed_per_run'][0]} -> {diff['passed_per_run'][1]}",
+                  f"- cases: {diff['counts']}", "",
+                  "| case | change | pass | behaviours | distinct answers (old / new) | primary (old -> new) |",
+                  "|---|---|---|---|---|---|"]
+        lines += [f"| `{r['id']}` | {r['change']} | {r['pass']} | {r['behaviours'][0]} -> {r['behaviours'][1]} | "
+                  f"{r['distinct_answers'][0]} / {r['distinct_answers'][1]} | {r['primary'][0]} -> {r['primary'][1]} |"
+                  for r in diff["cases"]] or ["| - | unchanged | | | | |"]
     return "\n".join(lines) + "\n"
 
 
@@ -439,16 +529,20 @@ def main(argv=None) -> int:
     run_parser = sub.add_parser("run")
     run_parser.add_argument("--env", default="eval-env-v1")
     run_parser.add_argument("--runs", type=int, default=3)
-    sub.add_parser("report")
+    run_parser.add_argument("--series", choices=sorted(SERIES), default="stage25")
+    report_parser = sub.add_parser("report")
+    report_parser.add_argument("--series", choices=sorted(SERIES), default="stage25")
     args = parser.parse_args(argv)
     if args.command == "run":
-        print(f"Wrote {run_experiment(args.env, args.runs)}")
+        print(f"Wrote {run_experiment(args.env, args.runs, args.series)}")
     else:
-        report = build_report()
+        report = build_report(args.series)
         print(json.dumps({arm: {"passed": [r["passed"] for r in m["per_run"]], "cost": m["cost_usd"]}
                           for arm, m in report["arms"].items()}, ensure_ascii=False))
         print(f"transitions: {report['transitions']['counts']}")
-        print(f"Wrote {OUT_DIR / 'qwen_vs_deepseek.md'}")
+        for arm, diff in report.get("versus_previous_series", {}).items():
+            print(f"{arm} vs previous series: {diff['counts']}")
+        print(f"Wrote {SERIES[args.series]['out_dir'] / 'qwen_vs_deepseek.md'}")
     return 0
 
 
