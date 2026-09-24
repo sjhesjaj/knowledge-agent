@@ -1,6 +1,6 @@
-# 交接文档：Stage 0（LLMProvider）· Stage 1（Agent Trace）· Stage 2（Diagnostic Eval）· Stage 2.1（Eval Environment）· Stage 2.5（Qwen vs DeepSeek）
+# 交接文档：Stage 0（LLMProvider）· Stage 1（Agent Trace）· Stage 2（Diagnostic Eval）· Stage 2.1（Eval Environment）· Stage 2.5（Qwen vs DeepSeek）· Integration Milestone（合入 main M10）
 
-> 本文件按阶段累积。**Stage 2.5 — Qwen vs DeepSeek 见 §13**（结果 commit `75cce92`）；**Stage 2.1 — Eval Environment 见 §12**（环境 `eval-env-v1`，baseline commit `ffdac42`）；**Stage 2 — Diagnostic Eval 见 §11**（实现 commit `3f1ff97`）；**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
+> 本文件按阶段累积。**Integration Milestone — 合入 origin/main@bac4d69 见 §14**（merge `f784f3e`，结果 commit `9f16680`，post-main-integration baseline）；**Stage 2.5 — Qwen vs DeepSeek 见 §13**（结果 commit `75cce92`）；**Stage 2.1 — Eval Environment 见 §12**（环境 `eval-env-v1`，baseline commit `ffdac42`）；**Stage 2 — Diagnostic Eval 见 §11**（实现 commit `3f1ff97`）；**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
 
 # Stage 0 交接：统一 LLMProvider（本地 Ollama/Qwen + DeepSeek API）
 
@@ -1229,3 +1229,128 @@ OK
 - **TD6 · 可以在 eval_env 里按 provider 区分记录模型信息，并把监听范围扩展到 OpenAI 兼容接口**。这属于 eval_env 的改进，本阶段没有做。
 
 按要求在这里停止：Stage 2、2.1 和 2.5 都没有修改 Agent 行为；没有根据 Stage 2.5 的结果去改 Agent。
+
+## 14. Integration Milestone — 合入 origin/main@bac4d69（M10）
+
+> 目标：把 main 上最新的 M10 可靠性工作合入 `stage0-llm-provider`。保留全部历史，不 rebase，不强推。不进入 Stage 3。结果标记为 **post-main-integration baseline**（series `pmi`）。Stage 0–2.5 的结果全部原样保留。
+
+### 14.1 合并本身
+
+- merge commit：`f784f3e`，`--no-ff`。父提交是 `a4ab04c`（本分支）和 `bac4d69`（origin/main）。之后的提交：`b8c8197`（runner 增加 series），`9f16680`（pmi 结果）。
+- main 带进来的改动：68 个文件。包括 planner +425 行，rag.py +1631 行（答案校验、`decide_delivery`、缓冲流式输出、检索预算），adapters，以及 361 个新测试。eval-env-v1 的输入文件没有变。
+- **唯一的文本冲突是 `rag.py`**。解决方式：
+  - 业务逻辑以 main 为准，逐字采用。
+  - 把 main 里的 6 处 LLM 调用重新接到 `llm_provider.get_provider()` 上（这样也就接上了 Trace）：
+    - `rerank`
+    - `select_for_subquestions`
+    - `answer`
+    - `_evidence_recheck`
+    - `answer_structured`
+    - `answer_stream`（改用 `chat_stream`，main 的缓冲逻辑和 `yield decide_delivery(...)` 保持不变）
+  - `rag.py` 里已经没有直接的 `/api/chat` 调用。剩下的唯一一处 `requests.post` 是 embedding。
+  - `CHAT_MODEL` 改为 `llm_provider.load_config().model`。
+- **`LLMResponse.raw_content`（新增字段，只增不改）**：
+  - 原因：provider 默认会剥掉 `<think>`，但 main 的 `extract_answer_text` 要先解析 JSON 外壳，再剥 think 标签。如果直接用 provider 剥过的 `content`，main 已经修好的 bug 会回来：答案正文里如果有字面的 `<think>`，会被弄坏。
+  - 做法：rag.py 统一读 `raw_content`；Trace 在 `raw_content` 与 `content` 不同时，把它记到 `span.output["raw_content"]`。
+  - 回归测试：`tests/test_llm_provider.py::test_rag_extraction_sees_the_raw_model_text`。
+- `chat_orchestration.py` 是自动合并的：main 的 `INVENTORY_TERMS` 和 Stage 1 的 trace span 都在，已人工核对。
+- 配套修改：
+  - main 把阈值判断重构成了 `bm25_confident()`，导致 `agent_trace` 和 `eval_env/common.py` 记录的检索阈值变成 None。
+  - 修复方式：两处都改为先读常量 `BM25_CONFIDENT_SCORE/RATIO`，读不到再退回到正则匹配源码。
+  - 同时新增记录 `MAX_SUB_QUESTIONS`、`PADDING_SCORE_RATIO`，以及 wiki 的 `TITLE/ALIAS/SUMMARY/CLAIM_WEIGHT`。
+
+### 14.2 Planner 行为差异（没有文本冲突，但做了审查）
+
+- 方法：对比旧 planner（`db3653a`）和新 planner。只用见过的数据，即 dev 和 validation_v1 的 answerability 与 routes，去重后共 233 个问题。**没有读 holdout 或 blind 数据。** 产物是 `eval/artifacts/planner_diff.json`（gitignored）。
+- 路由：新旧 planner 都是 233/233 与 `expected_route` 一致，没有任何路由变化。
+- 计划变化共 8 条：
+  - 7 条的 `requires_exact_citation` 从 False 变为 True：
+    - refuse_missing_h001、refuse_missing_h006
+    - route_document_only_005、route_document_only_009
+    - answer_document_h001、answer_document_h002、answer_document_004
+  - 1 条只有 reason_codes 变了。
+- main 新增的规则：
+  - `DOCUMENT_PRECISION_MARKERS`
+  - `AUTHORITY_QUESTION_PATTERN`
+  - `QUANTITY_INTERROGATIVE_PATTERN`
+  - 社交性的结束语、感谢、祝愿识别
+  - 否定和转述处理（"别"、转发、打发）
+  - `STOCK_NOUNS`
+  - 纯系统子句检测
+  - `document_focus()`
+  - `RECORD_ID_PATTERN`
+- **h008 的计划没有变化**：`requires_freshness=True`。
+- 除 planner 外还有一处行为变化：main 的 delivery validation（`decide_delivery`、答案校验）会改写最终交付的文本（见 14.5）。
+
+### 14.3 测试与 gate
+
+- 全量测试：合并后 1127 个通过。加入 runner 测试后是 1129 个（旧 765 + main 361 + 新增 3），全部通过。
+- `python -m eval_env verify eval-env-v1`：18/18 通过。
+- 路由评测：validation_v1 和 dev 的 overall 都是 1.0；dev 的 `exact_citation_signal_accuracy` 是 0.975。
+- `evaluate_answerability --validate-only`：OK。
+
+### 14.4 新 baseline（series `pmi`，post-main-integration baseline）
+
+实验设置：
+
+- 在干净提交 `b8c8197` 上运行（Agent 代码与 merge commit 完全相同）。
+- 两轮运行都标为 reference 且 baseline_eligible。
+- 两个 arm 的代码、retriever 配置和 index fingerprint 都相同，fingerprint 也与 Stage 2.5 相同。
+- 产物：
+  - `eval/post_main_integration/{experiment.json, qwen_vs_deepseek.json, .md}`
+  - `eval/pmi_{qwen,deepseek}_env_v1.json`
+  - `eval/diagnostics/pmi_{qwen,deepseek}_env_v1.diagnostic.{json,md}`
+
+结果：
+
+| | Qwen | DeepSeek |
+|---|---|---|
+| 每轮通过数 | 39/39/39（共 40 个 case） | 39/39/39 |
+| answer success / false refusal | 95% / 5% | 同左 |
+| 稳定性 | 100% | 100% |
+| primary error | planning_error ×3（h008） | 同左 |
+| secondary | evidence_error ×3 | 同左 |
+| latent / unattributed | 0 / 0 | 0 / 0 |
+| latency mean / p95 | 3.60 / 10.47 s | 1.96 / 5.89 s |
+| tokens prompt / completion | 55219 / 3891 | 58837 / 3101 |
+| DeepSeek cache hit / miss | – | 29169 / 29668 |
+| LLM / tool 调用 | 132 / 108 | 132 / 108 |
+
+- Qwen → DeepSeek 的 case 转移：stable_pass 39，unchanged_failure 1（h008），fixed、newly_failed、unstable 均为 0。
+- DeepSeek 成本：共 $0.012797，每个任务 $0.00010664，每个成功任务 $0.00010937。
+  - **132 次调用全部落在高峰时段（价格 ×2）**，所以不能直接和 Stage 2.5 的 $0.00739（非高峰）比较。
+- DeepSeek 的 prompt adaptation 与 Stage 2.5 相同（json_object 加 schema 说明），已写入报告。
+
+### 14.5 与 Stage 2.5 的对比（同一环境、同一模型，只有代码变了）
+
+- 两个模型的通过数和行为（answer / refuse）都没有变化。
+- 答案文本有变化：Qwen 11 个 case，DeepSeek 14 个 case。
+- 这些变化都来自 main 的 delivery validation：
+  - Qwen refuse_missing_h006：以前是一段冗长的推理加复述，现在是干净的"根据现有资料无法确定"。
+  - DeepSeek 的拒答统一规范成"根据现有资料无法确定。"。
+  - Qwen answer_document_h003：答案变短了。
+- 多个 case 的不同答案数量减少了，例如 2 种变为 1 种，说明交付文本更稳定。
+
+### 14.6 h008
+
+- h008 在两个 arm、两个 series 中完全一致：
+  - 路由 document_only，`requires_freshness=True`。
+  - 检索到 chunk:1（工作时间）。
+  - evidence 阶段因 `freshness_unsupported` 拒答，没有发生 LLM 调用。
+- 结论：这个失败与模型无关，M10 的 planner 也没有改变它。根因仍是 planner 把"目前的制度里"判为需要时效性，而语料无法提供时效证据。
+- 修复属于 Agent 行为改动，按要求本阶段不做。
+
+### 14.7 能否合入 main
+
+- `origin/main@bac4d69` 是 HEAD 的祖先，main 可以 fast-forward 到本分支，新增 21 个 commit。前提是合入时 origin/main 没有再前进。
+- 测试、gate 和 baseline 都达标。
+- 合入前需要知道的问题：
+  1. README 没有任何 Stage 0–2.5 的内容（LLMProvider、DeepSeek、Trace 都提到 0 次）。
+  2. `code_sha256` 按工作区文件计算哈希。切换分支后工作区变成 CRLF，`eval_env/environment.py` 因此被误判为改过，但 git blob 其实相同。应该改为对规范化后的 blob 内容计算哈希。
+  3. main 的 M10 把 blind_v2 的路由结果当作验收基线（"V2 路由整体正确率 57/80"），所以在 main 上 blind_v2 已经不再是盲测集。
+  4. `eval/runs` 和 console 文件里还有本机绝对路径，而仓库是公开的。
+  5. DeepSeek 在高峰和非高峰的价格不同，成本比较时必须看调用时段。
+  6. eval_env 的 `chat_model` 和 `observed_llm_requests` 对 DeepSeek 不准确（TD6）。
+- 合入后的 `.gitignore` 包含 `.env`、`.env.*`、`!.env.example` 和 `eval/artifacts/`，补上了 main 缺少的 `.env` 规则。
+
+按要求在这里停止：没有 push main，没有打 tag，没有进入 Stage 3。本阶段没有根据结果修改 Agent。
