@@ -1,6 +1,6 @@
 # 交接文档：Stage 0（LLMProvider）+ Stage 1（Agent Trace）
 
-> 本文件按阶段累积。**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
+> 本文件按阶段累积。**Stage 2 — Diagnostic Eval 见 §11**（实现 commit `3f1ff97`）；**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
 
 # Stage 0 交接：统一 LLMProvider（本地 Ollama/Qwen + DeepSeek API）
 
@@ -749,3 +749,171 @@ OK
 696 = 665 个原有测试 + 31 个 Trace 测试。本节和补充的测试在同一个 commit 里。
 
 按要求在这里停止，没有进入 Stage 2。
+
+---
+
+## 11. Stage 2 — Diagnostic Eval
+
+- 分支：`stage0-llm-provider`（本地，**未 push**）
+- 实现 commit：`3f1ff974b2ff8c1c417999938f0d4e552b633bae`
+- 本节所在的 docs commit 在它之后
+- 目标：基于 Stage 1 持久化的 Trace，把最终的 pass/fail 拆成可以解释的阶段级诊断，并找出每个失败 case 的最早根因
+- 按要求在此停止，**没有进入 Agent 优化阶段**；诊断出来的问题一律没有修
+
+### 11.1 决策是怎么落实的（对照你给的 9 条约束）
+
+1. **overlay labels**：新标签放在 `eval/diagnostic_labels/validation_v1.labels.json`，**冻结的数据集没有改**（sha256 仍是 `e4ad670c…`）。overlay 锁定了数据集的 sha256，一旦对不上就拒绝加载。
+2. **routing 只判断高层 route**（`route_acceptable`：route 是否在 `acceptable_routes` 中）。steps、required/forbidden tools、signals、arguments、availability **全部归 planning**，两个阶段的职责没有重叠。
+3. **自由文本的 notes 从不被解析**。推导只用结构化字段（expected_behavior、expected_route、required_source_types、expected_fact_groups/patterns、expected_message、question）。notes 只作为我人工编写 overlay 的依据；没有可靠标签的检查允许输出 undetermined。有测试 `test_notes_are_never_parsed_into_labels` 覆盖。
+4. **拒答机制不符**：上游都通过时，归为 `evidence_error`。如果 policy 的拒答是由某个 plan signal 引起的（`freshness_unsupported`→`requires_freshness`，`exact_citation_missing_*`→`requires_exact_citation`，这个对应关系来自 `evidence_policy.py` 的源码），那么：
+   - 该 signal 被标注为错误 → planning 先失败，primary 是 `planning_error`，evidence 这一项记为 secondary；
+   - 该 signal 被标注为正确 → primary 是 `evidence_error`；
+   - 该 signal 没有标注 → `label_gap`。
+5. **LLM Judge 只保留了可插拔接口**（`SemanticJudge`）。默认的 `DisabledJudge` 从不调用模型，只返回 `rule_inconclusive`；报告里记录 judge 名称和调用次数（这次是 0）。每个检查都带有 `method`（rule / judge），将来如果接入 judge，靠 judge 判定的 primary 会单独统计（`primary_by_method`）。
+6. **规则无法证明是 generation 的错时，不归为 generation_error**。事实没有命中但答案也不是拒答（可能是同义改写）、应该拒答的问题却没有出现拒答标记，这两种情况都会进入 `unattributed: rule_inconclusive`。
+7. **`unattributed` 不是第七类错误**，只用来记录 `missing_trace`、`environment_failure`、`rule_inconclusive`、`label_gap` 这几种诊断缺口，在报告里单独列一张表。
+8. **primary_error 只统计有确定性证据支持的最早根因**：要求最早失败的那个阶段由规则判定，并且它之前的所有阶段都是 pass 或 not_applicable。secondary effects 和 latent issues 分别单独统计，不计入 primary。
+9. **blind_v2 一个字节都没有读**。`load_labels` 在读取文件之前，就会按文件名拒绝任何包含 blind 的数据集（有测试覆盖）；代码里没有任何地方引用 blind_v2 的路径。
+
+### 11.2 Eval Case 的新 schema，以及怎么兼容现有 40 条
+
+生效的标签 = 从冻结数据集推导出来的标签 + overlay 的补充（只能补充，和原字段矛盾时报错）。
+
+| 标签 | 来源 | 规则 |
+|---|---|---|
+| `expected_outcome` / `refusal_mechanism` | 推导 | answer→answer；generation_refuse→refuse + generation；policy_refuse→refuse + policy；boundary→boundary |
+| `acceptable_routes` | 推导，overlay 可以放宽 | 默认是 `[expected_route]`；放宽时必须仍然包含原来的 expected_route |
+| `required_tools` | 推导 | 优先从 required_source_types 推；如果为空，则从 expected_route 的 steps 推（拒答前也必须先查过对应通道）；boundary 类为空（在执行工具之前就应该给出固定答案） |
+| `expected_message`、`facts`、`citation_required` | 推导 | 原样沿用；事实匹配直接复用评测器的 `evaluate_facts` 和 `body_for_fact_matching`，和官方评分口径一致 |
+| `forbidden_tools`、`plan_constraints`、`expected_arguments`、`expected_tool_status`、`expected_evidence` | 只能来自 overlay | 人工编写，每条都附有 rationale |
+| `wiki_corpus`（overlay 级别） | overlay | 声明 wiki 页面标签是针对哪份语料写的（`committed_sample` 或 `published_build:<id>`） |
+
+overlay 目前的覆盖情况：40 条 case 里有 24 条有 overlay 标签。其中 `expected_evidence` 20 条（依据是 notes 里写明的章节或页面，以及 system fixture 里的 SKU）、`expected_arguments` 10 条、`expected_tool_status` 4 条（不存在的 SKU 应返回 empty）、`plan_constraints` 1 条（h008）。剩下 16 条（缺失信息类拒答和 boundary 类）只用推导出来的标签。
+
+**标签偏差说明（需要你复核）**：overlay 完全是按 notes 和语料写的，写的时候没有看 Trace。但 h008 的 Trace 我在 Stage 1 时看到过，也在 Stage 2 的方案里分析过。它那一条标签（`requires_freshness=false`）的依据是 notes 中"考察时效词是否导致对可回答制度问题误拒"这句话，理由写在 overlay 的 rationale 里。**这条标签单独决定了 h008 的诊断结论**（见 §11.6 的敏感性对照），建议你亲自确认一下。
+
+### 11.3 Trace → 诊断的映射（全部是确定性规则）
+
+| 阶段 | 读取的 span | 检查项（任意一项 fail 即该阶段 fail） |
+|---|---|---|
+| routing | `planner/plan_request` | `route_acceptable` |
+| planning | `plan_request`、`availability_check`、工具 span 的 arguments | `planner_completed`、`required_tools_planned`、`forbidden_tools_absent`、`signal:<name>`、`availability_boundary_message`（boundary 类）/ `availability_not_short_circuited`（其他类；如果语料不可用，记为 environment_failure）、`argument:<tool>.<key>` |
+| tool | `execute_plan` 及其子 span | `executor_completed`、`executed:<tool>`（包括非必需工具报错；只是必需工具不在计划里的话，归 planning 管） |
+| retrieval | 工具 span 的 `output.evidence` | `status:<tool>`（例如不存在的 SKU 应返回 empty）、`expected_evidence:<type>`（document 按 `## 标题` 匹配，wiki 按 `page_title`，system 按 locator 里的 SKU）、`answer_facts_retrieved`（answer 类：检索结果里是否包含答案事实） |
+| evidence | `evidence/evaluate_evidence` | `policy_outcome`（按 §11.1 第 4 条的规则判定）、`required_sources_usable`、`answer_evidence_kept`（检索到的关键证据有没有进入 usable 列表）；如果 policy 是因为工具结果而拒答，并且上游工具确实失败或返回空，这一阶段记为 blocked（policy 反应正确，失败归工具那一层） |
+| generation | `generation` span | `generation_completed`、`not_a_restatement`、`no_false_refusal`（只有在 usable 证据里确实有答案时才判 fail）、`citation_present`、`citation_indices_valid`、`answer_facts` / `refused`（规则判不出来时交给 judge，v1 的结果是 inconclusive） |
+
+阶段状态有五种：`pass | fail | inconclusive | blocked | not_applicable`。检查项另外有一种 `skipped`，表示这条标签不适用于本次运行的环境，不参与统计。
+
+如果 run 本身异常中断，按 `failed_stage` 映射到对应的阶段；commit 或 request 阶段的异常则记为 `environment_failure`。
+
+### 11.4 primary root cause 的判定顺序
+
+1. 官方结果判 pass：不给出 primary；如果有阶段 fail，就记为 `latent_issues`。
+2. 没有 Trace → `missing_trace`；run 在 Agent 各阶段之外中断 → `environment_failure`。
+3. 依次检查 routing → planning → tool → retrieval → evidence → generation：
+   - 第一个 `fail` 的阶段 = primary（同时记录 method），之后各阶段的 fail 记为 secondary；
+   - 如果先遇到 `inconclusive`，就记为 unattributed（按它的 gap 类型：label_gap、rule_inconclusive 或 environment），之后的 fail 仍然列出来，但不计入 primary；
+   - `pass`、`not_applicable`、`blocked` 继续往后检查。
+4. 所有阶段都没有 fail，但官方结果判 fail → `rule_inconclusive`（说明规则有缺口）。
+
+### 11.5 改动的文件（`3f1ff97`）
+
+| 文件 | 说明 |
+|---|---|
+| `diagnostic_eval/labels.py` | 标签推导、overlay 的加载和校验（包括 sha、未知 case、字段矛盾、wiki 语料声明、拒绝读取 blind 数据集） |
+| `diagnostic_eval/rules.py` | `TraceView`、6 个阶段的检查、`SemanticJudge` 和 `DisabledJudge`、`diagnose()` |
+| `diagnostic_eval/report.py` | `diagnose_eval()`（从 eval 文件记录的环境得出 wiki 语料信息）、聚合统计、Markdown 报告 |
+| `diagnostic_eval/__init__.py`、`__main__.py` | 包入口和 CLI：`python -m diagnostic_eval --eval eval/<label>.json --labels <overlay>` |
+| `eval/diagnostic_labels/validation_v1.labels.json` | 人工编写的 overlay |
+| `eval/diagnostics/stage1_trace_qwen.diagnostic.json` / `.md` | 在 Stage 1 的真实 Trace 上跑出来的诊断报告（JSON 是 case 级明细，469KB） |
+| `tests/test_diagnostic_eval.py` | 44 个测试 |
+| `eval/README.md` | 补充诊断产物的说明 |
+
+**没有改**：`agent_trace.py`、`evaluate_answerability.py`（只 import 它的函数）、冻结的数据集、Agent 相关代码、Prompt、Retriever、业务决策逻辑。已跟踪文件的 diff 为 0。
+
+### 11.6 结果：validation_v1（`stage1_trace_qwen`，120 个 case-run，离线诊断，没有重跑 Agent）
+
+```
+.\.venv\Scripts\python.exe -X utf8 -m diagnostic_eval --eval eval\stage1_trace_qwen.json --labels eval\diagnostic_labels\validation_v1.labels.json
+case runs 120: passed 117, failed 3
+primary: {'planning_error': 3}
+unattributed: none
+secondary: {'evidence_error': 3}
+latent: none
+```
+
+**聚合的 root cause 分布**
+
+| category | primary | secondary effects | latent issues |
+|---|---:|---:|---:|
+| routing_error | 0 | 0 | 0 |
+| planning_error | **3** | 0 | 0 |
+| tool_error | 0 | 0 | 0 |
+| retrieval_error | 0 | 0 | 0 |
+| evidence_error | 0 | 3 | 0 |
+| generation_error | 0 | 0 | 0 |
+
+unattributed 四类（missing_trace / environment_failure / rule_inconclusive / label_gap）都是 0。
+
+**各阶段状态（全部 120 个 case-run）**：routing 120 pass；planning 117 pass / 3 fail；tool 96 pass / 24 n/a；retrieval 72 pass / 48 n/a；evidence 93 pass / 3 fail / 24 n/a；generation 81 pass / 3 blocked / 36 n/a。
+
+**case 级诊断**（3 次运行的结论一致）：
+
+```
+answer_document_h008  run 1-3  primary=planning_error  method=rule
+  routing pass · planning FAIL · tool pass · retrieval pass · evidence FAIL · generation blocked
+  primary:   signal:requires_freshness — requires_freshness=True, labelled False
+  secondary: evidence_error (policy_outcome) — policy refuse with ['freshness_unsupported']
+```
+
+问句"目前的制度里，核心协作时间是几点到几点？"中的"目前"让 Planner 设置了 `requires_freshness`，Evidence Policy 因此判定 `freshness_unsupported` 并拒答，模型根本没有被调用。检索其实已经拿到了包含答案的「工作时间」章节（retrieval pass）。
+
+**敏感性对照**：去掉 overlay 再跑一次，3 条都变成 `unattributed: label_gap`，原因是"拒答来自 plan signal `requires_freshness`，但没有标签"。这说明在缺少标签时，诊断会拒绝猜测；也说明 h008 的结论完全取决于那一条人工标签（见 §11.2 的偏差说明）。
+
+### 11.7 测试（`tests/test_diagnostic_eval.py`，44 个，全部 mock，不联网）
+
+Trace 用 `agent_trace` 真实的 Run API 写进临时 SQLite，再用 `load_trace` 读回来做诊断。
+
+| 覆盖面 | 测试 |
+|---|---|
+| routing_error | 高层 route 错误；boundary 问题被路由到文档；`acceptable_routes` 放宽后不再误报 |
+| planning_error | 错误的 signal（evidence 为 secondary，generation 为 blocked）；错误的 SKU 参数；错误的 boundary 消息；route 被接受但缺少必需工具 |
+| tool_error | 必需工具报错（retrieval 为 secondary，evidence 为 blocked）；执行器中断 |
+| retrieval_error | 没有检索到期望的章节；不存在的 SKU 却返回了数据；没有 evidence 标签时，靠事实检查判定 |
+| evidence_error | policy 拒绝了正确的证据；拒答机制不符；关键证据被丢弃；signal 标注为正确时，policy 成为根因 |
+| generation_error | usable 里有答案却拒答；缺少引用；引用编号越界；生成异常；只是复述问题 |
+| unattributed | missing_trace；signal 没有标注（label_gap）；**无法证明的 generation 失败不归为 generation_error**；应拒答却没有拒答标记；工具上游正常时的工具类拒答理由；语料不可用；Agent 阶段之外的异常；官方判 fail 但没有规则能解释 |
+| 统计与 judge | primary、secondary、latent、gap 分开计数；disabled judge 让语义问题保持 inconclusive；外接 judge 的结论标为 judge；规则能判定时不调用 judge |
+| 标签与兼容 | 40 条 case 都能得到标签，overlay 生效；notes 不会被解析；数据集 sha 没变；overlay 被篡改、有未知 case 或字段矛盾时报错；拒绝读取 blind；wiki 语料不一致时跳过对应检查、不判 fail |
+| 集成 | 真实 `chat_orchestration.prepare` 的成功 Trace 在 6 个阶段全部 pass；**真实 Planner 的 freshness 问题被诊断为 planning_error**；端到端生成报告 |
+
+```
+.\.venv\Scripts\python.exe -X utf8 -m unittest tests.test_diagnostic_eval
+Ran 44 tests in 3.670s
+OK
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover
+Ran 740 tests in 23.261s
+OK
+```
+
+740 = 696（Stage 0 和 Stage 1 的全部测试）+ 44。
+
+### 11.8 开发过程中发现的问题
+
+- **F1 · 评测环境和 case 的描述对不上（wiki 语料漂移）**。validation_v1 的 wiki case 在 notes 里引用的是**仓库里提交的样例 Wiki**（4 页，其中有「请假与年假」），但 eval 实际读取的是 `data/wiki` 里已发布的 **build-0001**（20 页，按文档章节编译而成，没有「请假与年假」）。第一次诊断时，这导致 `answer_wiki_h003` 出现了 3 条误报的 latent `retrieval_error`。我没有照着 Trace 去改标签，而是让 overlay 声明 `wiki_corpus: committed_sample`，诊断时读取 eval 文件记录的环境（`published_build_id`）做比对：两者不一致时，wiki 页面标签标记为 `skipped`（18 个 case-run），wiki 类的检索改为只看答案事实是否被检索到。**这意味着到目前为止，所有 wiki case 的评测结果都是在另一份语料上得出的。**这一点值得单独决定怎么处理，本阶段不做改动。
+- **F2 · Tool 失败之后，policy 以 `tool_error` 为由拒答，这是正确的反应**。第一版规则会把它当成 evidence 阶段的问题，现在记为 evidence `blocked`，失败只归 tool 这一层。
+- **F3 · 模块和函数同名**：`diagnostic_eval.diagnose` 既是子模块又是导出的函数，导致导入混乱，已把子模块改名为 `rules.py`。
+
+### 11.9 未解决的问题和风险
+
+- **R1 · 这次的失败分布几乎没有信息量**：validation_v1 上只有 1 个 case 失败，而且这个集合已经被看过。结论只能说明诊断链路可以跑通，**不能作为能力指标**。要拿到有意义的分布，需要一个没被看过的数据集（按要求，本阶段不读 blind_v2）。
+- **R2 · 标签依赖人工**：`plan_constraints` 只有 1 条，`expected_arguments` 和 `expected_evidence` 是按 notes 写的。标签越少，`label_gap` 就越多；标签写错，结论就会跟着错（h008 就是一个例子）。
+- **R3 · 用子串匹配事实可能误判为通过**：遗留的 `expected_fact_groups` 是子串匹配（例如 "10"），检索阶段的"答案事实已检索到"可能被无关的章节碰巧满足。它只会造成误判通过，不会造成误判失败；另外 `expected_evidence` 标签可以进一步约束。
+- **R4 · reason → signal 的对应关系是手工同步的**（`SIGNAL_FOR_REASON`）。如果 `evidence_policy.py` 新增了由 signal 触发的 reason，而这里没有同步，对应的拒答会落入 `rule_inconclusive`，不会被误判成某一类错误。
+- **R5 · legacy 模式的 API Trace 没有诊断**：Eval 只走 orchestrated 链路，legacy 模式也没有标签。
+- **R6 · judge 没有启用**：凡是需要语义判断的 generation 情况都会留在 `rule_inconclusive`。这次运行里没有出现这种情况。
+- **R7 · 诊断是离线的，依赖 `traces.sqlite`**：Trace 库在 gitignore 的 artifacts 目录里。已提交的诊断报告里带有 span_id，但重新生成报告需要本地的 Trace 库。
+- **TD5 · 诊断报告 JSON 有 469KB**：每一项检查都带着期望值和实际值。如果以后数据集变大，可以提供一个精简模式。
+
+按要求在这里停止，没有进入 Agent 优化阶段。
