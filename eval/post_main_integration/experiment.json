@@ -1,0 +1,68 @@
+{
+  "series": "pmi",
+  "baseline_kind": "post-main-integration baseline",
+  "question": "Qwen vs DeepSeek on eval-env-v1; the LLM provider/model is the only variable",
+  "env_id": "eval-env-v1",
+  "environment_manifest_sha256": "a6ecd2b4ae9dbede1285ece99da8fd840b300665ef5a882df0c642d30cc0c78f",
+  "runs_per_arm": 3,
+  "git": {
+    "commit": "b8c81971c4bf93abc1c397b1ccbe392d8e7f8e7a",
+    "dirty": false
+  },
+  "verification": "one clean verification for the whole experiment; before each later arm the tree differed only by the earlier arms' output files",
+  "deepseek_thinking": "disabled (pinned by OpenAICompatibleProvider)",
+  "pricing": {
+    "model": "deepseek-flash",
+    "source": "https://api-docs.deepseek.com/quick_start/pricing",
+    "checked": "2026-09-24",
+    "per_million_usd": {
+      "off_peak": {
+        "input_cache_hit": 0.003,
+        "input_cache_miss": 0.15,
+        "output": 0.6
+      },
+      "peak": {
+        "input_cache_hit": 0.006,
+        "input_cache_miss": 0.3,
+        "output": 1.2
+      }
+    },
+    "peak_hours_utc": "01:00-04:00 and 06:00-10:00, Monday-Friday (Chinese public holidays are off-peak; not modelled)"
+  },
+  "arms": [
+    {
+      "arm": "qwen",
+      "label": "pmi_qwen_env_v1",
+      "provider": "ollama",
+      "provider_config": {
+        "provider": "ollama",
+        "base_url": "http://localhost:11434",
+        "model": "qwen3:4b",
+        "timeout": 180.0,
+        "api_key_set": false
+      },
+      "output": "eval/pmi_qwen_env_v1.json",
+      "usage_log": "eval/artifacts/pmi_qwen_env_v1/llm_usage.jsonl",
+      "started_at": "2026-09-24T05:54:48+00:00",
+      "finished_at": "2026-09-24T06:02:21+00:00",
+      "chat_calls_recorded": 133
+    },
+    {
+      "arm": "deepseek",
+      "label": "pmi_deepseek_env_v1",
+      "provider": "deepseek",
+      "provider_config": {
+        "provider": "deepseek",
+        "base_url": "https://api.deepseek.com",
+        "model": "deepseek-flash",
+        "timeout": 180.0,
+        "api_key_set": true
+      },
+      "output": "eval/pmi_deepseek_env_v1.json",
+      "usage_log": "eval/artifacts/pmi_deepseek_env_v1/llm_usage.jsonl",
+      "started_at": "2026-09-24T06:02:22+00:00",
+      "finished_at": "2026-09-24T06:06:36+00:00",
+      "chat_calls_recorded": 133
+    }
+  ]
+}

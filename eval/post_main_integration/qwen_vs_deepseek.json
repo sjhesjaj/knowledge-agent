@@ -1,0 +1,1050 @@
+{
+  "experiment": {
+    "series": "pmi",
+    "baseline_kind": "post-main-integration baseline",
+    "question": "Qwen vs DeepSeek on eval-env-v1; the LLM provider/model is the only variable",
+    "env_id": "eval-env-v1",
+    "environment_manifest_sha256": "a6ecd2b4ae9dbede1285ece99da8fd840b300665ef5a882df0c642d30cc0c78f",
+    "runs_per_arm": 3,
+    "git": {
+      "commit": "b8c81971c4bf93abc1c397b1ccbe392d8e7f8e7a",
+      "dirty": false
+    },
+    "verification": "one clean verification for the whole experiment; before each later arm the tree differed only by the earlier arms' output files",
+    "deepseek_thinking": "disabled (pinned by OpenAICompatibleProvider)",
+    "pricing": {
+      "model": "deepseek-flash",
+      "source": "https://api-docs.deepseek.com/quick_start/pricing",
+      "checked": "2026-09-24",
+      "per_million_usd": {
+        "off_peak": {
+          "input_cache_hit": 0.003,
+          "input_cache_miss": 0.15,
+          "output": 0.6
+        },
+        "peak": {
+          "input_cache_hit": 0.006,
+          "input_cache_miss": 0.3,
+          "output": 1.2
+        }
+      },
+      "peak_hours_utc": "01:00-04:00 and 06:00-10:00, Monday-Friday (Chinese public holidays are off-peak; not modelled)"
+    }
+  },
+  "versus_previous_series": {
+    "qwen": {
+      "old": "stage25_qwen_env_v1",
+      "new": "pmi_qwen_env_v1",
+      "old_commit": "58f2611759133f7be41706b05033382d14276e92",
+      "new_commit": "b8c81971c4bf93abc1c397b1ccbe392d8e7f8e7a",
+      "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model",
+      "counts": {
+        "unchanged": 29,
+        "answer_changed": 11
+      },
+      "cases": [
+        {
+          "id": "answer_document_h003",
+          "category": "document",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_document_h004",
+          "category": "document",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_document_h005",
+          "category": "document",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_document_h007",
+          "category": "document",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_multi_h001",
+          "category": "multi_channel",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_multi_h002",
+          "category": "multi_channel",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_multi_h004",
+          "category": "multi_channel",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_wiki_h001",
+          "category": "wiki",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            2
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_wiki_h002",
+          "category": "wiki",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "refuse_missing_h006",
+          "category": "missing_evidence",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "generation_refuse"
+            ],
+            [
+              "generation_refuse"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "refuse_missing_h007",
+          "category": "missing_evidence",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "generation_refuse"
+            ],
+            [
+              "generation_refuse"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        }
+      ],
+      "passed_per_run": [
+        [
+          39,
+          39,
+          39
+        ],
+        [
+          39,
+          39,
+          39
+        ]
+      ]
+    },
+    "deepseek": {
+      "old": "stage25_deepseek_env_v1",
+      "new": "pmi_deepseek_env_v1",
+      "old_commit": "58f2611759133f7be41706b05033382d14276e92",
+      "new_commit": "b8c81971c4bf93abc1c397b1ccbe392d8e7f8e7a",
+      "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model",
+      "counts": {
+        "unchanged": 26,
+        "answer_changed": 14
+      },
+      "cases": [
+        {
+          "id": "answer_document_h004",
+          "category": "document",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_document_h005",
+          "category": "document",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_document_h006",
+          "category": "document",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_multi_h001",
+          "category": "multi_channel",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            2
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_multi_h002",
+          "category": "multi_channel",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            3
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_multi_h003",
+          "category": "multi_channel",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            2
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "answer_wiki_h003",
+          "category": "wiki",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "answer"
+            ],
+            [
+              "answer"
+            ]
+          ],
+          "distinct_answers": [
+            3,
+            2
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "refuse_missing_h001",
+          "category": "missing_evidence",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "generation_refuse"
+            ],
+            [
+              "generation_refuse"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "refuse_missing_h002",
+          "category": "missing_evidence",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "generation_refuse"
+            ],
+            [
+              "generation_refuse"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "refuse_missing_h003",
+          "category": "missing_evidence",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "generation_refuse"
+            ],
+            [
+              "generation_refuse"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "refuse_missing_h004",
+          "category": "missing_evidence",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "generation_refuse"
+            ],
+            [
+              "generation_refuse"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "refuse_missing_h005",
+          "category": "missing_evidence",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "generation_refuse"
+            ],
+            [
+              "generation_refuse"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "refuse_missing_h006",
+          "category": "missing_evidence",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "generation_refuse"
+            ],
+            [
+              "generation_refuse"
+            ]
+          ],
+          "distinct_answers": [
+            1,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        },
+        {
+          "id": "refuse_missing_h007",
+          "category": "missing_evidence",
+          "change": "answer_changed",
+          "pass": "3/3 -> 3/3",
+          "behaviours": [
+            [
+              "generation_refuse"
+            ],
+            [
+              "generation_refuse"
+            ]
+          ],
+          "distinct_answers": [
+            2,
+            1
+          ],
+          "primary": [
+            null,
+            null
+          ],
+          "attribution": "code_change: 58f2611 -> b8c8197 (main integration); same environment, same model"
+        }
+      ],
+      "passed_per_run": [
+        [
+          39,
+          39,
+          39
+        ],
+        [
+          39,
+          39,
+          39
+        ]
+      ]
+    }
+  },
+  "arms": {
+    "qwen": {
+      "arm": "qwen",
+      "label": "pmi_qwen_env_v1",
+      "provider": {
+        "provider": "ollama",
+        "base_url": "http://localhost:11434",
+        "model": "qwen3:4b",
+        "timeout": 180.0,
+        "api_key_set": false
+      },
+      "per_run": [
+        {
+          "run": 1,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        },
+        {
+          "run": 2,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        },
+        {
+          "run": 3,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        }
+      ],
+      "mean": {
+        "passed": 39.0,
+        "pass_rate": 0.975,
+        "answer_success_rate": 0.9499999999999998,
+        "false_refusal_rate": 0.05000000000000001
+      },
+      "stability": {
+        "stability_rate": 1.0,
+        "stable_pass": 39,
+        "stable_fail": 1,
+        "unstable": 0,
+        "unstable_ids": [],
+        "stable_fail_ids": [
+          "answer_document_h008"
+        ]
+      },
+      "diagnostic_aggregate": {
+        "official_failed": 3,
+        "primary_errors": {
+          "routing_error": 0,
+          "planning_error": 3,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 0,
+          "generation_error": 0
+        },
+        "unattributed": {
+          "missing_trace": 0,
+          "environment_failure": 0,
+          "rule_inconclusive": 0,
+          "label_gap": 0
+        },
+        "secondary_effects": {
+          "routing_error": 0,
+          "planning_error": 0,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 3,
+          "generation_error": 0
+        },
+        "latent_issues": {
+          "routing_error": 0,
+          "planning_error": 0,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 0,
+          "generation_error": 0
+        }
+      },
+      "diagnostic_per_run": {
+        "1": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        },
+        "2": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        },
+        "3": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        }
+      },
+      "latency_s": {
+        "task_mean": 3.6037666666666666,
+        "task_p95": 10.467,
+        "llm_mean_per_task": 3.1275948891653873
+      },
+      "tokens": {
+        "prompt_total": 55219,
+        "completion_total": 3891,
+        "prompt_per_task": 460.15833333333336,
+        "completion_per_task": 32.425,
+        "deepseek_cache_hit_tokens": null,
+        "deepseek_cache_miss_tokens": null
+      },
+      "calls": {
+        "llm_calls_total": 132,
+        "llm_calls_per_task": 1.1,
+        "tool_calls_total": 108,
+        "tool_calls_per_task": 0.9,
+        "usage_records": 132,
+        "warmup_or_untraced_calls": 1
+      },
+      "cost_usd": null,
+      "prompt_adaptations": {
+        "calls_with_effective_prompt_differing": 0,
+        "by_reason": {}
+      }
+    },
+    "deepseek": {
+      "arm": "deepseek",
+      "label": "pmi_deepseek_env_v1",
+      "provider": {
+        "provider": "deepseek",
+        "base_url": "https://api.deepseek.com",
+        "model": "deepseek-flash",
+        "timeout": 180.0,
+        "api_key_set": true
+      },
+      "per_run": [
+        {
+          "run": 1,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        },
+        {
+          "run": 2,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        },
+        {
+          "run": 3,
+          "passed": 39,
+          "pass_rate": 0.975,
+          "answer_success_rate": 0.95,
+          "false_refusal_rate": 0.05
+        }
+      ],
+      "mean": {
+        "passed": 39.0,
+        "pass_rate": 0.975,
+        "answer_success_rate": 0.9499999999999998,
+        "false_refusal_rate": 0.05000000000000001
+      },
+      "stability": {
+        "stability_rate": 1.0,
+        "stable_pass": 39,
+        "stable_fail": 1,
+        "unstable": 0,
+        "unstable_ids": [],
+        "stable_fail_ids": [
+          "answer_document_h008"
+        ]
+      },
+      "diagnostic_aggregate": {
+        "official_failed": 3,
+        "primary_errors": {
+          "routing_error": 0,
+          "planning_error": 3,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 0,
+          "generation_error": 0
+        },
+        "unattributed": {
+          "missing_trace": 0,
+          "environment_failure": 0,
+          "rule_inconclusive": 0,
+          "label_gap": 0
+        },
+        "secondary_effects": {
+          "routing_error": 0,
+          "planning_error": 0,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 3,
+          "generation_error": 0
+        },
+        "latent_issues": {
+          "routing_error": 0,
+          "planning_error": 0,
+          "tool_error": 0,
+          "retrieval_error": 0,
+          "evidence_error": 0,
+          "generation_error": 0
+        }
+      },
+      "diagnostic_per_run": {
+        "1": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        },
+        "2": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        },
+        "3": {
+          "primary": {
+            "planning_error": 1
+          },
+          "secondary": {
+            "evidence_error": 1
+          },
+          "latent": {},
+          "unattributed": {}
+        }
+      },
+      "latency_s": {
+        "task_mean": 1.9567916666666667,
+        "task_p95": 5.887,
+        "llm_mean_per_task": 1.4606589541658954
+      },
+      "tokens": {
+        "prompt_total": 58837,
+        "completion_total": 3101,
+        "prompt_per_task": 490.30833333333334,
+        "completion_per_task": 25.841666666666665,
+        "deepseek_cache_hit_tokens": 29169,
+        "deepseek_cache_miss_tokens": 29668
+      },
+      "calls": {
+        "llm_calls_total": 132,
+        "llm_calls_per_task": 1.1,
+        "tool_calls_total": 108,
+        "tool_calls_per_task": 0.9,
+        "usage_records": 132,
+        "warmup_or_untraced_calls": 1
+      },
+      "cost_usd": {
+        "total": 0.012796614,
+        "per_task": 0.00010663845,
+        "per_successful_task": 0.00010937276923076923,
+        "task_runs": 120,
+        "successful_task_runs": 117,
+        "calls_priced": 132,
+        "calls_at_peak": 132,
+        "basis": "list price x recorded usage (cache hit/miss split, peak by call time); not reconciled with the invoice"
+      },
+      "prompt_adaptations": {
+        "calls_with_effective_prompt_differing": 105,
+        "by_reason": {
+          "schema_not_supported_by_json_object": 105
+        }
+      }
+    }
+  },
+  "transitions": {
+    "definitions": {
+      "stable_pass": "3/3 in both",
+      "fixed": "0/3 qwen -> 3/3 deepseek",
+      "newly_failed": "3/3 qwen -> 0/3 deepseek",
+      "unchanged_failure": "0/3 in both",
+      "unstable": "any other combination (partial pass on either side)"
+    },
+    "counts": {
+      "stable_pass": 39,
+      "unchanged_failure": 1,
+      "fixed": 0,
+      "newly_failed": 0,
+      "unstable": 0
+    },
+    "cases": [
+      {
+        "id": "answer_document_h008",
+        "category": "document",
+        "transition": "unchanged_failure",
+        "qwen_pass": "0/3",
+        "deepseek_pass": "0/3",
+        "qwen_behaviours": [
+          "policy_refuse"
+        ],
+        "deepseek_behaviours": [
+          "policy_refuse"
+        ]
+      }
+    ]
+  },
+  "h008": {
+    "qwen": {
+      "trace_run_id": "727e20f6c30442dc889420885e53159a",
+      "passes": "0/3",
+      "answer": "根据现有资料无法确定。",
+      "signals": {
+        "is_direct": false,
+        "needs_wiki": false,
+        "needs_document": true,
+        "needs_system": false,
+        "requires_freshness": true,
+        "requires_exact_citation": false
+      },
+      "route": "document_only",
+      "evidence_outcome": "refuse",
+      "evidence_reasons": [
+        "freshness_unsupported"
+      ],
+      "retrieved": [
+        "chunk:1",
+        "chunk:17",
+        "chunk:4",
+        "chunk:7"
+      ],
+      "llm_calls": 0,
+      "provider": "ollama",
+      "model": "qwen3:4b",
+      "tree": "run 727e20f6c30442dc889420885e53159a  completed\n  eval eval:eval-env-v1 mode=orchestrated streaming=False  2026-09-24T05:55:16.906+00:00  28.7ms\n  commit=b8c81971c4bf  provider=ollama/qwen3:4b  llm_calls=0 tokens=0+0\n  question: 目前的制度里，核心协作时间是几点到几点？\n  eval: eval_answerability_validation_v1.json case=answer_document_h008 run=1\n    · [planner] plan_request ok 0.1ms\n    · [planner] availability_check ok 0.0ms\n    · [tool_call] execute_plan ok 4.0ms\n      · [tool_call] document_search ok 4.0ms\n    · [evidence] evaluate_evidence ok 0.0ms"
+    },
+    "deepseek": {
+      "trace_run_id": "3f622f304d84434896c5b0e935f1dcac",
+      "passes": "0/3",
+      "answer": "根据现有资料无法确定。",
+      "signals": {
+        "is_direct": false,
+        "needs_wiki": false,
+        "needs_document": true,
+        "needs_system": false,
+        "requires_freshness": true,
+        "requires_exact_citation": false
+      },
+      "route": "document_only",
+      "evidence_outcome": "refuse",
+      "evidence_reasons": [
+        "freshness_unsupported"
+      ],
+      "retrieved": [
+        "chunk:1",
+        "chunk:17",
+        "chunk:4",
+        "chunk:7"
+      ],
+      "llm_calls": 0,
+      "provider": "deepseek",
+      "model": "deepseek-flash",
+      "tree": "run 3f622f304d84434896c5b0e935f1dcac  completed\n  eval eval:eval-env-v1 mode=orchestrated streaming=False  2026-09-24T06:02:41.705+00:00  24.6ms\n  commit=b8c81971c4bf  provider=deepseek/deepseek-flash  llm_calls=0 tokens=0+0\n  question: 目前的制度里，核心协作时间是几点到几点？\n  eval: eval_answerability_validation_v1.json case=answer_document_h008 run=1\n    · [planner] plan_request ok 0.2ms\n    · [planner] availability_check ok 0.0ms\n    · [tool_call] execute_plan ok 8.1ms\n      · [tool_call] document_search ok 7.9ms\n    · [evidence] evaluate_evidence ok 0.1ms"
+    }
+  },
+  "notes": {
+    "tokens": "Token counts come from each provider's own tokenizer and are descriptive only; they are not comparable as context size and say nothing about context optimisation.",
+    "prompts": "DeepSeek's effective prompts are not byte-identical to Qwen's: schema requests are sent as json_object with an appended JSON Schema instruction (see prompt_adaptations). Logical prompts are identical by construction.",
+    "cost": "Qwen runs locally; its API cost is 0 and hardware is not costed."
+  }
+}
