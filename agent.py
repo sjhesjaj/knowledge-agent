@@ -6,9 +6,8 @@ import re
 from time import perf_counter
 from pathlib import Path
 
-import requests
-
-from rag import CHAT_MODEL, OLLAMA_URL, Chunk
+import llm_provider
+from rag import CHAT_MODEL, Chunk
 
 
 TOOLS = [
@@ -80,25 +79,18 @@ def decide_action(question: str, history: list[dict]) -> dict:
         *history[-4:],
         {"role": "user", "content": question},
     ]
-    response = requests.post(
-        f"{OLLAMA_URL}/api/chat",
-        json={"model": CHAT_MODEL, "messages": messages, "tools": TOOLS, "stream": False, "think": False},
-        timeout=180,
-    )
-    response.raise_for_status()
-    message = response.json()["message"]
-    calls = message.get("tool_calls") or []
-    if calls:
-        function = calls[0].get("function", {})
+    response = llm_provider.get_provider().chat(messages, tools=TOOLS)
+    if response.tool_calls:
+        call = response.tool_calls[0]
         return {
             "type": "tool",
-            "tool": function.get("name", "search_knowledge_base"),
-            "arguments": function.get("arguments") or {},
+            "tool": call.name if call.name is not None else "search_knowledge_base",
+            "arguments": call.arguments or {},
             "seconds": perf_counter() - started,
         }
     return {
         "type": "direct",
-        "content": clean_content(message.get("content", "")) or "你好！有什么可以帮你？",
+        "content": clean_content(response.content) or "你好！有什么可以帮你？",
         "seconds": perf_counter() - started,
     }
 
@@ -139,27 +131,19 @@ def summarize_knowledge_base(chunks: list[Chunk]) -> str:
             "summary": {"type": "array", "minItems": 5, "maxItems": 8, "items": {"type": "string"}}
         },
     }
-    response = requests.post(
-        f"{OLLAMA_URL}/api/chat",
-        json={
-            "model": CHAT_MODEL,
-            "messages": [
-                {"role": "system", "content": "请只依据章节摘要，合并相近主题，用5至8条简短要点概括员工手册。"},
-                {"role": "user", "content": context},
-            ],
-            "stream": False,
-            "think": False,
-            "format": schema,
-            "options": {"temperature": 0},
-        },
-        timeout=180,
-    )
-    response.raise_for_status()
+    content = llm_provider.get_provider().chat(
+        [
+            {"role": "system", "content": "请只依据章节摘要，合并相近主题，用5至8条简短要点概括员工手册。"},
+            {"role": "user", "content": context},
+        ],
+        response_format=schema,
+        temperature=0,
+    ).content
     try:
-        items = json.loads(response.json()["message"]["content"])["summary"]
+        items = json.loads(content)["summary"]
         result = "\n".join(f"{index}. {item}" for index, item in enumerate(items, start=1))
     except (json.JSONDecodeError, KeyError, TypeError):
-        result = clean_content(response.json()["message"]["content"])
+        result = clean_content(content)
     cache_file.parent.mkdir(parents=True, exist_ok=True)
     cache[cache_key] = result
     cache_file.write_text(json.dumps(cache, ensure_ascii=False), encoding="utf-8")

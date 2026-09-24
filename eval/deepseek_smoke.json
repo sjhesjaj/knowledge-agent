@@ -1,0 +1,133 @@
+{
+  "question": "员工年假有多少天？",
+  "provider_config": {
+    "provider": "deepseek",
+    "base_url": "https://api.deepseek.com",
+    "model": "deepseek-flash",
+    "timeout": 180.0,
+    "api_key_set": true
+  },
+  "rag_chat_model": "deepseek-flash",
+  "route": "document_only",
+  "outcome": "ready",
+  "needs_generation": true,
+  "sources": [
+    {
+      "rank": 1,
+      "type": "document",
+      "source": "sample_company_rules.md",
+      "heading": "请假制度",
+      "chunk_index": 3,
+      "locator": "chunk:3",
+      "score": 1.0,
+      "content": "# 星河科技员工手册（演示资料）\n## 请假制度\n正式员工入职满一年后，每年享有 5 天带薪年假；工作满三年后增加至 8 天。实习生不享有带薪年假，但每月可申请 1 天事假。请假应提前在系统提交申请，1 天以内由直属主管审批，超过 1 天还需部门负责人审批。"
+    },
+    {
+      "rank": 2,
+      "type": "document",
+      "source": "sample_company_rules.md",
+      "heading": "薪资发放",
+      "chunk_index": 6,
+      "locator": "chunk:6",
+      "score": 0.5,
+      "content": "# 星河科技员工手册（演示资料）\n## 薪资发放\n公司于每月 10 日发放上一个自然月的工资；遇法定节假日则提前至最近的工作日。工资条通过人力资源系统发送，员工如有疑问应在 5 个工作日内反馈。"
+    },
+    {
+      "rank": 3,
+      "type": "document",
+      "source": "sample_company_rules.md",
+      "heading": "远程办公",
+      "chunk_index": 5,
+      "locator": "chunk:5",
+      "score": 0.3333333333333333,
+      "content": "# 星河科技员工手册（演示资料）\n## 远程办公\n员工每周最多申请 2 天远程办公，须至少提前一个工作日获得直属主管批准。涉及客户现场支持、机房值守的岗位不适用远程办公政策。"
+    },
+    {
+      "rank": 4,
+      "type": "document",
+      "source": "sample_company_rules.md",
+      "heading": "账号与权限",
+      "chunk_index": 13,
+      "locator": "chunk:13",
+      "score": 0.25,
+      "content": "# 星河科技员工手册（演示资料）\n## 账号与权限\n系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。"
+    }
+  ],
+  "answer": "正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天[来源1]；实习生不享有带薪年假[来源1]。",
+  "total_seconds": 1.5312799999956042,
+  "llm_calls": [
+    {
+      "logical_messages": [
+        {
+          "role": "system",
+          "content": "你是严谨的企业知识库助手。请直接阅读用户消息中“资料”部分并回答“问题”。只能使用资料里的事实，不得使用外部知识。若资料明确包含答案，必须作答；只有资料确实没有相关信息时才说“根据现有资料无法确定”。最终答案控制在3句话以内，不要展示分析过程、推理步骤或自我检查。在每个关键结论后使用[来源1]这样的编号标注依据。 /no_think"
+        },
+        {
+          "role": "user",
+          "content": "以下是检索到的资料：\n\n[来源 1：sample_company_rules.md，片段 1]\n# 星河科技员工手册（演示资料）\n## 请假制度\n正式员工入职满一年后，每年享有 5 天带薪年假；工作满三年后增加至 8 天。实习生不享有带薪年假，但每月可申请 1 天事假。请假应提前在系统提交申请，1 天以内由直属主管审批，超过 1 天还需部门负责人审批。\n\n[来源 2：sample_company_rules.md，片段 2]\n# 星河科技员工手册（演示资料）\n## 薪资发放\n公司于每月 10 日发放上一个自然月的工资；遇法定节假日则提前至最近的工作日。工资条通过人力资源系统发送，员工如有疑问应在 5 个工作日内反馈。\n\n[来源 3：sample_company_rules.md，片段 3]\n# 星河科技员工手册（演示资料）\n## 远程办公\n员工每周最多申请 2 天远程办公，须至少提前一个工作日获得直属主管批准。涉及客户现场支持、机房值守的岗位不适用远程办公政策。\n\n[来源 4：sample_company_rules.md，片段 4]\n# 星河科技员工手册（演示资料）\n## 账号与权限\n系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。\n\n请回答问题：员工年假有多少天？\n/no_think"
+        }
+      ],
+      "options": {
+        "response_format": {
+          "type": "object",
+          "required": [
+            "answer"
+          ],
+          "properties": {
+            "answer": {
+              "type": "string"
+            }
+          }
+        },
+        "temperature": 0
+      },
+      "response": {
+        "content": "{\"answer\":\"正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天[来源1]；实习生不享有带薪年假[来源1]。\"}",
+        "prompt_tokens": 504,
+        "completion_tokens": 44,
+        "latency_seconds": 1.1061942999949679,
+        "provider": "deepseek",
+        "model": "deepseek-flash",
+        "reasoning": null,
+        "tool_calls": [],
+        "finish_reason": "stop",
+        "prompt_adaptations": [
+          {
+            "kind": "json_format_instruction",
+            "reason": "schema_not_supported_by_json_object",
+            "position": "appended_to_messages[0]",
+            "text": "请只输出一个合法的 JSON 对象，不要输出 JSON 以外的任何内容。该 JSON 必须符合以下 JSON Schema：{\"type\":\"object\",\"required\":[\"answer\"],\"properties\":{\"answer\":{\"type\":\"string\"}}}"
+          }
+        ]
+      },
+      "effective_messages": [
+        {
+          "role": "system",
+          "content": "你是严谨的企业知识库助手。请直接阅读用户消息中“资料”部分并回答“问题”。只能使用资料里的事实，不得使用外部知识。若资料明确包含答案，必须作答；只有资料确实没有相关信息时才说“根据现有资料无法确定”。最终答案控制在3句话以内，不要展示分析过程、推理步骤或自我检查。在每个关键结论后使用[来源1]这样的编号标注依据。 /no_think\n\n请只输出一个合法的 JSON 对象，不要输出 JSON 以外的任何内容。该 JSON 必须符合以下 JSON Schema：{\"type\":\"object\",\"required\":[\"answer\"],\"properties\":{\"answer\":{\"type\":\"string\"}}}"
+        },
+        {
+          "role": "user",
+          "content": "以下是检索到的资料：\n\n[来源 1：sample_company_rules.md，片段 1]\n# 星河科技员工手册（演示资料）\n## 请假制度\n正式员工入职满一年后，每年享有 5 天带薪年假；工作满三年后增加至 8 天。实习生不享有带薪年假，但每月可申请 1 天事假。请假应提前在系统提交申请，1 天以内由直属主管审批，超过 1 天还需部门负责人审批。\n\n[来源 2：sample_company_rules.md，片段 2]\n# 星河科技员工手册（演示资料）\n## 薪资发放\n公司于每月 10 日发放上一个自然月的工资；遇法定节假日则提前至最近的工作日。工资条通过人力资源系统发送，员工如有疑问应在 5 个工作日内反馈。\n\n[来源 3：sample_company_rules.md，片段 3]\n# 星河科技员工手册（演示资料）\n## 远程办公\n员工每周最多申请 2 天远程办公，须至少提前一个工作日获得直属主管批准。涉及客户现场支持、机房值守的岗位不适用远程办公政策。\n\n[来源 4：sample_company_rules.md，片段 4]\n# 星河科技员工手册（演示资料）\n## 账号与权限\n系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。\n\n请回答问题：员工年假有多少天？\n/no_think"
+        }
+      ],
+      "effective_request": {
+        "model": "deepseek-flash",
+        "stream": false,
+        "thinking": {
+          "type": "disabled"
+        },
+        "response_format": {
+          "type": "json_object"
+        },
+        "temperature": 0
+      },
+      "effective_differs_from_logical": true
+    }
+  ],
+  "totals": {
+    "llm_calls": 1,
+    "prompt_tokens": 504,
+    "completion_tokens": 44,
+    "llm_latency_seconds": 1.1061942999949679
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "dataset": "eval_answerability_validation_v1.json",
+  "dataset_sha256": "e4ad670c6dd6512c8ffcf647b967861d9d1bbef44dbc7872d3cfbf96915c6ced",
+  "wiki_corpus": "committed_sample",
+  "authoring": "Hand-written from each case's notes and the three corpora (sample_company_rules.md headings, wiki_pages/sample_company_wiki.json titles, system_fixtures inventory rows). Never derived from traces or agent output. Fields a case's notes do not clearly support are left unlabelled on purpose; the diagnostic reports that as a label gap instead of guessing.",
+  "cases": {
+    "answer_document_h001": {"expected_evidence": [{"source_type": "document", "heading": "请假制度"}], "rationale": "notes: 依据「请假制度」"},
+    "answer_document_h002": {"expected_evidence": [{"source_type": "document", "heading": "绩效考核"}], "rationale": "notes: 依据「绩效考核」"},
+    "answer_document_h003": {"expected_evidence": [{"source_type": "document", "heading": "薪资发放"}], "rationale": "notes: 依据「薪资发放」"},
+    "answer_document_h004": {"expected_evidence": [{"source_type": "document", "heading": "转正流程"}], "rationale": "notes: 依据「转正流程」"},
+    "answer_document_h005": {"expected_evidence": [{"source_type": "document", "heading": "加班与调休"}], "rationale": "notes: 依据「加班与调休」"},
+    "answer_document_h006": {"expected_evidence": [{"source_type": "document", "heading": "绩效考核"}], "rationale": "notes: 依据「绩效考核」"},
+    "answer_document_h007": {"expected_evidence": [{"source_type": "document", "heading": "员工建议与申诉"}], "rationale": "notes: 依据「员工建议与申诉」"},
+    "answer_document_h008": {
+      "expected_evidence": [{"source_type": "document", "heading": "工作时间"}],
+      "plan_constraints": {"requires_freshness": false},
+      "rationale": "notes: 依据「工作时间」; the case exists to check that a time word (「目前的制度」) does not turn an answerable policy question into a freshness requirement - the current rulebook is the policy, not live operational state"
+    },
+    "answer_wiki_h001": {"expected_evidence": [{"source_type": "wiki", "page_title": "远程办公"}], "rationale": "notes: wiki 页面「远程办公」"},
+    "answer_wiki_h002": {"expected_evidence": [{"source_type": "wiki", "page_title": "信息安全"}], "rationale": "notes: wiki 页面「信息安全」"},
+    "answer_wiki_h003": {"expected_evidence": [{"source_type": "wiki", "page_title": "请假与年假"}], "rationale": "notes: wiki 页面「请假与年假」"},
+    "answer_wiki_h004": {"expected_evidence": [{"source_type": "wiki", "page_title": "账号与权限"}], "rationale": "notes: wiki 页面「账号与权限」"},
+    "answer_inventory_h001": {"expected_arguments": {"system_query": {"sku": "sku-a100"}}, "expected_evidence": [{"source_type": "system", "sku": "sku-a100"}], "rationale": "question names SKU-A100; fixture row sku-a100"},
+    "answer_inventory_h002": {"expected_arguments": {"system_query": {"sku": "sku-c300"}}, "expected_evidence": [{"source_type": "system", "sku": "sku-c300"}], "rationale": "question names SKU-C300; fixture row sku-c300"},
+    "answer_inventory_h003": {"expected_arguments": {"system_query": {"sku": "sku-b200"}}, "expected_evidence": [{"source_type": "system", "sku": "sku-b200"}], "rationale": "question names SKU-B200; fixture row sku-b200 (quantity 0 is still a row)"},
+    "answer_inventory_h004": {"expected_arguments": {"system_query": {"sku": "sku-c300"}}, "expected_evidence": [{"source_type": "system", "sku": "sku-c300"}], "rationale": "question names SKU-C300; fixture row sku-c300"},
+    "answer_multi_h001": {"expected_arguments": {"system_query": {"sku": "sku-b200"}}, "expected_evidence": [{"source_type": "system", "sku": "sku-b200"}], "rationale": "question names SKU-B200; notes do not name which document clause, so no document evidence label"},
+    "answer_multi_h002": {"expected_arguments": {"system_query": {"sku": "sku-c300"}}, "expected_evidence": [{"source_type": "system", "sku": "sku-c300"}], "rationale": "question names SKU-C300; notes do not name the document clause"},
+    "answer_multi_h003": {"expected_evidence": [{"source_type": "wiki", "page_title": "信息安全"}, {"source_type": "document", "heading": "信息安全"}], "rationale": "notes: Wiki 概览 + 原文条款 about 信息安全; the rulebook section of that name"},
+    "answer_multi_h004": {"expected_evidence": [{"source_type": "wiki", "page_title": "账号与权限"}, {"source_type": "document", "heading": "账号与权限"}], "rationale": "notes: Wiki 概览 + 原文数值 (90 天复核) - both live under 账号与权限"},
+    "refuse_policy_h001": {"expected_arguments": {"system_query": {"sku": "sku-y321"}}, "expected_tool_status": {"system_query": "empty"}, "rationale": "notes: SKU 合法但 fixture 中不存在"},
+    "refuse_policy_h002": {"expected_arguments": {"system_query": {"sku": "sku-k808"}}, "expected_tool_status": {"system_query": "empty"}, "rationale": "notes: 不存在的 SKU"},
+    "refuse_policy_h003": {"expected_arguments": {"system_query": {"sku": "sku-d009"}}, "expected_tool_status": {"system_query": "empty"}, "rationale": "notes: 不存在的 SKU"},
+    "refuse_policy_h004": {"expected_arguments": {"system_query": {"sku": "sku-p111"}}, "expected_tool_status": {"system_query": "empty"}, "rationale": "notes: 不存在的 SKU"}
+  }
+}

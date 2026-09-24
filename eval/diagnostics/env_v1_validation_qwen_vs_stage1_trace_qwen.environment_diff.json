@@ -1,0 +1,791 @@
+{
+  "old": "eval/stage1_trace_qwen.json",
+  "new": "eval/env_v1_validation_qwen.json",
+  "attribution_rule": "Every difference is attributed to the environment change; this is not a regression or improvement judgement of the agent.",
+  "environments": {
+    "old": {
+      "wiki": "unpinned (live data/wiki published_build:build-0001)",
+      "git_commit": "5baf106ace40aebfb0503c8cc3e38b28b05d469e"
+    },
+    "new": {
+      "wiki": "committed_sample",
+      "env_id": "eval-env-v1",
+      "git_commit": "38afa41a3b5318a8e51b47e92055ec5460f373cb"
+    }
+  },
+  "passed_per_run": {
+    "old": [
+      39,
+      39,
+      39
+    ],
+    "new": [
+      39,
+      39,
+      39
+    ]
+  },
+  "change_counts": {
+    "answer_changed": 11,
+    "unchanged": 29
+  },
+  "cases": [
+    {
+      "id": "answer_document_h001",
+      "category": "document",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "根据资料，请假超过一天需要部门负责人审批。[来源 1]",
+          "请假超过一天需要部门负责人审批。[来源 1]"
+        ],
+        "new": [
+          "根据资料[来源 1]，请假超过一天需要部门负责人审批。"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 2,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "answer_document_h002",
+      "category": "document",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_document_h003",
+      "category": "document",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_document_h004",
+      "category": "document",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_document_h005",
+      "category": "document",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "调休应在3个月内使用[来源1]"
+        ],
+        "new": [
+          "调休应在3个月内使用[来源1]",
+          "调休应在3个月内使用。[来源1]"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 2
+      },
+      "wiki_evidence_used": false,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "answer_document_h006",
+      "category": "document",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_document_h007",
+      "category": "document",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "员工申诉应在结果公布后5个工作日内提交。[来源1]"
+        ],
+        "new": [
+          "员工申诉应在结果公布后 5 个工作日内提交。[来源 1]"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "answer_document_h008",
+      "category": "document",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 0,
+        "new": 0
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_inventory_h001",
+      "category": "system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_inventory_h002",
+      "category": "system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_inventory_h003",
+      "category": "system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_inventory_h004",
+      "category": "system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_multi_h001",
+      "category": "multi_channel",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "answer_multi_h002",
+      "category": "multi_channel",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "SKU sku-c300 的当前库存为 7 箱。[来源 5：demo-business-system，片段 5]"
+        ],
+        "new": [
+          "SKU sku-c300 的当前库存为 7 箱。[来源 5：demo-business-system，片段 5]",
+          "根据资料，SKU-C300 当前库存为 7 箱。[来源 5：demo-business-system，片段 5]"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 2
+      },
+      "wiki_evidence_used": false,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "answer_multi_h003",
+      "category": "multi_channel",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "根据资料，星河科技员工手册中信息安全条款规定：内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务。敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具。[来源1][来源4]"
+        ],
+        "new": [
+          "根据资料，星河科技员工手册中信息安全相关条款包括：内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务[来源4]，敏感文件对外发送前须获得部门负责人批准，并使用公司指定的加密工具[来源4]，发现账号异常应立即联系信息安全团队[来源5]。"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": true,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "answer_multi_h004",
+      "category": "multi_channel",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。[来源1]（或[来源4]）"
+        ],
+        "new": [
+          "根据资料，系统账号仅限本人使用，不得共享密码或验证码。高权限账号每 90 天复核一次。[来源 4]",
+          "根据资料，系统账号仅限本人使用，不得共享密码或验证码。高权限账号每90天复核一次。[来源4]"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 2
+      },
+      "wiki_evidence_used": true,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "answer_wiki_h001",
+      "category": "wiki",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "员工每周最多申请2天远程办公，须至少提前一个工作日获得直属主管批准。涉及客户现场支持、机房值守的岗位不适用远程办公政策。[来源1]"
+        ],
+        "new": [
+          "根据资料，远程办公政策包括：1) 涉及客户现场支持、机房值守的岗位不适用远程办公；2) 远程办公须提前一个工作日获得直属主管批准；3) 员工每周最多申请2天远程办公。[来源1][来源2][来源3]",
+          "远程办公政策规定：涉及客户现场支持、机房值守的岗位不适用远程办公；员工需提前一个工作日获得直属主管批准；每周最多可申请2天远程办公。[来源1][来源2][来源3]"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 2
+      },
+      "wiki_evidence_used": true,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "answer_wiki_h002",
+      "category": "wiki",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "根据资料，信息安全要求包括：内部资料不得上传至未经公司批准的公共网盘或外部AI服务，敏感文件对外发送前需获得部门负责人批准并使用公司指定加密工具；系统账号仅限本人使用，不得共享密码，高权限账号每90天复核一次；设备故障应联系IT服务台，遗失设备需在2小时内报告直属主管和信息技术部门。[来源1][来源2][来源3]"
+        ],
+        "new": [
+          "根据资料，信息安全涉及敏感文件对外发送前需获得部门负责人批准并使用公司指定加密工具，内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务，发现账号异常应立即联系信息安全团队。[来源1][来源2][来源3]",
+          "根据资料，信息安全涉及敏感文件对外发送前需部门负责人批准并使用公司指定加密工具，内部资料不得上传至未经公司批准的公共网盘或外部人工智能服务，发现账号异常应立即联系信息安全团队。[来源1][来源2][来源3]"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 2
+      },
+      "wiki_evidence_used": true,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "answer_wiki_h003",
+      "category": "wiki",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "正式员工入职满一年后，每年享有5天带薪年假；工作满三年后增加至8天。实习生不享有带薪年假，但每月可申请1天事假。请假应提前在系统提交申请，1天以内由直属主管审批，超过1天还需部门负责人审批。[来源1]"
+        ],
+        "new": [
+          "正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天；实习生不享有带薪年假，但每月可申请1天事假。[来源1][来源2]。请假需提前在系统提交申请，1天以内由直属主管审批，超过1天需部门负责人审批。[来源3]"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": true,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "answer_wiki_h004",
+      "category": "wiki",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "系统账号仅限本人使用，不得共享密码或验证码。岗位调整时，直属主管应发起权限变更；高权限账号每 90 天复核一次。发现账号异常应立即联系信息安全团队。[来源 1]"
+        ],
+        "new": [
+          "系统账号仅限本人使用，不得共享密码或验证码。[来源 1]"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": true,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "boundary_approval_h001",
+      "category": "unsupported_system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "boundary_approval_h002",
+      "category": "unsupported_system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "boundary_balance_h001",
+      "category": "unsupported_system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "boundary_balance_h002",
+      "category": "unsupported_system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "boundary_missing_sku_h001",
+      "category": "missing_sku",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "boundary_missing_sku_h002",
+      "category": "missing_sku",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "boundary_order_h001",
+      "category": "unsupported_system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "boundary_order_h002",
+      "category": "unsupported_system",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_missing_h001",
+      "category": "missing_evidence",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_missing_h002",
+      "category": "missing_evidence",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_missing_h003",
+      "category": "missing_evidence",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_missing_h004",
+      "category": "missing_evidence",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_missing_h005",
+      "category": "missing_evidence",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_missing_h006",
+      "category": "missing_evidence",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_missing_h007",
+      "category": "missing_evidence",
+      "change": "answer_changed",
+      "changed_fields": [
+        "answers"
+      ],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "answers": {
+        "old": [
+          "根据现有资料无法确定。"
+        ],
+        "new": [
+          "根据现有资料无法确定",
+          "根据现有资料无法确定。"
+        ]
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 2
+      },
+      "wiki_evidence_used": false,
+      "attribution": "environment_change"
+    },
+    {
+      "id": "refuse_missing_h008",
+      "category": "missing_evidence",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_policy_h001",
+      "category": "unknown_sku",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_policy_h002",
+      "category": "unknown_sku",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_policy_h003",
+      "category": "unknown_sku",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    },
+    {
+      "id": "refuse_policy_h004",
+      "category": "unknown_sku",
+      "change": "unchanged",
+      "changed_fields": [],
+      "pass_count": {
+        "old": 3,
+        "new": 3
+      },
+      "distinct_answers_within_runs": {
+        "old": 1,
+        "new": 1
+      },
+      "wiki_evidence_used": false,
+      "attribution": null
+    }
+  ]
+}

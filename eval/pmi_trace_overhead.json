@@ -1,0 +1,80 @@
+{
+  "method": "TestClient, real request path, retrieval + model mocked; arms alternate per request",
+  "git": {
+    "commit": "551bab26c81aca7ee2153f5bde412ad95827ea6c",
+    "dirty": false
+  },
+  "n_per_arm": 200,
+  "warmup_pairs": 20,
+  "python": "3.12.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "scenarios": {
+    "orchestrated_chat": {
+      "trace_on": {
+        "n": 200,
+        "mean_ms": 47.40273850169615,
+        "stdev_ms": 14.384706635578938,
+        "p50_ms": 42.4007999827154,
+        "p95_ms": 66.7937999824062,
+        "p99_ms": 116.31569999735802,
+        "max_ms": 125.3920000162907
+      },
+      "trace_off": {
+        "n": 200,
+        "mean_ms": 26.53696100023808,
+        "stdev_ms": 9.084132669232567,
+        "p50_ms": 23.28649998526089,
+        "p95_ms": 47.29029998998158,
+        "p99_ms": 55.00039999606088,
+        "max_ms": 75.59379999293014
+      },
+      "mean_delta_ms": 20.86577750145807,
+      "mean_delta_95ci_ms": [
+        18.507899736218025,
+        23.223655266698113
+      ],
+      "p50_delta_ms": 19.11429999745451,
+      "p95_delta_ms": 19.503499992424622,
+      "mean_delta_pct": 78.62911469505069
+    },
+    "orchestrated_stream": {
+      "trace_on": {
+        "n": 200,
+        "mean_ms": 54.29329750055331,
+        "stdev_ms": 11.774226672155995,
+        "p50_ms": 50.2691000001505,
+        "p95_ms": 75.52270000451244,
+        "p99_ms": 90.95030001481064,
+        "max_ms": 93.96849997574463
+      },
+      "trace_off": {
+        "n": 200,
+        "mean_ms": 30.446465501008788,
+        "stdev_ms": 7.763863675583247,
+        "p50_ms": 28.25880001182668,
+        "p95_ms": 46.41840001568198,
+        "p99_ms": 54.54340000869706,
+        "max_ms": 59.521100018173456
+      },
+      "mean_delta_ms": 23.84683199954452,
+      "mean_delta_95ci_ms": [
+        21.892180331438425,
+        25.801483667650615
+      ],
+      "p50_delta_ms": 22.010299988323823,
+      "p95_delta_ms": 29.104299988830462,
+      "mean_delta_pct": 78.3238106858558
+    }
+  },
+  "internal_trace_overhead_ms": {
+    "p50": 9.44670001626946,
+    "p95": 21.541799971600994,
+    "max": 149.60519995656796,
+    "note": "self-timed by the recorder; diagnostic only"
+  },
+  "spans_per_run": {
+    "min": 8,
+    "max": 8
+  },
+  "app_db_bytes_after_benchmark": 4231168
+}

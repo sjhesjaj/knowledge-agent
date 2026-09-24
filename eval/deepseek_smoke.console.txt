@@ -1,0 +1,11 @@
+Building prefix dict from the default dictionary ...
+Loading model from cache C:\Users\h000_\AppData\Local\Temp\jieba.cache
+Loading model cost 0.417 seconds.
+Prefix dict has been built successfully.
+Question : 员工年假有多少天？
+Provider : deepseek / deepseek-flash @ https://api.deepseek.com
+Route    : document_only (ready)
+LLM call 1: format=True prompt_tokens=504 completion_tokens=44 latency=1.11s finish=stop adaptations=['schema_not_supported_by_json_object']
+  content: {"answer":"正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天[来源1]；实习生不享有带薪年假[来源1]。"}
+Answer   : 正式员工入职满一年后每年享有5天带薪年假，工作满三年后增加至8天[来源1]；实习生不享有带薪年假[来源1]。
+Wrote C:\Users\h000_\Documents\ChatGPT\agent项目改进\knowledge-agent\eval\deepseek_smoke.json

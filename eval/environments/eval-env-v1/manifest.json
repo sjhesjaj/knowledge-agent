@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "env_id": "eval-env-v1",
+  "description": "validation_v1 as originally designed: the committed 4-page sample wiki (not the locally compiled data/wiki build), the sample rulebook and the sample business fixture.",
+  "created_at": "2026-09-24T04:45:10+00:00",
+  "created_from": {
+    "commit": "9ba92c709ce5b5c60aea02f243140090ba8e91a8",
+    "describe": "stage0-baseline-11-g9ba92c7",
+    "branch": "stage0-llm-provider",
+    "dirty": false
+  },
+  "dataset": {
+    "path": "eval_answerability_validation_v1.json",
+    "sha256": "e4ad670c6dd6512c8ffcf647b967861d9d1bbef44dbc7872d3cfbf96915c6ced"
+  },
+  "diagnostic_labels": {
+    "path": "labels/validation_v1.labels.json",
+    "sha256": "6cacbcb98b3d708f3ec0d2188e788de826e95fdf4b995d6e65bfb913f1acc44e",
+    "bytes": 5525,
+    "copied_from": "eval/diagnostic_labels/validation_v1.labels.json"
+  },
+  "corpus": {
+    "documents": [
+      {
+        "path": "corpus/documents/sample_company_rules.md",
+        "sha256": "c30634966afdaa5803ce9d4db71d3a3e32d8ede1f2ab59fe15f0645ca4d11704",
+        "bytes": 4739,
+        "copied_from": "sample_company_rules.md",
+        "source_name": "sample_company_rules.md"
+      }
+    ],
+    "wiki": {
+      "kind": "pages_file",
+      "corpus_id": "committed_sample",
+      "path": "corpus/wiki/sample_company_wiki.json",
+      "sha256": "b6eac725e2dbd4191a5c7dea017e774cd32fde5621ce5968d5d450f0f07a58e7",
+      "bytes": 4240,
+      "copied_from": "wiki_pages/sample_company_wiki.json",
+      "page_count": 4
+    },
+    "system_fixture": {
+      "path": "corpus/system/sample_business_system.sql",
+      "sha256": "843bad7499a246d428d19bc75a1a44b6cebbc59d646fb593ac074b4e1810c184",
+      "bytes": 1727,
+      "copied_from": "system_fixtures/sample_business_system.sql"
+    }
+  },
+  "embedding": {
+    "model": "nomic-embed-text",
+    "ollama_digest": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f"
+  },
+  "not_pinned": {
+    "retriever": "experiment configuration - recorded per run, not part of the environment",
+    "chat_model": "the system under test - recorded per run"
+  }
+}

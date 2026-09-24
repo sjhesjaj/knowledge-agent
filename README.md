@@ -1,385 +1,226 @@
-# 企业知识库 RAG Agent
+# 企业知识问答 Agent：可追踪、可诊断、可复现评测
 
-一个基于本地大模型的企业知识问答系统。项目采用 Vue 3 + FastAPI 前后端分离架构，支持多格式文档导入、混合检索、Agent 工具路由、SSE 流式回答、引用溯源、多会话管理与 SQLite 持久化。
+面向企业制度/知识问答的 **Agent 工程项目**，不只是一个 RAG Demo。除了检索和生成，项目的重点是这套工程链路：请求先被**规划**，再按计划取证，证据不足就**拒答**；模型通过统一接口**可替换**；每一步都有 **Trace**；失败能被**定位到具体阶段**；评测在**版本化、可校验的环境**里运行，模型对照可以复现。
 
-在此之上提供一条**只读三通道**问答链路：`wiki_query` 给出已编译的主题概览，
-`document_search` 给出原文条款，`system_query` 给出当前业务状态。系统先判定一个请求
-需要哪几条通道，合并证据后作答；证据不足时明确拒答，能力未开放时给出固定边界文案。
+**主链路：** Planner / Executor / Evidence Policy → LLM Provider → Run/Span Trace → Diagnostic Eval → Versioned Eval Environment → Model Comparison
 
-系统默认使用 Ollama 运行 Qwen3 4B 和 nomic-embed-text，不依赖付费模型 API。原有 Streamlit 页面仍保留，可作为轻量原型入口。
+| 当前已验证 | 结果 |
+|---|---|
+| 自动化测试 | **1129 项全部通过** |
+| Eval Env V1 回答评测（40 题 × 3 轮） | Qwen3-4B 本地：**39/40、39/40、39/40**；DeepSeek API：**39/40、39/40、39/40** |
+| 唯一的失败 case `h008` | 被诊断为 **planning 阶段的 freshness 误判**，与模型无关 |
+| Qwen vs DeepSeek | 在这 40 题上**质量没有差异**；DeepSeek 延迟更低（平均 1.96 s vs 3.60 s），但有 API 费用 |
 
-> **范围说明**：这是一个本地演示项目。三通道里的「业务状态」读的是仓库内的内存样例
-> 数据，**只开放库存查询**，没有接入任何真实企业系统；也没有登录鉴权和写操作。
+> [!IMPORTANT]
+> **`blind_v2` 已经在开发中被使用过**（M10 用它的路由结果做过验收基线），**不能再当作真正的盲测集**。上面的 validation 集同样是开发中见过的回归集。所以这些数字说明的是回归稳定性和链路可用性，**不是**对未见数据的泛化能力。
 
-## 页面预览
+> **范围说明**：这是一个本地运行的演示项目，**不是生产系统**。语料是一份模拟的公司制度（约 20 个知识块）；「业务状态」通道读的是仓库内的样例数据，没有接入真实企业系统；没有登录鉴权和写操作。
 
-### 会话管理与知识库状态
+---
 
-![Vue 会话管理页面](docs/images/06-vue-conversations.png)
-
-### 流式回答与检索依据
-
-![Vue 流式回答与检索依据](docs/images/05-vue-chat-evidence.png)
-
-## 核心能力
-
-- 文档处理：导入 PDF、TXT、Markdown，按标题和重叠窗口切分文本。
-- 混合检索：Jieba + BM25 + Embedding + RRF；高置信问题走 BM25 快速路径。
-- 语义重排：Qwen3 对候选片段重排，复合问题为每个子问题选择证据。
-- 三通道编排：Planner 判定需要哪几条证据通道（Wiki 概览 / 原文条款 / 只读实时
-  状态），Executor 执行，Evidence Policy 判定证据是否足够。八种路由，最多三步。
-- Agent 路由：legacy 模式保留直接回复、知识检索、来源列表和知识库总结工具。
-- 回答校验：结构化输出、引用编号校验、缺引用检测、复述问题检测、数量依据核对、
-  无依据拒答，以及至多一次的证据复查。
-- 流式交互：SSE 分阶段返回路由、检索、来源、文本增量和运行轨迹。
-- Wiki 生命周期：上传后台编译成 Wiki 构建，发布、回退、清空和重启恢复；
-  已被替代的旧文档会同时从检索索引和 Wiki 中退役。
-- 增量更新：同名文档再次上传按文档 upsert，不再整体重建索引。
-- 会话管理：新建、切换、恢复和删除会话，浏览器匿名客户端逻辑隔离。
-- 持久化：SQLite 保存知识块、向量、会话、消息、引用和运行轨迹。
-- 并发一致性：同一会话生成锁、知识库原子替换和知识版本校验。
-- 自动化验证：991 项单元/接口测试，以及检索相关性、路由、回答与拒答评测集。
-
-## 系统架构
-
-前端与 FastAPI 之间有两种链路。默认 legacy 链路保持原有单一检索行为；勾选
-「三通道模式」后走 Planner → Executor → Evidence Policy 的编排链路。
+## Architecture
 
 ```mermaid
-flowchart LR
-    U[用户] --> V[Vue 3 / Vite]
-    V -->|REST / SSE| F[FastAPI]
+flowchart TB
+    subgraph ON["在线链路：回答问题"]
+        direction LR
+        Q[用户请求] --> PL[Planner<br/>八种路由 · 最多三步]
+        PL --> EX[Executor]
+        EX --> CH[证据通道<br/>Wiki 概览 · 原文检索 · 只读业务状态]
+        CH --> EP{Evidence Policy<br/>证据是否足够}
+        EP -->|不足| RF[拒答 / 能力边界<br/>不调用模型]
+        EP -->|足够| G[结构化生成<br/>+ 交付校验]
+        G --> LP[LLM Provider<br/>Ollama Qwen3 / DeepSeek]
+    end
 
-    F --> L{模式}
-    L -->|legacy| A{Agent 路由}
-    A -->|直接回复| D[Direct]
-    A -->|来源 / 总结| T[Agent Tools]
-    A -->|制度查询| RET[检索链]
+    ON -. 每个阶段写入 Trace span .-> OFF
 
-    L -->|orchestrated| PL[Planner<br/>八种路由 / 最多三步]
-    PL --> EX[Executor]
-    EX -->|wiki_query| W[Wiki 页面<br/>已编译知识]
-    EX -->|document_search| RET
-    EX -->|system_query| SY[只读业务状态<br/>内存样例数据]
-    W --> EP[Evidence Policy<br/>证据是否足够]
-    RET --> EP
-    SY --> EP
-    EP -->|不足| RF[固定拒答 / 边界文案<br/>不调用模型]
-    EP -->|足够| G
-
-    RET --> Q{查询类型}
-    Q -->|高置信| B[BM25 Fast Path]
-    Q -->|困难 / 复合问题| H[Embedding + BM25 + RRF]
-    H --> R[Qwen3 Reranker]
-
-    D --> V
-    T --> V
-    G[Qwen3 结构化生成] --> VA[答案交付校验<br/>引用编号 / 复述 / 数量依据]
-    VA --> V
-    RF --> V
-
-    P[PDF / TXT / MD] --> S[解析与切分]
-    S --> I[Embedding 与缓存]
-    I --> DB[(SQLite)]
-    S --> WC[后台 Wiki 编译]
-    WC --> WB[(Wiki 构建仓库)]
-    WB --> W
-    DB --> F
+    subgraph OFF["评测链路：定位失败、对比模型"]
+        direction LR
+        ENV[Versioned Eval Environment<br/>eval-env-v1] --> RUN[逐题运行在线链路<br/>× N 轮]
+        RUN --> TR[(Run / Span Trace<br/>SQLite)]
+        TR --> DG[Diagnostic Eval<br/>规则化的阶段归因]
+        DG --> MC[Model Comparison<br/>同环境只换模型]
+    end
 ```
 
-## 技术栈
+上面是在线链路，每个请求在其中经过规划、取证、证据判断和生成，每个阶段都会写入 Trace。下面是评测链路：在固定环境里逐题运行在线链路，读取 Trace 找出每个失败出在哪个阶段，再在同一环境下只替换模型做对比。
 
-| 模块 | 技术 |
-|---|---|
-| 前端 | Vue 3、Vite、Fetch、SSE、Marked、DOMPurify |
-| API | FastAPI、Pydantic、Uvicorn |
-| RAG | Jieba、BM25、Embedding、RRF、Qwen3 Reranker |
-| 模型 | Ollama、Qwen3 4B、nomic-embed-text |
-| 存储 | SQLite、Embedding 文件缓存 |
-| 测试 | unittest、FastAPI TestClient |
+## Why this project
 
-## 快速开始
+多数 RAG Demo 只能回答"这次答对了吗"。真正做 Agent 时更难的问题是：
 
-### 1. 准备模型
+- **答错了，错在哪一步？** 是路由错了、没检索到、证据判断错了，还是模型生成错了？只看最终答案无法区分。
+- **换了模型或改了代码，变好了还是变坏了？** 如果评测环境（语料、索引、配置、数据集）没有固定下来，前后结果不可比。
+- **模型能不能换？** 业务代码直接调用某个模型的 HTTP 接口，换模型就要改业务代码。
+
+这个项目针对这三个问题各做了一层基础设施，并用它们找到了一个具体问题（h008，见下文）。
+
+## Core capabilities
+
+- **规划与取证**：Planner 判定请求需要哪几条证据通道（Wiki 概览、原文条款、只读业务状态），共八种路由、最多三步；Executor 执行；Evidence Policy 判定证据是否足够，不足时直接拒答，不调用模型。
+- **混合检索**：Jieba + BM25 + Embedding + RRF，高置信问题走 BM25 快速路径，复合问题拆子问题并用 LLM 重排。
+- **答案交付校验**：结构化输出，检查引用编号越界、缺引用、复述问题、无依据的数量；失败时最多复查一次，仍不通过就拒答。只做**形式上可判定**的检查，不判断语义是否正确。
+- **LLM Provider**：统一的 `chat` / `chat_stream` 接口，支持本地 Ollama（Qwen3-4B）和 DeepSeek API（OpenAI 兼容）。通过 `.env` 切换，业务代码不感知。为适配 DeepSeek 的 JSON 模式所做的 prompt 调整会被记录下来，不会悄悄发生。
+- **应用层**：FastAPI + Vue 3，SSE 流式回答，多会话，SQLite 持久化，文档增量更新，Wiki 后台编译与发布/回退。详见 [docs/APP_DETAILS.md](docs/APP_DETAILS.md)。
+
+## Trace / Diagnostic Eval
+
+**Trace**（[`agent_trace.py`](agent_trace.py)）
+
+- 每个请求是一个 run，每个阶段是一个 span：router、planner、tool_call、evidence、generation、llm_call、commit。记录内容包括输入输出、耗时、token 数和失败归属，存在 SQLite 中。
+- 敏感字段会被脱敏；响应头带 `X-Run-Id`，可以直接查到对应的 Trace。`TRACE_ENABLED=0` 可以整体关闭。
+- 开销用 TRACE 开/关的 A/B 测量（[`eval/trace_overhead.py`](eval/trace_overhead.py)）：请求走真实路径（FastAPI → planner → executor → evidence → 生成 → provider → SQLite），只把检索和模型换成立即返回的 mock。开、关两组交替执行，每组 200 次。下表是在当前集成版本 `551bab2` 上的结果（[`eval/pmi_trace_overhead.json`](eval/pmi_trace_overhead.json)）：
+
+| 接口 | OFF p50 / p95 | ON p50 / p95 | 平均差值（95% CI） | 占真实请求 p50 的比例 |
+|---|---|---|---|---|
+| `/api/chat` | 23.3 / 47.3 ms | 42.4 / 66.8 ms | +20.9 ms（+18.5 ~ +23.2） | Qwen 0.74% · DeepSeek 1.8% |
+| `/api/chat/stream` | 28.3 / 46.4 ms | 50.3 / 75.5 ms | +23.9 ms（+21.9 ~ +25.8） | Qwen 0.85% · DeepSeek 2.1% |
+
+- 表中的比例都以 post-main-integration 评测里真实请求的 p50 作分母：Qwen 2.81 s，DeepSeek 1.16 s。相对 mock 请求本身（20–30 ms）的开销约为 +78%，但这个比例不能代表实际开销。
+- 历史测量：Stage 1（`8899d66`）时，`/api/chat` 的平均差值是 +19.4 ms，约占真实请求的 +0.7%（[`eval/stage1_trace_overhead.json`](eval/stage1_trace_overhead.json)）。
 
 ```powershell
+.\.venv\Scripts\python.exe -m agent_trace list
+.\.venv\Scripts\python.exe -m agent_trace show <run_id>
+```
+
+**Diagnostic Eval**（[`diagnostic_eval/`](diagnostic_eval)）
+
+- 对每个 case 的每一轮运行，读取它的 Trace，依次检查 routing → planning → tool → retrieval → evidence → generation 六个阶段。结果分为主错误（primary error）、连带影响（secondary）和潜在问题（latent）。
+- **纯规则，不用 LLM 当裁判**。规则证明不了是生成的问题时，不会默认归到 generation；证明不了的情况会明确标为 unattributed，并注明原因：缺 Trace、环境故障、规则无法判定，或缺人工标签。
+- 人工标签以 overlay 文件的形式附加在冻结的数据集上，并锁定数据集的 sha256。
+
+**h008：这套诊断实际定位到的问题**
+
+问题是"目前的制度里，核心协作时间是几点到几点？"。它在两个模型、合入 main 前后的所有轮次里都失败，而且失败方式完全一样：
+
+| 阶段 | 实际发生了什么 |
+|---|---|
+| routing | `document_only`，正确 |
+| planning | 因为"目前"，设置了 `requires_freshness=True` ← **主错误** |
+| retrieval | 检索到了正确的知识块（工作时间条款） |
+| evidence | 语料无法证明时效性，以 `freshness_unsupported` 拒答（连带影响） |
+| generation | 没有发生 LLM 调用 |
+
+结论：这个失败**与模型无关**，更换模型不会修好它；问题出在 planner 对"目前"的时效性判断。修复它需要改 Agent 行为，目前还没有做（见 Roadmap）。
+
+## Reproducible Eval Environment
+
+[`eval_env/`](eval_env) 把一次评测需要的所有输入冻结成一个版本化环境 `eval-env-v1`（[`eval/environments/`](eval/environments)），包括：数据集、诊断标签、原文语料、Wiki 页面和业务样例数据。代码提交、检索配置和索引指纹不锁定在环境里，而是随每次运行记录下来，用于判断两次运行是否可比。
+
+- 用 manifest 记录每个文件的 sha256。`verify` 共 18 项检查，包括：每个输入文件的哈希、标签与数据集和 Wiki 语料的绑定关系、Embedding 模型的 digest，以及工作区是否干净。
+- 默认**拒绝**在有未提交修改的工作区上运行；`--allow-dirty` 的结果只能作为探索，不能当基线。
+- **拒绝**任何名字里带 blind 的数据集。
+- 结果文件**只追加、不覆写**。Embedding 缓存按环境隔离。
+
+```powershell
+.\.venv\Scripts\python.exe -m eval_env verify --env eval-env-v1
+.\.venv\Scripts\python.exe -m eval_env run --env eval-env-v1 --label my_run --runs 3
+.\.venv\Scripts\python.exe -m diagnostic_eval --eval eval\my_run.json --labels eval\diagnostic_labels\validation_v1.labels.json
+```
+
+## Model comparison
+
+[`eval/model_comparison.py`](eval/model_comparison.py) 在同一个 eval environment、同一份代码、同一份检索配置和索引下，**只替换 LLM Provider**，Qwen 和 DeepSeek 各跑 3 轮。两边都经过 Diagnostic Eval，并逐个 case 比较结果是否发生变化。
+
+最新一组（post-main-integration baseline，报告见 [`eval/post_main_integration/qwen_vs_deepseek.md`](eval/post_main_integration/qwen_vs_deepseek.md)）：
+
+| | Qwen3-4B（本地 Ollama） | DeepSeek `deepseek-flash`（API） |
+|---|---|---|
+| 每轮通过 | 39/40 × 3 | 39/40 × 3 |
+| 失败归因 | h008 · planning_error | h008 · planning_error |
+| 任务延迟 平均 / p95 | 3.60 s / 10.47 s | 1.96 s / 5.89 s |
+| LLM 调用 / 工具调用 | 132 / 108 | 132 / 108 |
+| API 费用（120 次任务） | 0（本地硬件成本未计） | $0.0128（全部在高峰时段）；更早一轮非高峰为 $0.0074 |
+
+逐个 case 对比：39 个稳定通过，1 个两边都失败（h008），没有被修好、新失败或不稳定的 case。
+
+**怎么解读这个结果：**
+
+- 在这 40 题上，两个模型的**正确率没有差异**。但这 40 题是开发中见过的回归集，唯一的失败又发生在模型被调用之前，所以这个数据集**区分不了两个模型的能力**，不能得出"两者能力相当"的结论。
+- DeepSeek 的延迟更低，但要付 API 费用，费用还取决于调用时段。Qwen 的延迟取决于本机硬件。
+- 为适配 DeepSeek 的 JSON 模式做了 prompt 调整（`json_object` 加上 schema 说明），这一点已记录在报告里。
+
+## Current metrics
+
+| 指标 | 数值 | 测量范围 |
+|---|---|---|
+| 自动化测试 | 1129 通过 / 1129 | 当前分支（旧分支 765 + main 的 M10 361 + 本次合并新增 3） |
+| Eval env 校验 | 18/18 | `eval-env-v1` |
+| 路由评测 | validation_v1 1.0；dev 1.0 | 纯逻辑，不调用模型 |
+| 回答评测，Qwen3-4B | 39/40 × 3 轮，稳定性 100% | eval-env-v1（validation_v1，40 题） |
+| 回答评测，DeepSeek | 39/40 × 3 轮，稳定性 100% | 同上 |
+| 失败归因 | 1 个 case，主错误 planning；unattributed 0 | Diagnostic Eval |
+| Trace 开销 | `/api/chat` 每个请求 +20.9 ms，约占真实请求 p50 的 0.74%（Qwen）/ 1.8%（DeepSeek） | 每组 200 次 A/B，当前集成版本 `551bab2` |
+
+历史结果都保留在 `eval/` 中，不会被覆写：Stage 0 基线、Stage 1 Trace 回归、Stage 2.5 对照。M10 阶段的验收记录见 [docs/M10_CLOSEOUT_REPORT.md](docs/M10_CLOSEOUT_REPORT.md)，每个阶段的完整记录见 [HANDOFF.md](HANDOFF.md)。
+
+## Quick start
+
+```powershell
+# 1. 本地模型
 ollama pull qwen3:4b
 ollama pull nomic-embed-text
-```
 
-### 2. 安装后端依赖
-
-```powershell
+# 2. 依赖
 py -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-```
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt -r requirements-dev.txt
 
-### 3. 启动 FastAPI
+# 3. 配置（默认 LLM_PROVIDER=ollama；若用 DeepSeek，在 .env 中填入 DEEPSEEK_API_KEY）
+copy .env.example .env
 
-```powershell
+# 4. 测试（模型调用使用测试替身；api.py 导入时会初始化 data\ 下的 SQLite，建议在隔离副本中运行）
+.\.venv\Scripts\python.exe -m unittest discover
+
+# 5. 启动 API 与前端
 .\start_api.ps1
+cd frontend; npm install; npm run dev
 ```
 
-API 文档：http://127.0.0.1:8000/docs
+API 文档在 http://127.0.0.1:8000/docs，页面在 http://127.0.0.1:5173。演示时要先上传 `sample_company_rules.md`，并在页面上打开「三通道模式」。完整的演示步骤见 [docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md)。
 
-### 4. 启动 Vue 前端
-
-另开一个 PowerShell：
-
-```powershell
-cd frontend
-npm install
-npm run dev
-```
-
-页面地址：http://127.0.0.1:5173
-
-### 5. 上传样例文档（演示必做）
-
-通过左侧「导入知识」上传仓库根目录的 **`sample_company_rules.md`**，等待侧栏
-「知识片段」数量大于 0。
-
-跳过这一步只能演示 Wiki 与库存查询，涉及原文的问题会返回「当前没有可用的文档知识库。」
-
-全新安装尚无已发布构建时，Wiki 使用仓库自带的四主题样例页面；Document 通道
-依赖上传建立的原文索引。上传完成后原文索引即可查询，同时会提交后台 Wiki 编译任务。
-请等待 `/api/wiki/status` 显示 `published` 后再演示更新后的 Wiki；编译期间仍读取
-先前发布的构建，两条路径在发布完成前可能处于不同版本。
-
-### 6. 打开「三通道模式」
-
-右上角勾选 **三通道模式** 即可启用 Wiki / 原文 / 只读实时状态三通道链路。
-关闭时走原有 legacy 链路，路由、检索与 SSE 协议均不变。
-
-两条链路共用生成层的答案交付校验。引用越界、缺少必要引用或无依据事实会触发
-有界复查；最终不能交付时返回明确拒答。SSE 会先完成校验再发送正文，拒答也通过
-`delta` 和 `done` 正常结束并保存到会话。传输、解析或请求处理错误使用 `error` 事件，
-失败回答不落库。缓冲会增加首段可见正文的等待时间，相关耗时单独记录。
-
-### 7. 六步演示流程
-
-一条能把本项目主要能力串起来的最短路径。逐题脚本、预期路由与排查表见
-**[docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md)**。
-
-| 步骤 | 做什么 | 看什么 |
-|---|---|---|
-| 1 上传资料 | 导入 `sample_company_rules.md` | 知识片段数 > 0；后台开始编译 Wiki |
-| 2 三通道问答 | 分别问概览、原文条款、SKU 库存 | 三题分别走 `wiki_only`、`document_only`、`system_only` |
-| 3 复合请求 | 一句话同时要概览、准确条款和库存 | 走 `wiki_document_system`，证据卡片三类齐全 |
-| 4 文档更新 | 改一条规则后同名重新上传 | 只有该文档的知识块被替换，Wiki 重新编译 |
-| 5 新事实生效 | 再问同一条规则 | 答案与引用变成新值，旧值不再出现在证据里 |
-| 6 拒答与边界 | 问资料里没有的事；问订单状态 | 前者明确拒答，后者返回能力边界文案，两者都不编答案 |
-
-完整演示流程、固定问题与预期路由见 **[docs/DEMO_GUIDE.md](docs/DEMO_GUIDE.md)**。
-
-详细使用说明见 [FRONTEND.md](FRONTEND.md)。如需运行原有 Streamlit 版本：
-
-```powershell
-.\start.ps1
-```
-
-## 上下文与持久化
-
-- SQLite 按 `client_id + conversation_id` 保存全部聊天记录。
-- 每次推理只加载当前会话最近 4 条消息，避免上下文无限增长。
-- 文档默认按约 220 字切块，并保留约 40 字重叠。
-- 检索通常召回 8 个候选，最终向模型提供最相关的 4 个片段；`top_k` 是上限而不是
-  配额——明显低于最佳命中的尾部结果会被丢弃，因此实际条数常少于 4。
-- 复合问题最多拆成 3 个检索子查询，超出时合并相邻分句而不丢弃；多分句问题同样
-  不超过 `top_k` 条；有分句归属时优先覆盖尚未得到依据的问题，同覆盖增益再比较相关性。预算不足以容纳所有事实时仍遵守上限。
-- FastAPI 重启时从 `data/knowledge_agent.db` 恢复知识块、向量和会话。
-- 上传同名文档按文档 upsert，只替换该文档的知识块；不同名文档并存。
-- 清空知识库会原子替换索引，并清除不再兼容的历史会话。
-
-## Wiki 生命周期
-
-Wiki 是从上传文档派生的**编译知识**，与原文是两种知识形态、同一来源。
-
-1. 上传文档后，后台任务把该文档切成来源片段并编译成一个新的 Wiki 构建；
-2. 构建通过校验后发布，成为该请求之后的「当前 Wiki」，无需重启 API；
-3. 被新文档替代的旧文档，会同时从检索索引和 Wiki 中退役，避免旧事实继续被引用；
-4. 编译失败时回退到上一个已发布构建，不会让 Wiki 处于半更新状态；
-5. 清空知识库会一并清空 Wiki 构建；重启后从仓库恢复已发布的构建。
-
-在第一个构建产生之前，仓库自带的 `wiki_pages/sample_company_wiki.json` 作为兜底，
-所以全新安装也能直接演示。**它只覆盖 4 个主题**（请假与年假、远程办公、信息安全、
-账号与权限），共 11 条 claim；语料其余章节要经过一次真实编译才会进入 Wiki。
-
-## API
-
-| 方法 | 地址 | 用途 |
-|---|---|---|
-| GET | `/api/health` | 模型连接与知识库状态 |
-| POST | `/api/knowledge/upload` | 上传文档、按文档 upsert 索引并触发 Wiki 编译 |
-| GET | `/api/wiki/status` | Wiki 编译任务状态与当前已发布构建 |
-| DELETE | `/api/knowledge` | 清空知识库、Wiki 构建与历史会话 |
-| POST | `/api/chat` | 非流式问答（`mode=orchestrated` 走三通道链路） |
-| POST | `/api/chat/stream` | SSE 流式问答（同样支持 `mode=orchestrated`） |
-| GET/POST | `/api/conversations` | 查询或新建会话 |
-| GET | `/api/conversations/{id}/messages` | 恢复会话消息 |
-| DELETE | `/api/conversations/{id}` | 删除会话 |
-
-## 评测结果
-
-所有数字都来自本地模拟资料（`sample_company_rules.md`，20 个知识块），仅用于项目
-回归与方案比较，**不代表通用生产性能**。下面按「哪一轮测的、用什么题集、跑几轮」
-分开列，不把不同轮次的结果混在一张表里。
-
-### 早期检索方案比较（历史记录，未在本轮重测）
-
-80 条有答案检索题、20 条无答案题、15 条 Agent 路由题，legacy 单一检索链路。
-
-| 检索方法 | Recall@1 | Recall@3 | MRR |
-|---|---:|---:|---:|
-| 纯向量 | 38.8% | 58.8% | 0.529 |
-| 纯 BM25 | 91.3% | 97.5% | 0.946 |
-| RRF 融合 | 65.0% | 85.0% | 0.763 |
-
-- Agent Tool Selection Accuracy：100%（15/15）
-- 无答案拒答准确率：100%（20/20）
-
-分组结果与复现命令见 [EVALUATION.md](EVALUATION.md)。
-
-### M10 当前验收与收尾（2026-09-15）
-
-本阶段工程约束与预设量化门槛通过，按已披露范围交付。Document 保留默认 `top_k=4`，
-严格遵守调用方证据上限与最多三个召回子查询；合并保留原始分句，预算分配优先补充尚未
-覆盖的问题。无效复查不会覆盖有效首轮答案，普通/SSE共用交付决策。
-
-| 检查 | 当前结果 | 证据范围 |
-|---|---|---|
-| 单元/接口测试 | 991 项通过 | 最终48f候选，Python 3.12.14，隔离源码副本 |
-| 公开路由 dev / validation / blind_v2 / holdout | 80/80、80/80、80/80、78/80 | 四套逐题零新增回归 |
-| 实现方未见路由80题 | 77/80，边界38/40 | 本次冻结替换后的独立集 |
-| 公开V2回答40题×3轮 | 39/40、39/40、39/40 | ASR95%、FRR5%；006稳定拒答计失败 |
-| 独立回答40题×3轮 | 自动40/40；严格语义各39/40 | 020附加审批关系不完整 |
-| 独立20题检索 | 静态18/20、原文19/20、动态六次均20/20 | 各路径Hit@3均20/20；合计中位数57/60 |
-| 最终真实API/SSE | 自动各8/8；严格语义各7/8；边界/拒答各4/4 | 实际HTTP、全部delta、终态和SQLite正文 |
-| 真实资料更新 | 两条路径均从5天切换为6天 | 上传、发布、新事实引用和落库全部验证 |
-| 前端生产构建 | 成功，18个模块 | 未作浏览器端到端验收 |
-
-最终 `rag.py` 原始字节哈希为 `48f9ecd9c55ab7459b2c06a6cd16d05e85f044d8fbd8cd06ad512ed2c5bc6f79`。
-广泛回答和三路径检索实际测于 `8b8fd6b5…`；224次路径影响检查证明最后一处变更不会
-进入这些题的执行分支，因此保留旧测量身份并继承不受影响的行为证据，没有改标成最终版重跑。
-六次动态编译只有一种实际内容哈希，不能据此宣称已消除编译方差。新检索集替换了曝光题，
-历史55/60与本次57/60也不能直接归因于代码改进。
-
-最终同环境配对使用同模型、同暖机，并由外部观察器把两侧模型连接映射到IPv4 loopback。
-普通总耗时p95为3.126→3.254秒（+4.09%），SSE为2.875→3.252秒（+13.09%），
-均满足25%门槛；SSE首段正文p95为1.389→3.299秒（+137.54%），单独报告缓冲代价。
-较早发生的180秒模型服务超时保留为失败批次，不拿它制造加速结论。
-
-**仍有明确的质量限制**：公开复合12题×3轮的k=3检索覆盖93.47%，预算内上界94.58%；
-有一次模型漏选，尽管预算仍有空位。默认k=4本组达到预算内上界98.33%。真实复合回答
-仍有无依据预支否定、条件遗漏和错引；覆盖率不等于语义正确率，也不代表生产验收完成。
-Wiki的claim自身分数只裁主排序分数相等的记录，主分数相等的跨页记录也可能改变次序，
-不能称为“仅同页平局”。
-
-完整结果、原始记录索引、源码身份、取舍、未覆盖项和归档清单见
-**[M10收尾验收报告](docs/M10_CLOSEOUT_REPORT.md)**。旧实现与各轮返修报告保持原样，
-其中的历史“不通过”、旧测试数量和旧候选哈希不代表本次状态。验收报告记录的是提交前冻结快照，后续提交状态以 Git 历史为准。
-
-## 运行验证
-
-后端验收请在隔离源码副本运行，并隔离其 `data` 与 Wiki 目录。`api.py` 导入会按源文件位置初始化 SQLite，仅切换工作目录不能保护真实数据库。下面是副本内已有测试环境的命令形态；也可使用原项目解释器的绝对路径。
-
-```powershell
-# 安装测试依赖
-.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt
-
-# 单元与接口测试（模型调用使用测试替身；在隔离源码副本中运行）
-.\.venv\Scripts\python.exe -m unittest discover -v
-
-# 通道判定评测（纯逻辑，无模型）
-.\.venv\Scripts\python.exe evaluate_orchestrated_routes.py `
-    --dataset eval_orchestrated_routes_blind_v2.json --output out\route-v2.json
-
-# 检索相关性评测（静态 Wiki / 动态 Wiki / 原文三条路径）
-.\.venv\Scripts\python.exe evaluate_retrieval_relevance.py --output-dir out\relevance
-
-# 回答、拒答与边界评测（真实本地模型，3 轮）
-.\.venv\Scripts\python.exe evaluate_answerability.py `
-    --dataset eval_answerability_blind_v2.json --runs 3 --output-dir out\answer-v2
-
-# 真实 API / SSE 两接口自测（会启动一个 uvicorn，占用一个空闲端口）
-.\.venv\Scripts\python.exe verify_api_sse.py --output-dir out\api-sse
-
-# 完整离线/本地模型评测
-.\run_tests.ps1
-
-# 前端生产构建
-cd frontend
-pnpm run build
-```
-
-`evaluate_retrieval_relevance.py` 与 `verify_api_sse.py` 是本轮新增的自测入口，
-不被产品代码导入，也不改动任何既有评测程序或题集。两者都会在隔离目录里落原始结果，
-`verify_api_sse.py` 启动时会打印它解析到的数据库路径——**请在隔离源码副本中运行**，
-因为 `api.py` 在导入时就会按 `storage.py` 的位置解析数据库。
-
-## 项目结构
+## Repo structure
 
 ```text
 knowledge-agent/
-├── api.py                       # FastAPI、SSE、会话与知识库接口
-├── storage.py                   # SQLite 持久化与事务
-├── agent.py                     # legacy Agent 路由和工具
-├── rag.py                       # 切分、检索、重排、生成与答案交付校验
-├── chat_orchestration.py        # HTTP 层与编排链路之间的胶水、能力边界文案
-├── orchestration/               # 编排 sidecar（纯逻辑，不被 rag.py 反向依赖）
-│   ├── planner.py               # 通道判定：八种路由，最多三步，纯函数
-│   ├── executor.py              # 执行计划并汇总证据
-│   ├── evidence_policy.py       # 证据充分性与权威裁决
-│   ├── wiki_adapter.py          # Wiki 页面加载与检索
-│   ├── document_adapter.py      # rag 检索 → Evidence 适配边界
-│   └── system_provider.py       # 只读业务状态（库存）
-├── wiki_runtime.py              # Wiki 编译任务队列与发布/回退/清空
-├── wiki_maintenance/            # Wiki 编译器、构建仓库、来源片段与差异
-├── wiki_pages/                  # 随仓库分发的样例 Wiki 页面
-├── system_fixtures/             # 只读业务状态样例数据（SQLite 脚本）
-├── app.py                       # 保留的 Streamlit 原型
-├── frontend/                    # Vue 3 + Vite 前端
-├── tests/                       # 自动化测试
-├── eval_*.json                  # 检索相关性、路由、回答与拒答评测集
-├── evaluate*.py                 # 评测脚本
-├── verify_api_sse.py            # 真实 API / SSE 两接口自测
-├── sample_company_rules.md      # 演示知识库
-├── evaluation_runs/             # 历史评测原始记录（只追加，不覆写）
-└── data/                        # 本地 SQLite 与 Wiki 构建（Git 忽略）
+├── orchestration/         # Planner / Executor / Evidence Policy 与三个通道适配器（纯逻辑）
+├── rag.py                 # 切分、混合检索、重排、生成与答案交付校验
+├── llm_provider.py        # 统一 LLM 接口：Ollama / DeepSeek（OpenAI 兼容）
+├── agent_trace.py         # Run/Span Trace：记录、脱敏、失败归属、CLI
+├── diagnostic_eval/       # 规则化的阶段诊断与报告
+├── eval_env/              # 版本化评测环境：make / verify / run / diff
+├── eval/                  # 基线、诊断报告、模型对照（只追加）；environments/ 存放 eval-env-v1
+├── chat_orchestration.py  # HTTP 层与编排链路之间的衔接
+├── api.py                 # FastAPI / SSE
+├── storage.py             # SQLite 持久化
+├── wiki_runtime.py        # Wiki 编译任务、发布、回退
+├── wiki_maintenance/      # Wiki 编译器与构建仓库
+├── frontend/              # Vue 3 + Vite
+├── tests/                 # 1129 项自动化测试
+├── eval_*.json            # 评测数据集
+├── evaluate*.py           # 评测脚本
+├── HANDOFF.md             # 每个阶段的决策、结果与风险记录
+└── docs/                  # 应用细节、演示指南、M10 报告
 ```
 
-## 当前边界
+应用层的完整说明见 **[docs/APP_DETAILS.md](docs/APP_DETAILS.md)**，内容包括：完整目录树、API 列表、演示流程、持久化与 Wiki 生命周期、M10 验收记录和产品边界。
 
-- 适合本地演示和单 Uvicorn Worker；进程内锁尚未扩展到多实例部署。
-- `client_id` 只用于演示级逻辑隔离，不等同于登录认证和服务端鉴权。
-- **System 通道用的是内存中的样例数据**，来自 `system_fixtures/`，每次请求新建一个
-  内存 SQLite。**没有接入任何真实企业系统**，也不会写入任何持久业务数据。
-- System 通道**只开放库存查询**（`get_inventory_level`）。订单与审批属于主体范围
-  查询，在可信身份解析器就位前主动不开放——不是查不到，而是避免用客户端自报的身份
-  读取业务数据。问到这类内容会返回固定的能力边界文案，不调用模型。
-- 一次只查一个 SKU。给了多个会返回拆分提示，这是产品限制，不是缺参数。
-- 生产链路暂未接入结构化事实断言，因此**主链路不进行事实冲突裁决**。Evidence
-  Policy 的权威裁决模块已实现并有测试覆盖，但当前没有生产数据触发它——有代码有测试
-  不等于这条能力已经在主链路上生效。
-- 答案交付校验只覆盖五类**形式上可判定**的问题：空答案、复述问题、引用编号越界、
-  有证据却一处不标来源、答案里出现证据和问题都没有的「数字＋量词」。
-  它**不判断结论与引用在语义上是否相符**，那仍需人工或独立验收逐条核对。
-- 流式接口的校验分两处：来源标注在发出前验编号（可阻止），复述与数量核对在整段
-  结束后进行（只能让本次回答以错误收尾，正文已经发出）。普通接口在同样判定失败时
-  改为拒答。两条接口判定规则相同，但流式收不回已发出的文字。
-- 前端没有测试框架，只有生产构建作为门禁。
-- 当前检索会扫描内存中的全部知识块，大规模数据应迁移到专用向量数据库。
-- 扫描版 PDF 尚未接入 OCR，上传文件也需要进一步增加大小和安全限制。
+## Known limitations / Roadmap
 
-## 后续方向
+**已知限制**
 
-- 接入真实企业只读数据源，并在此之前补上可信身份解析器
-- 主链路接入结构化事实断言，让冲突裁决真正生效
-- 引用与结论的语义相符校验（当前只校验编号有效性和数量依据）
-- 一次查询多个 SKU，或提供批量库存操作
-- 文档级权限、Qdrant / pgvector 与元数据过滤
-- 历史摘要 + 最近消息的长对话记忆
-- 登录鉴权、多实例部署与分布式锁
-- Docker Compose、CI、结构化日志和请求追踪
-- OCR、上传任务队列和索引进度
-- 前端测试框架
+- **评测集**：`blind_v2` 已被开发使用，validation_v1 和 dev 也都是见过的数据。目前**没有干净的未见评测集**，所有数字都不能当作泛化能力。
+- **规模**：只有一份约 20 个知识块的模拟语料，40 题 × 3 轮。样本量不足以支撑统计意义上的模型比较。
+- **h008** 还没有修复：planner 的时效性判断过于敏感。
+- **Diagnostic Eval** 在当前集合上只见到一种失败，规则的覆盖面还没有在多样的失败上得到检验。
+- **应用层**：单 worker、进程内锁；`client_id` 不等于鉴权；业务状态通道只开放库存查询，读的是样例数据；答案校验不判断语义。
+- **工程细节**：代码哈希按工作区文件计算，CRLF 与 LF 的差异会造成误报，应改为对 git blob 规范化后计算；eval_env 对 DeepSeek 记录的模型信息不完整；DeepSeek 的费用按公开价目表估算，没有和账单核对。
+
+**Roadmap**
+
+1. 建立新的、真正不参与开发的盲测集，在它上面重跑 baseline 和模型对照。
+2. 修复 h008 的 freshness 误判，并用 Diagnostic Eval 验证它没有引入新的回归。
+3. 代码哈希规范化；eval_env 按 provider 分别记录模型信息。
+4. 语义层面的答案校验（引用与结论是否相符）。
+5. 应用层：鉴权、多实例、真实只读数据源（需先有可信身份解析）。

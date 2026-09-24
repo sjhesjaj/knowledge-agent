@@ -1,0 +1,76 @@
+{
+  "method": "TestClient, real request path, retrieval + model mocked; arms alternate per request",
+  "n_per_arm": 200,
+  "warmup_pairs": 20,
+  "python": "3.12.14",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "scenarios": {
+    "orchestrated_chat": {
+      "trace_on": {
+        "n": 200,
+        "mean_ms": 45.37894999994023,
+        "stdev_ms": 6.584160339655345,
+        "p50_ms": 43.377800000598654,
+        "p95_ms": 60.04910000774544,
+        "p99_ms": 66.97949999943376,
+        "max_ms": 71.30329999199603
+      },
+      "trace_off": {
+        "n": 200,
+        "mean_ms": 26.027563500319957,
+        "stdev_ms": 7.5110843216173,
+        "p50_ms": 22.79019998968579,
+        "p95_ms": 44.59980000683572,
+        "p99_ms": 47.48269999981858,
+        "max_ms": 51.117599999997765
+      },
+      "mean_delta_ms": 19.351386499620276,
+      "mean_delta_95ci_ms": [
+        17.96706890683911,
+        20.73570409240144
+      ],
+      "p50_delta_ms": 20.587600010912865,
+      "p95_delta_ms": 15.449300000909716,
+      "mean_delta_pct": 74.34958904002823
+    },
+    "orchestrated_stream": {
+      "trace_on": {
+        "n": 200,
+        "mean_ms": 46.84951000010187,
+        "stdev_ms": 7.49252593598894,
+        "p50_ms": 44.54179998720065,
+        "p95_ms": 63.746099986019544,
+        "p99_ms": 71.95389999833424,
+        "max_ms": 78.13829999940936
+      },
+      "trace_off": {
+        "n": 200,
+        "mean_ms": 27.273415999734425,
+        "stdev_ms": 7.8247191104267975,
+        "p50_ms": 24.425900002825074,
+        "p95_ms": 48.41319999832194,
+        "p99_ms": 53.4876999881817,
+        "max_ms": 54.81680000957567
+      },
+      "mean_delta_ms": 19.576094000367448,
+      "mean_delta_95ci_ms": [
+        18.074651009336307,
+        21.07753699139859
+      ],
+      "p50_delta_ms": 20.115899984375574,
+      "p95_delta_ms": 15.332899987697601,
+      "mean_delta_pct": 71.77719872185453
+    }
+  },
+  "internal_trace_overhead_ms": {
+    "p50": 9.011399975861423,
+    "p95": 13.066400002571754,
+    "max": 210.08109998365398,
+    "note": "self-timed by the recorder; diagnostic only"
+  },
+  "spans_per_run": {
+    "min": 8,
+    "max": 8
+  },
+  "app_db_bytes_after_benchmark": 4145152
+}
