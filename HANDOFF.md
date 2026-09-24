@@ -1,6 +1,6 @@
-# 交接文档：Stage 0（LLMProvider）+ Stage 1（Agent Trace）
+# 交接文档：Stage 0（LLMProvider）· Stage 1（Agent Trace）· Stage 2（Diagnostic Eval）· Stage 2.1（Eval Environment）
 
-> 本文件按阶段累积。**Stage 2 — Diagnostic Eval 见 §11**（实现 commit `3f1ff97`）；**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
+> 本文件按阶段累积。**Stage 2.1 — Eval Environment 见 §12**（环境 `eval-env-v1`，baseline commit `ffdac42`）；**Stage 2 — Diagnostic Eval 见 §11**（实现 commit `3f1ff97`）；**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
 
 # Stage 0 交接：统一 LLMProvider（本地 Ollama/Qwen + DeepSeek API）
 
@@ -916,4 +916,181 @@ OK
 - **R7 · 诊断是离线的，依赖 `traces.sqlite`**：Trace 库在 gitignore 的 artifacts 目录里。已提交的诊断报告里带有 span_id，但重新生成报告需要本地的 Trace 库。
 - **TD5 · 诊断报告 JSON 有 469KB**：每一项检查都带着期望值和实际值。如果以后数据集变大，可以提供一个精简模式。
 
-按要求在这里停止，没有进入 Agent 优化阶段。
+---
+
+## 12. Stage 2.1 — 可复现的 Eval Environment
+
+- 分支：`stage0-llm-provider`（本地，**未 push**）
+- 目标：冻结一个可复现的 Eval Environment，解决 validation case、Wiki 语料和实际运行的 build 三者不一致的问题
+- 按要求在此停止，**没有修改 Agent 的任何行为**
+
+| commit | 内容 |
+|---|---|
+| `2fb055a3cae6bd4d6874b3dfc1dac069f9a3d97e` | feat：`eval_env` 包（make / verify / activate / run / diff）、测试，以及 `diagnostic_eval` 读取固定的 wiki 语料 |
+| `9ba92c709ce5b5c60aea02f243140090ba8e91a8` | fix：生成环境时，在创建 staging 目录之前就记录 git 状态（见 §12.9 F1） |
+| `38afa41a3b5318a8e51b47e92055ec5460f373cb` | eval：不可变环境 `eval-env-v1` |
+| `adaf8d89659456ac36db72d3f089869e350af151` | feat：环境 diff 里增加"同一侧多次运行中出现了几种答案"和"是否用到 wiki"这两个事实字段 |
+| `ffdac42170c5049a70ec4dfb3fb31f534ea1cbcc` | eval：Env V1 baseline、诊断报告、环境 diff |
+| 本节所在的 docs commit | HANDOFF §12 |
+
+### 12.1 决策是怎么落实的（对照你给的 10 条）
+
+1. **eval-env-v1 用的是提交的 4 页样例 Wiki**（`corpus_id: committed_sample`），和 validation_v1 的原始设计、V1 评测报告一致；**没有**建 build-0001 的第二个环境。机制本身支持 `published_build` 类型（锁定 build_id 和内容 hash，运行时读的是快照），有测试覆盖，但这次没有使用。
+2. **document、wiki、system 三份语料都复制进环境**，作为不可变快照；`make` 拒绝覆盖已经存在的环境。
+3. **tree 有改动时默认拒绝执行**，而且新增的未跟踪文件也算改动。`--allow-dirty` 只能用于 exploratory 运行：结果 metadata 里会标记 `run_kind: exploratory`、`baseline_eligible: false`，并且这种运行不允许用含 "baseline" 的名字。
+4. **用 env-v1 跑了 Qwen 3 轮 validation 和 Diagnostic Eval**，形成新的 Env V1 baseline（§12.6–§12.7）。和旧结果的差异一律归因为 environment change（§12.8）。
+5. **新 harness（`eval_env/common.py`）完全自包含**，没有 import `run_stage0_eval.py`，那个 Stage 0 历史脚本一字未改。
+6. **诊断 overlay 也复制了一份快照进环境**，并锁定 hash（`labels/validation_v1.labels.json`）；冻结的数据集仍然用路径加 sha256 引用。校验时还会检查：这份 overlay 是针对哪个数据集版本写的，以及它声明的 `wiki_corpus` 和环境是否一致。
+7. **Embedding 用环境专属的缓存**，存放在 `eval/artifacts/env-cache/<env_id>/embeddings-<key>.json`，缓存 key 绑定环境 id、embedding 模型 digest 和切块指纹，旁边的 `.meta.json` 记录它的来源；来源对不上就删除重建。共享的 `.cache/embeddings.json` 在运行期间被指向一个空路径，不会被读到。
+8. **metadata 额外记录了 Python、Ollama、platform 的版本**，只记录，不作为执行条件。
+9. **Retriever 参数只记录**（`retriever.config` 和它的 `config_sha256`），**不冻结进环境**；manifest 里的 `not_pinned` 写明了这一点。
+10. **没有修改 Agent 的行为，没有读取 blind_v2**（按文件名拒绝，make 和 verify 都有测试），**没有覆盖 Stage 0–2 的任何历史结果**：从 Stage 2 结束（`2d74f0d`）到现在，唯一被修改的已有文件是 `diagnostic_eval/report.py`，而且是代码，不是结果文件；另外 `run` 本身也拒绝覆盖任何已存在的输出。
+
+### 12.2 Env manifest（`eval/environments/eval-env-v1/manifest.json`，sha256 `a6ecd2b4ae9dbede1285ece99da8fd840b300665ef5a882df0c642d30cc0c78f`）
+
+```json
+{
+  "schema_version": 1,
+  "env_id": "eval-env-v1",
+  "description": "validation_v1 as originally designed: the committed 4-page sample wiki (not the locally compiled data/wiki build), the sample rulebook and the sample business fixture.",
+  "created_from": {"commit": "9ba92c709ce5b5c60aea02f243140090ba8e91a8", "describe": "stage0-baseline-11-g9ba92c7", "branch": "stage0-llm-provider", "dirty": false},
+  "dataset": {"path": "eval_answerability_validation_v1.json", "sha256": "e4ad670c6dd6512c8ffcf647b967861d9d1bbef44dbc7872d3cfbf96915c6ced"},
+  "diagnostic_labels": {"path": "labels/validation_v1.labels.json", "sha256": "6cacbcb98b3d708f3ec0d2188e788de826e95fdf4b995d6e65bfb913f1acc44e", "copied_from": "eval/diagnostic_labels/validation_v1.labels.json"},
+  "corpus": {
+    "documents": [{"path": "corpus/documents/sample_company_rules.md", "source_name": "sample_company_rules.md", "sha256": "c30634966afdaa5803ce9d4db71d3a3e32d8ede1f2ab59fe15f0645ca4d11704"}],
+    "wiki": {"kind": "pages_file", "corpus_id": "committed_sample", "path": "corpus/wiki/sample_company_wiki.json", "sha256": "b6eac725e2dbd4191a5c7dea017e774cd32fde5621ce5968d5d450f0f07a58e7", "page_count": 4},
+    "system_fixture": {"path": "corpus/system/sample_business_system.sql", "sha256": "843bad7499a246d428d19bc75a1a44b6cebbc59d646fb593ac074b4e1810c184"}
+  },
+  "embedding": {"model": "nomic-embed-text", "ollama_digest": "0a109f422b47e3a30ba2b10eca18548e944e8a23073ee3f3e947efcf3c45e59f"},
+  "not_pinned": {"retriever": "experiment configuration - recorded per run, not part of the environment", "chat_model": "the system under test - recorded per run"}
+}
+```
+
+（上面省略了 `created_at`，以及每个文件的 `bytes` 和 `copied_from`，完整内容见原文件。）
+
+### 12.3 执行前的校验（`verify`，任何一项不通过都会拒绝执行，一共 18 项）
+
+schema 版本；env_id 和目录名一致；数据集文件存在、sha 一致，且不是 blind；标签快照存在、sha 一致；标签针对的数据集版本正确；标签声明的 `wiki_corpus` 和环境一致；只有一份文档，且文档快照存在、sha 一致；wiki 快照存在、sha 一致，页数一致（published_build 类型还要校验 build_id）；system fixture 存在、sha 一致；Ollama 上的 embedding digest 一致（Ollama 连不上也会拒绝）；tree 是干净的。运行结束后还会再校验一次，确认运行没有改动快照（`post_run_manifest_sha256`）。
+
+### 12.4 运行 metadata（`eval/env_v1_validation_qwen.json` 的 `environment` 部分）
+
+| 项 | 本次的值 |
+|---|---|
+| 运行类型 | `run_kind: reference`，`baseline_eligible: true` |
+| 环境 | `eval-env-v1`，manifest `a6ecd2b4…`，运行后仍为 `a6ecd2b4…`，18 项校验全部通过 |
+| 数据集 / 标签 | `e4ad670c…` / `6cacbcb9…`（环境内的快照） |
+| 语料 | 文档 `c3063496…`；wiki 为 `pages_file / committed_sample / b6eac725… / 4 页`；fixture `843bad74…` |
+| Embedding | `nomic-embed-text`，digest `0a109f42…`；chunk 20 个；切块指纹 `7baada00…`；**索引指纹** `9aadd281…`；使用环境专属缓存（这次是首次构建） |
+| Retriever | 配置本身，以及 `config_sha256` `16acc9cc…`（只记录） |
+| Provider / model | ollama / `qwen3:4b`，digest `359d7dd4…`，Q4_K_M，权重 blob `3e4cb141…` |
+| 代码 | git `38afa41`，dirty 为 false；关键代码文件的 sha256 |
+| 运行时版本 | Python 3.12.14 / Ollama 0.32.15 / Windows-11-10.0.26200 |
+| Trace | `eval/artifacts/env_v1_validation_qwen/traces.sqlite`：120 个 run 全部 completed，753 个 span；每个 case-run 都有 `trace_run_id` |
+
+### 12.5 改动的文件
+
+| 文件 | 说明 |
+|---|---|
+| `eval_env/environment.py` | 生成快照（make）、校验（verify）、运行时接入（activate）、和环境绑定的 embedding 缓存、切块指纹和索引指纹 |
+| `eval_env/common.py` | 自包含的 harness 公共逻辑（请求监听、模型信息、Retriever 配置、Trace 安装、case 整理、git 状态和运行时版本） |
+| `eval_env/__main__.py`、`__init__.py` | CLI：`make`、`verify`、`run`、`diff` |
+| `diagnostic_eval/report.py` | `eval_context` 优先读取 `eval_environment.corpus.wiki.corpus_id`，旧的结果文件仍走原来的回退逻辑 |
+| `tests/test_eval_environment.py` | 22 个测试 |
+| `eval/environments/eval-env-v1/**` | 不可变的环境（manifest 加 4 个快照文件） |
+| `eval/env_v1_validation_qwen.json`、`eval/diagnostics/env_v1_validation_qwen.diagnostic.{json,md}`、`eval/diagnostics/env_v1_validation_qwen_vs_stage1_trace_qwen.environment_diff.{json,md}` | baseline、诊断报告、环境 diff |
+
+**没有改**：Agent 相关代码、`agent_trace.py`、`evaluate_answerability.py`、`run_stage0_eval.py`、冻结的数据集、`eval/diagnostic_labels/` 下的原始 overlay、Stage 0–2 的全部结果文件。
+
+### 12.6 测试
+
+`tests/test_eval_environment.py` 共 22 个测试，Ollama 和 git 都是 mock 的：
+
+- **make**：快照了所有输入并且能通过校验；Retriever 不在 manifest 里；git 状态在 staging 之前读取；环境不可变；拒绝针对别的数据集写的标签（被拒绝时什么都不会留下）；拒绝 blind。
+- **verify**：文档快照、标签快照或数据集被改动时拒绝；embedding digest 不一致或 Ollama 连不上时拒绝；tree 有改动时拒绝，加了 `--allow-dirty` 就变成 exploratory 且 `baseline_eligible=false`；exploratory 运行不能用含 baseline 的名字；拒绝覆盖已有结果；目录改名后拒绝。
+- **published_build**：快照被锁定，并且运行时读到的就是快照里的页面；build_id 不一致时拒绝；标签的 wiki 语料和环境不一致时拒绝。
+- **activate**：本机即使有一个会覆盖默认 Wiki 的"活"build，环境内读到的仍然是 4 页快照；文档、fixture 和 embedding 缓存的路径都指向环境；退出后全部恢复原样。embedding 缓存按环境、digest 和切块绑定：条件相同就复用，digest 一变就重建；来源被伪造的缓存会被删掉。
+- **diff 和诊断**：诊断会读取固定的 wiki 语料，旧文件走回退逻辑；环境 diff 把每一处差异都归为 environment_change。
+
+```
+.\.venv\Scripts\python.exe -X utf8 -m unittest tests.test_eval_environment
+Ran 22 tests in 1.012s
+OK
+.\.venv\Scripts\python.exe -X utf8 -m unittest discover
+Ran 762 tests in 24.966s
+OK
+```
+
+762 = 740（Stage 0–2 的全部测试）+ 22。
+
+### 12.7 Env V1 baseline（validation_v1，Qwen，3 轮）
+
+```
+.\.venv\Scripts\python.exe -X utf8 -m eval_env verify --env eval-env-v1
+eval-env-v1 verified: 18 checks, manifest sha256 a6ecd2b4…, run kind reference
+.\.venv\Scripts\python.exe -X utf8 -m eval_env run --env eval-env-v1 --label env_v1_validation_qwen --runs 3
+```
+
+| 指标 | Env V1 |
+|---|---|
+| 每轮通过数 | 39 / 39 / 39 |
+| Answer Success / False Refusal | 95.0% / 5.0% |
+| Unanswerable Refusal / Boundary | 100% / 100% |
+| Citation Presence / Index Validity | 100% / 100% |
+| Required Source Coverage / Fact Hit | 100% / 95.0% |
+| 跨轮稳定性 | 100%（39 题 3/3 通过，1 题 0/3） |
+| 耗时 p50 / p95 / max | 2.82 / 10.35 / 11.15 秒 |
+| 7 项门禁 | 全部通过 |
+
+**Diagnostic Eval**（使用环境内的标签快照）：
+```
+.\.venv\Scripts\python.exe -X utf8 -m diagnostic_eval --eval eval\env_v1_validation_qwen.json --labels eval\environments\eval-env-v1\labels\validation_v1.labels.json
+case runs 120: passed 117, failed 3
+primary: {'planning_error': 3}   unattributed: none   secondary: {'evidence_error': 3}   latent: none
+```
+- 3 个失败的 case-run 都是 `answer_document_h008`，primary 是 `planning_error`（`requires_freshness=True`，而标签是 False），secondary 是 `evidence_error`（`freshness_unsupported`）。
+- **不再有被跳过的检查**：Stage 2 那次运行里，wiki 页面标签因为语料不一致被跳过了 18 个 case-run；这次运行读的正是标签所针对的那份 Wiki，所以 wiki 页面检查全部适用，并且全部通过（retrieval 阶段 72 pass、0 fail）。
+
+### 12.8 旧环境 → 新环境：逐 case 差异（`env_v1_validation_qwen_vs_stage1_trace_qwen.environment_diff.md`）
+
+> 按规则，每一处差异都归因为 environment change，不判断为回归或改进。
+
+- 旧环境：`stage1_trace_qwen`（commit `5baf106`），wiki **没有固定**，读的是本机 `data/wiki` 里发布的 build-0001（20 页）。
+- 新环境：`eval-env-v1`（commit `38afa41`），wiki 是 `committed_sample`（4 页）。
+- 每轮通过数：旧 `[39, 39, 39]` → 新 `[39, 39, 39]`。**40 个 case 的通过次数全部相同**，行为和路由也全部相同。
+- 11 个 case 的答案文本有变化，其余 29 个完全相同。
+
+| case | 通过次数（旧 → 新） | 本侧 3 次运行里的不同答案数（旧 / 新） | 用到 wiki |
+|---|---|---|---|
+| `answer_wiki_h001` | 3 → 3 | 1 / 2 | 是 |
+| `answer_wiki_h002` | 3 → 3 | 1 / 2 | 是 |
+| `answer_wiki_h003` | 3 → 3 | 1 / 1 | 是 |
+| `answer_wiki_h004` | 3 → 3 | 1 / 1 | 是 |
+| `answer_multi_h003` | 3 → 3 | 1 / 1 | 是 |
+| `answer_multi_h004` | 3 → 3 | 1 / 2 | 是 |
+| `answer_document_h001` | 3 → 3 | 2 / 1 | 否 |
+| `answer_document_h005` | 3 → 3 | 1 / 2 | 否 |
+| `answer_document_h007` | 3 → 3 | 1 / 1 | 否 |
+| `answer_multi_h002` | 3 → 3 | 1 / 2 | 否 |
+| `refuse_missing_h007` | 3 → 3 | 1 / 2 | 否 |
+
+**供阅读时参考的事实**（不改变上面的归因）：
+- 6 个用到 wiki 的 case，读到的 Wiki 页面本身就不同，所以答案文本变了，这是意料之中的。
+- 另外 5 个没有用到 wiki 的 case：embedding **不是**原因，环境专属缓存里的 20 个向量和旧的共享缓存逐位相同（差值为 0）；而且这些 case 的答案文本在**同一个环境**里本来就会变，例如 env-v1 自己的 3 次运行里，就有 3 个 case 出现了两种措辞（结尾标点、有没有"根据资料"这类前缀），旧环境两次运行之间（Stage 0 的 baseline 和 regression）本来也有 3/40 个 case 措辞不同。
+
+### 12.9 发现的问题
+
+- **F1（已修复）· 生成环境时误记了 `dirty: true`**：`make` 在创建 staging 目录之后才读 git 状态，把自己的临时目录当成了未跟踪文件。当时那份环境还没有被提交或使用，所以修复后删掉重新生成了（`9ba92c7`，并加了测试）；现在 manifest 里的 `created_from` 是干净的 `9ba92c7`。
+- **F2 · Stage 0–2 的所有结果都是在一份没有固定的 Wiki 上跑出来的**（本机 `data/wiki` 的 build-0001），而那份 Wiki 取决于这台机器上传过什么文档、编译出了什么。从 Env V1 开始，Eval 不再受本机 `data/wiki` 影响。
+
+### 12.10 未解决的问题和风险
+
+- **R1 · `run_stage0_eval.py` 仍然会读本机的 `data/wiki`**。它是 Stage 0–1 的复现脚本，按要求保持原样，**以后的新 Eval 一律用 `python -m eval_env run`**。
+- **R2 · 环境只固定数据，不固定代码和模型**：代码由 git commit 和代码 hash 追溯，被测的 chat 模型只做记录。要比较两个 Agent 版本，必须在同一个环境里各跑一次。
+- **R3 · embedding digest 的校验依赖 Ollama 在线**：Ollama 不在线时会直接拒绝执行，而不是跳过这项校验。
+- **R4 · 环境专属的 embedding 缓存在 gitignore 的 artifacts 目录里**，换一台机器就会重新计算。可以用索引指纹来比对两台机器算出来的向量是否一致。
+- **R5 · 同一环境里答案文本本来就会波动**（例如 rerank 没设 temperature），所以只看文本做 diff 会显示"有变化"。以后比较两次运行时，应该看通过数、行为和诊断，而不是答案文本。
+- **R6 · 数据集是按路径加 sha 引用的，没有复制进环境**：如果仓库里的这个文件被删掉或改动，这个环境就会拒绝执行，这是有意的。
+- **R7 · API（产品）本身仍然使用本机的 `data/wiki`**，这是产品设计，本阶段不改。环境固定只作用于 Eval。
+- **R8 · 只有一个环境**：没有为 build-0001 建环境。如果以后想在编译出来的 Wiki 上做评测，需要为它单独写一份 overlay，并在 `published_build` 类型的环境里运行。
+
+按要求在这里停止：Stage 2 和 2.1 都没有修改 Agent 行为，也没有进入 Agent 优化阶段。
