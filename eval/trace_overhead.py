@@ -7,7 +7,11 @@ difference is the instrumentation (spans, sanitizing, two trace-DB writes),
 not model noise. Arms alternate request by request so drift hits both equally.
 
 Usage:
-    .venv\\Scripts\\python.exe eval\\trace_overhead.py [--n 200]
+    .venv\\Scripts\\python.exe eval\\trace_overhead.py --output eval\\<name>.json [--n 200]
+
+An existing output is never overwritten (the Stage 1 measurement lives in
+eval/stage1_trace_overhead.json). The report records the git commit and
+whether the tree was dirty, so a measurement can be tied to the code it ran.
 """
 
 from __future__ import annotations
@@ -19,6 +23,7 @@ import os
 import platform
 import sqlite3
 import statistics
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -92,7 +97,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n", type=int, default=200, help="requests per arm per scenario")
     parser.add_argument("--warmup", type=int, default=20)
+    parser.add_argument("--output", default=str(ROOT / "eval" / "stage1_trace_overhead.json"))
     args = parser.parse_args()
+    output = Path(args.output)
+    if output.exists():
+        print(f"REFUSED: {output} exists; measurements are never overwritten, pass a new --output")
+        return 2
+    git = lambda *cmd: subprocess.run(["git", *cmd], cwd=ROOT, capture_output=True, text=True).stdout.strip()
+    code = {"commit": git("rev-parse", "HEAD"), "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))}
 
     directory = tempfile.TemporaryDirectory()
     root = Path(directory.name)
@@ -150,7 +162,7 @@ def main() -> int:
 
     report = {
         "method": "TestClient, real request path, retrieval + model mocked; arms alternate per request",
-        "n_per_arm": args.n, "warmup_pairs": args.warmup,
+        "git": code, "n_per_arm": args.n, "warmup_pairs": args.warmup,
         "python": platform.python_version(), "platform": platform.platform(),
         "scenarios": results,
         "internal_trace_overhead_ms": {"p50": diag[len(diag) // 2], "p95": diag[int(0.95 * (len(diag) - 1))],
@@ -158,7 +170,6 @@ def main() -> int:
         "spans_per_run": {"min": span_counts[0], "max": span_counts[-1]},
         "app_db_bytes_after_benchmark": db_bytes,
     }
-    output = ROOT / "eval" / "stage1_trace_overhead.json"
     output.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
     for name, data in results.items():
         a, b = data["trace_on"], data["trace_off"]
