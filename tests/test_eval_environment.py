@@ -76,6 +76,13 @@ class MakeTests(EnvTestCase):
         self.assertFalse(env.exploratory)
         self.assertTrue(all(check["ok"] for check in env.checks))
 
+    def test_creation_records_the_tree_state_before_staging(self):
+        calls = []
+        self.git.side_effect = lambda: calls.append(sorted(p.name for p in self.envs.glob("*"))) or CLEAN
+        root = self.make()
+        self.assertEqual(calls, [[]])  # read once, before the staging directory existed
+        self.assertFalse(self.manifest(root)["created_from"]["dirty"])
+
     def test_environments_are_immutable(self):
         self.make()
         with self.assertRaisesRegex(EnvironmentRefused, "immutable"):

@@ -75,6 +75,8 @@ def make_environment(env_id: str, *, dataset: Path, labels: Path, documents: lis
     if labels_data.get("dataset_sha256") != common.sha256_file(dataset):
         raise EnvironmentRefused("the label overlay was written for a different dataset version")
 
+    # Before anything is written: the staging directory must not count as a change.
+    created_from = {k: v for k, v in common.git_state().items() if k != "changes"}
     Path(environments_dir).mkdir(parents=True, exist_ok=True)
     # Staged next to its final place so the closing rename is atomic and same-volume.
     staging = Path(tempfile.mkdtemp(prefix=f".staging-{env_id}-", dir=environments_dir))
@@ -108,7 +110,7 @@ def make_environment(env_id: str, *, dataset: Path, labels: Path, documents: lis
             "env_id": env_id,
             "description": description,
             "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "created_from": {k: v for k, v in common.git_state().items() if k != "changes"},
+            "created_from": created_from,
             "dataset": {"path": common.rel(dataset), "sha256": common.sha256_file(dataset)},
             "diagnostic_labels": copy(labels, f"labels/{Path(labels).name}"),
             "corpus": {"documents": docs, "wiki": wiki,
