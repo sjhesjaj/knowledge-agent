@@ -7,7 +7,8 @@
 | 基线 / 回归 / 任一带标签的运行 | `eval/<label>.json` | 环境（commit、模型 digest、量化、Ollama 版本、Wiki build）、检索配置、system prompt 哈希、请求形态、每次运行的 summary、aggregate、gates，以及**每个 case 每次运行的结果**（用于翻转分析） |
 | 对比结论 | `eval/stage0_comparison.json`（以及以后的同类文件） | `compare_stage0.py` 的输出 |
 | 冒烟 / 真实调用记录 | `eval/deepseek_smoke.json` | 逻辑与实际 prompt 的差异、token、耗时；不含请求头和 Key |
-| Trace 开销 A/B | `eval/stage1_trace_overhead.json` | `trace_overhead.py` 的结果（TRACE on/off 各 200 次 mock 请求） |
+| Trace 开销 A/B | `eval/stage1_trace_overhead.json`（Stage 1）、`eval/pmi_trace_overhead.json`（合入 main 之后） | `trace_overhead.py --output <file>` 的结果（TRACE on/off 各 200 次 mock 请求）；已存在的文件不会被覆盖，结果里记录 git commit 和工作区是否干净 |
+| 模型对照 | `eval/stage25/`、`eval/post_main_integration/` | `model_comparison.py --series stage25\|pmi`。每个 series 用自己的 label 前缀（`stage25_*`、`pmi_*`）和目录，已有报告不会被重写 |
 | 诊断标签 overlay | `eval/diagnostic_labels/<dataset>.labels.json` | Stage 2 起。人工编写，锁定数据集 sha256 和它所针对的 wiki 语料；冻结数据集本身不改 |
 | 诊断报告 | `eval/diagnostics/<label>.diagnostic.json` / `.md` | `python -m diagnostic_eval --eval eval/<label>.json --labels <overlay>` 的输出：case 级阶段诊断，以及 root cause 分布 |
 | 脚本 | `eval/*.py` | harness、对比、冒烟、开销基准 |

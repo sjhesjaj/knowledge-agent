@@ -1354,3 +1354,23 @@ OK
 - 合入后的 `.gitignore` 包含 `.env`、`.env.*`、`!.env.example` 和 `eval/artifacts/`，补上了 main 缺少的 `.env` 规则。
 
 按要求在这里停止：没有 push main，没有打 tag，没有进入 Stage 3。本阶段没有根据结果修改 Agent。
+
+### 14.8 发布前收尾：README 与 Trace 开销重测
+
+- **README 重写**（`87c8bea`）：
+  - 第一屏说明项目定位、主链路、已验证的结果，并提示 blind_v2 已被开发使用。
+  - 旧 README 的应用层内容原文移到 `docs/APP_DETAILS.md`，包括演示、API、Wiki、M10 验收和完整目录树，README 里有链接。
+- **Trace 开销重测**：
+  - 在当前集成版本 `551bab2` 上重测，工作区干净。结果在 `eval/pmi_trace_overhead.json`（`7532f2f`）。
+  - 测量脚本加了 `--output` 参数，不会再覆盖 `eval/stage1_trace_overhead.json`。
+  - 结果：
+
+| 接口 | OFF p50 / p95 | ON p50 / p95 | 平均差值（95% CI） | 占真实请求 p50（Qwen 2.81 s / DeepSeek 1.16 s） |
+|---|---|---|---|---|
+| `/api/chat` | 23.3 / 47.3 ms | 42.4 / 66.8 ms | +20.9 ms [+18.5, +23.2] | 0.74% / 1.8% |
+| `/api/chat/stream` | 28.3 / 46.4 ms | 50.3 / 75.5 ms | +23.9 ms [+21.9, +25.8] | 0.85% / 2.1% |
+
+- **与 Stage 1 对比**：
+  - `/api/chat` 基本没变（+19.4 → +20.9 ms，两个置信区间重叠）。
+  - 流式接口从 +19.6 ms 增加到 +23.9 ms，置信区间不重叠。可能与 main 的缓冲流式输出有关，但没有深挖。
+  - README 的第一屏不再展示开销；当前数字放在 Trace 小节和 Current metrics 里，Stage 1 的 +0.7% 标为历史测量。
