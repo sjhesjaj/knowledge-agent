@@ -1,0 +1,218 @@
+[
+  {
+    "id": "tfh_001",
+    "question": "如今公司的远程办公政策是怎么规定的？每周最多能远程几天？",
+    "markers": ["如今"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“如今”修饰的是远程办公制度本身，问的是现行规则里的具体天数，属于制度内容问题，不需要读取业务状态。"
+  },
+  {
+    "id": "tfh_002",
+    "question": "sku-c300 眼下还剩多少箱？",
+    "markers": ["眼下"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "问的是库存记录此刻的数量，会随时间变化，只能从业务系统实时读取。"
+  },
+  {
+    "id": "tfh_003",
+    "question": "我这阵子要去新加坡出差，境外出差除了部门负责人之外还需要谁审批？",
+    "markers": ["这阵子"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“这阵子”描述的是提问人自己的出差安排，真正的问题是境外出差的审批规则，与制度是否当前有效或业务记录无关。"
+  },
+  {
+    "id": "tfh_004",
+    "question": "帮我查查我最近一次提交的报销单审批到哪个环节了",
+    "markers": ["最近一次"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "“最近一次”用来指定是哪一张报销单，问的是这条审批记录此刻的进度，属于实时业务状态。"
+  },
+  {
+    "id": "tfh_005",
+    "question": "现行的费用报销制度中，单笔金额超过多少需要部门负责人审批？",
+    "markers": ["现行"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“现行”修饰报销制度，问的是制度中的审批金额门槛，是具体规则数值，不需要实时读取。"
+  },
+  {
+    "id": "tfh_006",
+    "question": "笔记本电脑丢了，是不是要立刻上报？手册规定多长时间内必须报告给谁？",
+    "markers": ["立刻"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“立刻”表达的是紧迫性和上报时限，问的是设备遗失的上报规则，与当前有效性或业务状态无关。"
+  },
+  {
+    "id": "tfh_007",
+    "question": "按目前的年假规定，入职满三年一年有几天带薪年假？另外帮我看下系统里我今年的年假还剩几天没休。",
+    "markers": ["目前", "今年"],
+    "temporal_intent": "mixed",
+    "expected_requires_freshness": true,
+    "expected_route": "document_system",
+    "rationale": "前半句问年假制度（current_knowledge），后半句问个人年假余额这一实时业务记录，按 mixed 处理，freshness 由余额部分决定为 True。"
+  },
+  {
+    "id": "tfh_008",
+    "question": "订单 ord-1002 我刚刚付过款了，它的状态更新了没有？",
+    "markers": ["刚刚"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "“刚刚”描述的是提问人的付款动作，但问题本身是订单记录此刻的状态，必须实时读取业务系统。"
+  },
+  {
+    "id": "tfh_009",
+    "question": "最新一版员工手册里，加班转调休是按什么比例折算的？调休多久内要用掉？",
+    "markers": ["最新一版"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“最新一版”指的是文档版本，但问的仍是规则内容（折算比例和有效期），按规则标 False。"
+  },
+  {
+    "id": "tfh_010",
+    "question": "我想在办公电脑上装一个实时翻译插件，需要走什么申请流程？",
+    "markers": ["实时"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“实时”是名词短语“实时翻译插件”的一部分，问题是软件安装的申请规则，不涉及时效或业务状态。"
+  },
+  {
+    "id": "tfh_011",
+    "question": "查一下 sku-b200 的最新库存数量。",
+    "markers": ["最新"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "这里“最新”修饰的是库存数量这一业务记录的值，而不是制度版本，需要实时读取库存。"
+  },
+  {
+    "id": "tfh_012",
+    "question": "能不能简单介绍一下公司当今实行的考勤制度大概是什么样的？",
+    "markers": ["当今"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "wiki_only",
+    "rationale": "“当今”修饰考勤制度本身，且请求的是概览介绍而非具体条款，按路由规则标 wiki_only，不需要实时数据。"
+  },
+  {
+    "id": "tfh_013",
+    "question": "手册上说每月 10 日发放上一个自然月的工资，那本月 10 号发的是哪个月的工资？",
+    "markers": ["本月"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“本月”只是相对日期的指代，答案可由发薪规则直接推出（发上个月的工资），不涉及制度时效或业务记录；略有边界感，但语义上属于 incidental。"
+  },
+  {
+    "id": "tfh_014",
+    "question": "截止到现在，我的调休余额还有多少小时？",
+    "markers": ["截止到现在"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "问的是个人调休余额此刻的值，属于随时间变化的个人业务记录，只能从业务系统读取。"
+  },
+  {
+    "id": "tfh_015",
+    "question": "时下公司对于将内部资料上传至外部人工智能服务持何种态度？",
+    "markers": ["时下"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“时下”修饰的是公司政策立场，问的是信息安全制度的具体规定，属于当前有效知识。"
+  },
+  {
+    "id": "tfh_016",
+    "question": "境外出差按现在的流程需要哪些人审批？我上周提交的出差申请 apr-3001 此时卡在哪一步了？",
+    "markers": ["现在", "上周", "此时"],
+    "temporal_intent": "mixed",
+    "expected_requires_freshness": true,
+    "expected_route": "document_system",
+    "rationale": "前半句问差旅审批制度，后半句问具体审批单此刻所处的步骤，同时包含制度与实时业务状态，按 mixed 标 True。"
+  },
+  {
+    "id": "tfh_017",
+    "question": "季度绩效结果今天公布了，我对结果有异议，最晚几个工作日内要申请复核？",
+    "markers": ["今天"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“今天”描述的是提问人所处的情境（结果公布日），实际问的是复核申请期限这条规则，不需要实时读取。"
+  },
+  {
+    "id": "tfh_018",
+    "question": "sku-a100 还有货吗？够不够发 50 件？",
+    "markers": [],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "没有显式时间词，但“还有货吗”隐含询问此刻库存，属于实时业务状态；这是有意设置的无显式时间词样本。"
+  },
+  {
+    "id": "tfh_019",
+    "question": "目下公司每年的岗位培训预算上限是多少？实习生能不能申请？",
+    "markers": ["目下"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“目下”修饰培训预算制度，问的是规则中的金额上限与适用对象，属于制度内容问题。"
+  },
+  {
+    "id": "tfh_020",
+    "question": "我目前还在试用期，转正总结需要在期满前多少个工作日提交？",
+    "markers": ["目前"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“目前”描述的是提问人自己的处境（处于试用期），不是修饰制度或业务记录，问的是转正流程的规则。"
+  },
+  {
+    "id": "tfh_021",
+    "question": "我本周提交的远程办公申请，主管批了没有？",
+    "markers": ["本周"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "“本周”用来指定是哪一条申请，问的是该审批记录此刻是否通过，属于实时业务状态。"
+  },
+  {
+    "id": "tfh_022",
+    "question": "当前公司对访客进入办公区域有哪些要求？",
+    "markers": ["当前"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“当前”修饰的是办公区域管理制度，问的是具体要求，属于当前有效知识，不需要实时读取。"
+  },
+  {
+    "id": "tfh_023",
+    "question": "现在报销单笔超过 2000 块要几级审批？顺便帮我实时查一下我那笔报销审批到哪了。",
+    "markers": ["现在", "实时"],
+    "temporal_intent": "mixed",
+    "expected_requires_freshness": true,
+    "expected_route": "document_system",
+    "rationale": "前半句问报销审批制度，后半句要求实时查询个人报销审批进度，同时包含制度与业务状态，按 mixed 标 True。"
+  },
+  {
+    "id": "tfh_024",
+    "question": "截至目前，公司关于员工离职交接的规定包括哪些方面？",
+    "markers": ["截至目前"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "“截至目前”修饰的是离职交接制度的有效版本，问的是规定内容；也可视作概览类请求而偏向 wiki，但问的是具体规定条目，按 document_only 标注。"
+  }
+]
