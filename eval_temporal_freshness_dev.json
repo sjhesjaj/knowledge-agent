@@ -1,0 +1,263 @@
+[
+  {
+    "id": "tf_ck_01",
+    "question": "目前公司的弹性到岗时间是几点到几点？",
+    "markers": ["目前"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "问的是「工作时间」这条制度规定的到岗区间，属于制度内容。「目前」修饰的是当前生效的制度，由知识库维护保证；问题里没有需要实时读取的业务记录。"
+  },
+  {
+    "id": "tf_ck_02",
+    "question": "当前的报销时限是费用发生后多少天内？",
+    "markers": ["当前"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "报销时限是「费用报销」制度里的固定数值（30 天）。「当前的」指当前生效的规定，不是一条会随时间变化的业务记录。"
+  },
+  {
+    "id": "tf_ck_03",
+    "question": "现在公司规定每周最多能远程办公几天？",
+    "markers": ["现在"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "问的是远程办公政策里的上限（每周 2 天）。「现在公司规定」是在问现行规则，答案来自文档，不依赖实时状态。"
+  },
+  {
+    "id": "tf_ck_04",
+    "question": "最新的年假规定里，工作满三年有几天年假？",
+    "markers": ["最新"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「最新的年假规定」指制度的最新版本。知识库里保存的就是当前发布的版本（旧版会退役），问题要的是规则数值（8 天），不是某个人的年假余额。"
+  },
+  {
+    "id": "tf_ck_05",
+    "question": "现行的差旅审批流程是怎样的？境外出差要谁批？",
+    "markers": ["现行"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「现行」就是「当前生效」的意思。这里问的是审批流程和审批人，属于制度内容，没有涉及任何业务记录。"
+  },
+  {
+    "id": "tf_ck_06",
+    "question": "截至目前，公司的培训预算上限是每年多少钱？",
+    "markers": ["截至目前"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「截至目前」限定的是规则本身（到现在为止有效的上限），问的是制度里的固定额度（2000 元）。对照 tf_ls_05：同样用「截至目前」，但那条问的是个人余额，会随时间累积变化。"
+  },
+  {
+    "id": "tf_ck_07",
+    "question": "我今天漏打卡了，按规定最晚什么时候要补卡？",
+    "markers": ["今天"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「今天」只是说明漏打卡发生的时间，真正问的是补卡时限这条规则（2 个工作日内）。回答不需要读取打卡记录。"
+  },
+  {
+    "id": "tf_ck_08",
+    "question": "最近调整后的加班调休有效期是几个月？",
+    "markers": ["最近"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「最近调整后」预设制度改过，但问题要的是当前生效的调休有效期（3 个月），仍然是制度内容。它没有问新旧版本差异，所以路由标为 document_only，而不是 wiki_document。"
+  },
+  {
+    "id": "tf_ck_09",
+    "question": "简单介绍一下目前的信息安全要求。",
+    "markers": ["目前"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "wiki_only",
+    "rationale": "这是概览请求（「简单介绍一下」），不要原文条款；「目前的」修饰的是当前的要求。概览类问题应该走 Wiki。"
+  },
+  {
+    "id": "tf_ck_10",
+    "question": "当下公司的高权限账号多久复核一次？",
+    "markers": ["当下"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "复核周期是「账号与权限」制度里的固定值（90 天）。「当下」和「目前」是同一个意思，修饰的是制度。"
+  },
+  {
+    "id": "tf_ck_11",
+    "question": "目前生效的保密制度对离职后有什么要求？",
+    "markers": ["目前"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「目前生效的」明确表示问的是现行制度，内容来自「保密义务」条款。这条与 validation_v1 的 route_document_only_h005 句式相同，那条在冻结数据集里标的是 True（冲突见 LABELING.md）。"
+  },
+  {
+    "id": "tf_ck_12",
+    "question": "眼下这版考勤制度，每月迟到几次以内不扣款？",
+    "markers": ["眼下"],
+    "temporal_intent": "current_knowledge",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「眼下这版考勤制度」指当前版本的制度，问的是不扣款的次数（2 次）。句式与 dev 的 answer_document_008 相同，那条被标为应该回答。"
+  },
+  {
+    "id": "tf_ls_01",
+    "question": "SKU-A100 目前还有多少库存？",
+    "markers": ["目前"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "库存是一条业务记录此刻的值，会随出入库变化，只能从业务系统实时读取。"
+  },
+  {
+    "id": "tf_ls_02",
+    "question": "SKU-B200 现在有货吗？",
+    "markers": ["现在"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "「现在有货吗」问的是此刻的可用库存，不涉及任何制度内容。"
+  },
+  {
+    "id": "tf_ls_03",
+    "question": "今天 SKU-C300 的库存是多少？",
+    "markers": ["今天"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "「今天」把问题限定在当前时点，要的是实时库存。"
+  },
+  {
+    "id": "tf_ls_04",
+    "question": "给我 SKU-A100 最新的库存数字。",
+    "markers": ["最新"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "「最新的库存数字」修饰的是一条业务记录的当前读数，而不是制度版本；对照 tf_ck_04，那条的「最新」修饰的是制度版本。"
+  },
+  {
+    "id": "tf_ls_05",
+    "question": "截至目前我的年假还剩几天？",
+    "markers": ["截至目前"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "问的是本人的年假余额，会随请假记录变化，属于个人业务状态。demo 业务系统没有开放年假余额，运行时应该返回能力边界文案，但规划层面这仍然是 system 请求，并且需要实时数据。"
+  },
+  {
+    "id": "tf_ls_06",
+    "question": "我最近一次的报销申请审批到哪一步了？",
+    "markers": ["最近"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "问的是本人某次报销申请的审批进度，是一条会推进的业务记录。这里的「最近一次」用来指定是哪一条记录。"
+  },
+  {
+    "id": "tf_ls_07",
+    "question": "我当前的调休余额还有多少小时？",
+    "markers": ["当前"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "个人调休余额会随加班和调休使用变化，是个人业务状态。对照 tf_ck_08，那条问的是调休有效期这条规则。"
+  },
+  {
+    "id": "tf_ls_08",
+    "question": "SKU-B200 的实时库存给我看一下。",
+    "markers": ["实时"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "「实时库存」明确要求实时读取业务系统。"
+  },
+  {
+    "id": "tf_ls_09",
+    "question": "此刻 SKU-C300 库存够不够发 20 件？",
+    "markers": ["此刻"],
+    "temporal_intent": "live_state",
+    "expected_requires_freshness": true,
+    "expected_route": "system_only",
+    "rationale": "需要把此刻的库存和 20 件做比较，依赖实时库存。"
+  },
+  {
+    "id": "tf_mx_01",
+    "question": "现行的年假规定是几天？另外我目前还剩几天年假？",
+    "markers": ["现行", "目前"],
+    "temporal_intent": "mixed",
+    "expected_requires_freshness": true,
+    "expected_route": "document_system",
+    "rationale": "前半句是现行规则（文档，不需要实时数据），后半句是本人年假余额（个人业务状态，需要实时数据）。整个请求需要实时数据，这是由后半句决定的。"
+  },
+  {
+    "id": "tf_mx_02",
+    "question": "库存盘点口径现在是怎么规定的？顺便查一下 SKU-A100 当前库存。",
+    "markers": ["现在", "当前"],
+    "temporal_intent": "mixed",
+    "expected_requires_freshness": true,
+    "expected_route": "document_system",
+    "rationale": "「现在是怎么规定的」问的是规则（文档）；「当前库存」问的是实时业务值（系统）。需要实时数据来自第二个子句。"
+  },
+  {
+    "id": "tf_mx_03",
+    "question": "先简单介绍下目前的差旅政策，再看下我当前的差旅额度。",
+    "markers": ["目前", "当前"],
+    "temporal_intent": "mixed",
+    "expected_requires_freshness": true,
+    "expected_route": "wiki_system",
+    "rationale": "「简单介绍下目前的差旅政策」是概览（Wiki，不需要实时数据）；「我当前的差旅额度」是个人业务状态（系统，需要实时数据）。"
+  },
+  {
+    "id": "tf_in_01",
+    "question": "年假截至每年什么时候必须休完？",
+    "markers": ["截至"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "这里的「截至」表示期限，问的是年假有效期这条规则，与当前是否有效无关。语料里没有这条规则，最终可能拒答，但规划层面它是文档问题。"
+  },
+  {
+    "id": "tf_in_02",
+    "question": "我现在就要出差，差旅申请需要填写哪些内容？",
+    "markers": ["现在"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「现在就要」表达的是紧迫，问的是差旅申请需要填写的内容（目的地、日期、任务、预算），属于制度内容。"
+  },
+  {
+    "id": "tf_in_03",
+    "question": "公司对安装实时通讯软件有什么规定？",
+    "markers": ["实时"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「实时」是「实时通讯软件」这个名词的一部分，不是在要求实时数据；问的是软件安装规定。"
+  },
+  {
+    "id": "tf_in_04",
+    "question": "工资遇到法定节假日会提前到最近的工作日吗？",
+    "markers": ["最近"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「最近的工作日」指时间上距离最近的那个工作日，是制度原文里的表述；问的是薪资发放规则。"
+  },
+  {
+    "id": "tf_in_05",
+    "question": "我当前还在试用期，转正总结要提前多久提交？",
+    "markers": ["当前"],
+    "temporal_intent": "incidental",
+    "expected_requires_freshness": false,
+    "expected_route": "document_only",
+    "rationale": "「当前还在试用期」描述的是提问人自己的处境，是一个前提，不需要系统核实；问的是转正总结的提交时限（期满前 10 个工作日）。"
+  }
+]
