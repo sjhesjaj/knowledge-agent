@@ -73,6 +73,7 @@ def rate(num: int, den: int) -> float | None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True)
+    parser.add_argument("--kind", default="baseline (current planner, before any change)")
     args = parser.parse_args()
     output = Path(args.output)
     if output.exists() or output.with_suffix(".md").exists():
@@ -117,7 +118,7 @@ def main() -> int:
     blocked = [r for r in answerable if r["refused_for_freshness_without_system"]]
 
     report = {
-        "stage": "3", "kind": "baseline (current planner, before any change)",
+        "stage": "3", "kind": args.kind,
         "dataset": DATASET.name, "dataset_sha256": hashlib.sha256(raw).hexdigest(),
         "git": {"commit": git("rev-parse", "HEAD"),
                 "dirty": bool(git("status", "--porcelain", "--untracked-files=no"))},
@@ -154,7 +155,7 @@ def main() -> int:
 def markdown(report: dict) -> str:
     f = report["freshness"]
     lines = [
-        "# Stage 3 · freshness baseline（当前 Planner，修改前）", "",
+        f"# Stage 3 · freshness 评分：{report['kind']}", "",
         f"- 数据集 `{report['dataset']}`，sha256 `{report['dataset_sha256'][:16]}…`，{f['n']} 条",
         f"- 代码 `{report['git']['commit'][:7]}`，dirty={report['git']['dirty']}",
         f"- Planner 的 freshness 词表：{'、'.join(report['planner_freshness_markers'])}", "",
