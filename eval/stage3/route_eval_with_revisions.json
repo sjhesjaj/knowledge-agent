@@ -1,0 +1,44 @@
+{
+  "revision_id": "stage3-freshness-contract-v1",
+  "revisions": "eval/label_revisions/stage3_freshness_contract.revisions.json",
+  "results": [
+    {
+      "dataset": "eval_orchestrated_routes_dev.json",
+      "git_sha": "c786cf4db190ee039cd8144d2359331a61fedb26",
+      "revised_cases": [
+        {
+          "id": "route_document_only_004",
+          "field": "expected_requires_freshness",
+          "old": true,
+          "new": false,
+          "actual": false
+        }
+      ],
+      "metrics": {
+        "freshness_signal_accuracy": {
+          "original_labels": "79/80",
+          "with_revisions": "80/80"
+        }
+      }
+    },
+    {
+      "dataset": "eval_orchestrated_routes_validation_v1.json",
+      "git_sha": "c786cf4db190ee039cd8144d2359331a61fedb26",
+      "revised_cases": [
+        {
+          "id": "route_document_only_h005",
+          "field": "expected_requires_freshness",
+          "old": true,
+          "new": false,
+          "actual": false
+        }
+      ],
+      "metrics": {
+        "freshness_signal_accuracy": {
+          "original_labels": "79/80",
+          "with_revisions": "80/80"
+        }
+      }
+    }
+  ]
+}
