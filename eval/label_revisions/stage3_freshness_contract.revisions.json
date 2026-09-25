@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "revision_id": "stage3-freshness-contract-v1",
+  "stage": "3",
+  "contract": "eval/stage3/LABELING.md, section \"requires_freshness 语义契约\"",
+  "policy": "Frozen datasets are never edited in place. This overlay records label corrections with reasons; scores are reported both on the original labels and with the overlay applied, and the corrected cases are never counted as planner improvements.",
+  "hashing": "dataset_sha256 is what evaluate_orchestrated_routes.py records (raw bytes of the working copy on the authoring machine, CRLF). dataset_sha256_lf is the sha256 of the committed blob (LF), which is stable across checkouts; consumers should verify the LF form.",
+  "revisions": [
+    {
+      "dataset": "eval_orchestrated_routes_dev.json",
+      "dataset_sha256": "9e7bf57d397b1a07a61536175c6689282e951e0cdadf2b756df585a50b37ccd0",
+      "dataset_sha256_lf": "7548b7ac90a66fe64b75de011db22e7e88492a00bb76dbeda7772d80765ab84c",
+      "case_id": "route_document_only_004",
+      "question": "现在这版考勤制度对迟到是怎么规定的？",
+      "field": "expected_requires_freshness",
+      "old": true,
+      "new": false,
+      "rationale": "「现在这版考勤制度」修饰的是当前生效的制度，问题要的是制度内容，不涉及任何实时业务状态。按语义契约不属于 freshness。原标签按「出现时间词即 freshness」标注；按原标签，这条问题会被 Evidence Policy 以 freshness_unsupported 拒答（文档证据不带观测时间），与 dev answerability 集把同类问题 answer_document_008 标为应当回答的预期相矛盾。"
+    },
+    {
+      "dataset": "eval_orchestrated_routes_validation_v1.json",
+      "dataset_sha256": "edc5ae8d0af633abcdf554abcd215c4cce679ce795dafb6d3d5438d359e43479",
+      "dataset_sha256_lf": "71435f6f22d3aa7b27ff47e39ff7518ff40b8361ea317e2e01f8e475f0a08051",
+      "case_id": "route_document_only_h005",
+      "question": "目前生效的这版保密制度是怎么写的？",
+      "field": "expected_requires_freshness",
+      "old": true,
+      "new": false,
+      "rationale": "「目前生效的这版保密制度」明确指现行制度，问的是条款内容。知识库本身代表当前生效版本（旧文档会退役），不需要实时读取业务系统。按语义契约不属于 freshness；原标签会让一个可回答的制度问题注定被拒答。"
+    }
+  ]
+}

@@ -6,13 +6,14 @@
 
 | 当前已验证 | 结果 |
 |---|---|
-| 自动化测试 | **1129 项全部通过** |
-| Eval Env V1 回答评测（40 题 × 3 轮） | Qwen3-4B 本地：**39/40、39/40、39/40**；DeepSeek API：**39/40、39/40、39/40** |
-| 唯一的失败 case `h008` | 被诊断为 **planning 阶段的 freshness 误判**，与模型无关 |
-| Qwen vs DeepSeek | 在这 40 题上**质量没有差异**；DeepSeek 延迟更低（平均 1.96 s vs 3.60 s），但有 API 费用 |
+| 自动化测试 | **1140 项全部通过** |
+| Eval Env V1 回答评测（40 题 × 3 轮） | Qwen3-4B 本地：**40/40、40/40、40/40**（Stage 3 之后）；DeepSeek API：39/40 × 3（Stage 3 之前测得，之后没有重跑） |
+| `h008` | Trace + Diagnostic Eval 定位为 **planning 阶段的 freshness 误判**；Stage 3 修复后，Qwen 从 0/3 变为 **3/3** |
+| freshness 修复的泛化（隔离 holdout，24 条） | 误报 5 → **0**，precision 0.545 → **1.000**；但 recall 0.600 → **0.500**。这是一个取舍：误拒答减少了，漏报多了 1 条，而漏报不影响回答（见 [Stage 3](#stage-3从定位到修复)） |
+| Qwen vs DeepSeek | 在这 40 题上**质量没有差异**（Stage 3 之前、同一份代码的对照）；DeepSeek 延迟更低（平均 1.96 s vs 3.60 s），但有 API 费用 |
 
 > [!IMPORTANT]
-> **`blind_v2` 已经在开发中被使用过**（M10 用它的路由结果做过验收基线），**不能再当作真正的盲测集**。上面的 validation 集同样是开发中见过的回归集。所以这些数字说明的是回归稳定性和链路可用性，**不是**对未见数据的泛化能力。
+> **`blind_v2` 已经在开发中被使用过**（M10 用它的路由结果做过验收基线），**不能再当作真正的盲测集**。上面的 validation 集同样是开发中见过的回归集。所以这些数字说明的是回归稳定性和链路可用性，**不是**对未见数据的泛化能力。Stage 3 的 temporal holdout 是唯一一份隔离编写的集合，但它已经开封过一次，以后也不能再当作 holdout 使用。
 
 > **范围说明**：这是一个本地运行的演示项目，**不是生产系统**。语料是一份模拟的公司制度（约 20 个知识块）；「业务状态」通道读的是仓库内的样例数据，没有接入真实企业系统；没有登录鉴权和写操作。
 
@@ -54,7 +55,7 @@ flowchart TB
 - **换了模型或改了代码，变好了还是变坏了？** 如果评测环境（语料、索引、配置、数据集）没有固定下来，前后结果不可比。
 - **模型能不能换？** 业务代码直接调用某个模型的 HTTP 接口，换模型就要改业务代码。
 
-这个项目针对这三个问题各做了一层基础设施，并用它们找到了一个具体问题（h008，见下文）。
+这个项目针对这三个问题各做了一层基础设施，并用它们定位并修复了一个具体问题（h008，见下文）。
 
 ## Core capabilities
 
@@ -103,7 +104,50 @@ flowchart TB
 | evidence | 语料无法证明时效性，以 `freshness_unsupported` 拒答（连带影响） |
 | generation | 没有发生 LLM 调用 |
 
-结论：这个失败**与模型无关**，更换模型不会修好它；问题出在 planner 对"目前"的时效性判断。修复它需要改 Agent 行为，目前还没有做（见 Roadmap）。
+结论：这个失败**与模型无关**，更换模型不会修好它；问题出在 planner 对"目前"的时效性判断。Stage 3 修复了这个问题，过程见下一节。
+
+### Stage 3：从定位到修复
+
+**根因：**
+
+- planner 只要看到时间词（目前、现在、最新……）就设置 `requires_freshness`，不管这个词修饰的是什么。
+- 文档证据不带观测时间，所以一旦被标了 freshness，"目前的制度里……"这类本来能回答的制度问题就必然被拒答。
+- 这不是个例：dev 集里的 `answer_document_008` 也以同样的方式失败。
+
+**修复（A′）：**
+
+- 时间词只有出现在实时状态子句里才算 freshness。实时状态子句指需要读系统的子句，或者"我的……还剩 / 余额"这类个人余额。
+- 路由逻辑不变。
+- `requires_freshness` 的语义定义为一个**显式时效证据约束**，定义见 [`eval/stage3/LABELING.md`](eval/stage3/LABELING.md)：
+  - flag 为 True 时，Evidence Policy 会额外要求至少有一条证据能证明答案是当前时点的值。
+  - 普通系统查询即使 flag 为 False，用的也是带 `observed_at` 的系统证据。
+
+**评测的顺序：**
+
+1. 先提交 29 条专项 dev 标签，然后跑 baseline。
+2. 由一个看不到 planner 和 dev 集的独立 agent 编写 24 条 holdout，并封存。
+3. 先提交只能运行一次的开封脚本，再实现 A′、跑 dev。
+4. 最后一次性打开 holdout，并跑 validation 回归。
+
+| | 修改前 | A′ |
+|---|---|---|
+| dev freshness（29 条，标签先于修改） | 0.483；可回答却被误拒 13/17 | 1.000；误拒 0/17（有拟合成分） |
+| **holdout freshness（24 条，只开封一次）** | 0.625；FP 5 / FN 4 | **0.792；FP 0 / FN 5** |
+| holdout precision / recall | 0.545 / 0.600 | **1.000 / 0.500** |
+| eval-env-v1 回答评测，Qwen × 3 轮 | 39/40（h008 0/3） | **40/40**（h008 3/3），其余 39 个 case 行为不变 |
+| 路由评测 validation_v1 / dev | 路由 1.0 / 1.0 | 路由 1.0 / 1.0（没有变化） |
+
+**precision 和 recall 的取舍：**
+
+- A′ 用更严格的条件换来了零误报。代价是：当时间词和实时请求被逗号切到不同子句里时，会漏判，比如"截止到现在，我的调休余额还有多少"。
+- 这两种错误的代价不对称：
+  - **误报**必然导致一个能回答的问题被拒答。
+  - **漏报**只是少了一次显式约束。只要路由正确，系统证据本来就带 `observed_at`，回答不受影响。
+- holdout 的 5 条漏报里，3 条路由正确，不影响回答；另外 2 条的问题出在路由本身，freshness 改对了也解决不了。
+- 所以 Stage 3 没有继续调整规则。另一个原因是，holdout 已经开封，继续调整也没有干净的衡量手段。
+- 完整记录见 [HANDOFF §15](HANDOFF.md)，逐条分析见 [`eval/stage3/HOLDOUT_REVIEW.md`](eval/stage3/HOLDOUT_REVIEW.md)。
+
+两条冻结的路由标签与新语义冲突。它们通过 overlay（[`eval/label_revisions/`](eval/label_revisions)）修订，原数据集没有改动：freshness 信号在原标签下是 79/80，修订后是 80/80，两个数字都会报告，这两条也不算作 planner 的改进。
 
 ## Reproducible Eval Environment
 
@@ -136,6 +180,8 @@ flowchart TB
 
 逐个 case 对比：39 个稳定通过，1 个两边都失败（h008），没有被修好、新失败或不稳定的 case。
 
+> 这组对照是在 Stage 3 之前（`b8c8197`）测的。Stage 3 之后只重跑了 Qwen（40/40 × 3），DeepSeek 没有重跑。h008 的失败发生在模型调用之前、与模型无关，但在 DeepSeek 上真正重跑之前，这里不声称 DeepSeek 也是 40/40。
+
 **怎么解读这个结果：**
 
 - 在这 40 题上，两个模型的**正确率没有差异**。但这 40 题是开发中见过的回归集，唯一的失败又发生在模型被调用之前，所以这个数据集**区分不了两个模型的能力**，不能得出"两者能力相当"的结论。
@@ -146,15 +192,17 @@ flowchart TB
 
 | 指标 | 数值 | 测量范围 |
 |---|---|---|
-| 自动化测试 | 1129 通过 / 1129 | 当前分支（旧分支 765 + main 的 M10 361 + 本次合并新增 3） |
+| 自动化测试 | 1140 通过 / 1140 | Stage 3（Stage 3 之前 1129 项，本阶段新增 11 项） |
 | Eval env 校验 | 18/18 | `eval-env-v1` |
 | 路由评测 | validation_v1 1.0；dev 1.0 | 纯逻辑，不调用模型 |
-| 回答评测，Qwen3-4B | 39/40 × 3 轮，稳定性 100% | eval-env-v1（validation_v1，40 题） |
-| 回答评测，DeepSeek | 39/40 × 3 轮，稳定性 100% | 同上 |
-| 失败归因 | 1 个 case，主错误 planning；unattributed 0 | Diagnostic Eval |
-| Trace 开销 | `/api/chat` 每个请求 +20.9 ms，约占真实请求 p50 的 0.74%（Qwen）/ 1.8%（DeepSeek） | 每组 200 次 A/B，当前集成版本 `551bab2` |
+| freshness 信号（路由集） | 原标签 79/80、79/80；应用 overlay 后 80/80、80/80 | 2 条冻结标签的修订见 [`eval/label_revisions/`](eval/label_revisions) |
+| 回答评测，Qwen3-4B | **40/40 × 3 轮**，7 项 gate 全部通过，误拒率 0% | eval-env-v1（validation_v1，40 题），Stage 3 `5f0ff42` |
+| 回答评测，DeepSeek | 39/40 × 3 轮 | Stage 3 之前（`b8c8197`）测得，之后没有重跑 |
+| 失败归因 | Qwen 在 Stage 3 之后 0 个失败；unattributed 0 | Diagnostic Eval |
+| freshness holdout（24 条，已开封） | precision 1.000 / recall 0.500（修改前 0.545 / 0.600） | Stage 3，只开封一次 |
+| Trace 开销 | `/api/chat` 每个请求 +20.9 ms，约占真实请求 p50 的 0.74%（Qwen）/ 1.8%（DeepSeek） | 每组 200 次 A/B，`551bab2`（Stage 3 之前测得，之后没有重测） |
 
-历史结果都保留在 `eval/` 中，不会被覆写：Stage 0 基线、Stage 1 Trace 回归、Stage 2.5 对照。M10 阶段的验收记录见 [docs/M10_CLOSEOUT_REPORT.md](docs/M10_CLOSEOUT_REPORT.md)，每个阶段的完整记录见 [HANDOFF.md](HANDOFF.md)。
+历史结果都保留在 `eval/` 中，不会被覆写：Stage 0 基线、Stage 1 Trace 回归、Stage 2.5 对照、post-main-integration baseline，以及 Stage 3 的 freshness 评测（`eval/stage3/`）。M10 阶段的验收记录见 [docs/M10_CLOSEOUT_REPORT.md](docs/M10_CLOSEOUT_REPORT.md)，每个阶段的完整记录见 [HANDOFF.md](HANDOFF.md)。
 
 ## Quick start
 
@@ -197,7 +245,7 @@ knowledge-agent/
 ├── wiki_runtime.py        # Wiki 编译任务、发布、回退
 ├── wiki_maintenance/      # Wiki 编译器与构建仓库
 ├── frontend/              # Vue 3 + Vite
-├── tests/                 # 1129 项自动化测试
+├── tests/                 # 1140 项自动化测试
 ├── eval_*.json            # 评测数据集
 ├── evaluate*.py           # 评测脚本
 ├── HANDOFF.md             # 每个阶段的决策、结果与风险记录
@@ -210,9 +258,10 @@ knowledge-agent/
 
 **已知限制**
 
-- **评测集**：`blind_v2` 已被开发使用，validation_v1 和 dev 也都是见过的数据。目前**没有干净的未见评测集**，所有数字都不能当作泛化能力。
+- **评测集**：`blind_v2` 已被开发使用，validation_v1 和 dev 也都是见过的数据。Stage 3 的 temporal holdout 已经开封，今后只能当作回归集。目前**没有干净的未见评测集**，所有数字都不能当作泛化能力。
 - **规模**：只有一份约 20 个知识块的模拟语料，40 题 × 3 轮。样本量不足以支撑统计意义上的模型比较。
-- **h008** 还没有修复：planner 的时效性判断过于敏感。
+- **freshness recall**：holdout 上的 recall 是 0.500。当时间词和实时请求落在不同子句里，或者使用了"刚刚 / 本周"这类词表里没有的词时，会漏判。这些漏报在运行时不影响回答，Stage 3 有意没有继续调整。
+- **路由缺口**：有几类请求没有被识别为系统请求，例如记录号和状态词被逗号拆进两个子句、"申请"类记录、个人年假余额。这些会影响回答，但不在 Stage 3 范围内。
 - **Diagnostic Eval** 在当前集合上只见到一种失败，规则的覆盖面还没有在多样的失败上得到检验。
 - **应用层**：单 worker、进程内锁；`client_id` 不等于鉴权；业务状态通道只开放库存查询，读的是样例数据；答案校验不判断语义。
 - **工程细节**：代码哈希按工作区文件计算，CRLF 与 LF 的差异会造成误报，应改为对 git blob 规范化后计算；eval_env 对 DeepSeek 记录的模型信息不完整；DeepSeek 的费用按公开价目表估算，没有和账单核对。
@@ -220,7 +269,7 @@ knowledge-agent/
 **Roadmap**
 
 1. 建立新的、真正不参与开发的盲测集，在它上面重跑 baseline 和模型对照。
-2. 修复 h008 的 freshness 误判，并用 Diagnostic Eval 验证它没有引入新的回归。
+2. 修复路由缺口（记录号和状态词分句、"申请"类记录、个人余额），先在 dev 上开发，再用新的隔离 holdout 衡量。
 3. 代码哈希规范化；eval_env 按 provider 分别记录模型信息。
 4. 语义层面的答案校验（引用与结论是否相符）。
 5. 应用层：鉴权、多实例、真实只读数据源（需先有可信身份解析）。

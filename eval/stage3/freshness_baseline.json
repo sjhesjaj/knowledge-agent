@@ -1,0 +1,871 @@
+{
+  "stage": "3",
+  "kind": "baseline (current planner, before any change)",
+  "dataset": "eval_temporal_freshness_dev.json",
+  "dataset_sha256": "322471b50e25c12dee55787818bb6f3cb7f5fb3cff3f8c8818a7209ef2ac57f6",
+  "git": {
+    "commit": "9751c10af7826e09d3f74dafb41a3c0f2c5645e8",
+    "dirty": false
+  },
+  "planner_freshness_markers": [
+    "当前",
+    "现在",
+    "实时",
+    "目前",
+    "最新",
+    "截至",
+    "此时",
+    "此刻",
+    "眼下",
+    "这会儿",
+    "当下"
+  ],
+  "freshness": {
+    "n": 29,
+    "accuracy": 0.4828,
+    "tp": 10,
+    "fp": 13,
+    "fn": 2,
+    "tn": 4,
+    "precision": 0.4348,
+    "recall": 0.8333,
+    "false_positive_rate": 0.7647,
+    "false_negative_rate": 0.1667
+  },
+  "route_accuracy": 0.931,
+  "by_intent": {
+    "current_knowledge": {
+      "FP": 9,
+      "route_match": 12,
+      "n": 12,
+      "TN": 3
+    },
+    "incidental": {
+      "FP": 4,
+      "route_match": 5,
+      "n": 5,
+      "TN": 1
+    },
+    "live_state": {
+      "TP": 7,
+      "route_match": 8,
+      "n": 9,
+      "FN": 2
+    },
+    "mixed": {
+      "TP": 3,
+      "route_match": 2,
+      "n": 3
+    }
+  },
+  "by_marker": {
+    "今天": {
+      "n": 2,
+      "freshness_correct": 1
+    },
+    "实时": {
+      "n": 2,
+      "freshness_correct": 1
+    },
+    "当下": {
+      "n": 1,
+      "freshness_correct": 0
+    },
+    "当前": {
+      "n": 5,
+      "freshness_correct": 3
+    },
+    "截至": {
+      "n": 1,
+      "freshness_correct": 0
+    },
+    "截至目前": {
+      "n": 2,
+      "freshness_correct": 1
+    },
+    "最新": {
+      "n": 2,
+      "freshness_correct": 1
+    },
+    "最近": {
+      "n": 3,
+      "freshness_correct": 2
+    },
+    "此刻": {
+      "n": 1,
+      "freshness_correct": 1
+    },
+    "现在": {
+      "n": 4,
+      "freshness_correct": 2
+    },
+    "现行": {
+      "n": 2,
+      "freshness_correct": 2
+    },
+    "目前": {
+      "n": 6,
+      "freshness_correct": 3
+    },
+    "眼下": {
+      "n": 1,
+      "freshness_correct": 0
+    }
+  },
+  "downstream": {
+    "expected_answerable": 17,
+    "refused_for_freshness_without_system": 13,
+    "ids": [
+      "tf_ck_01",
+      "tf_ck_02",
+      "tf_ck_03",
+      "tf_ck_04",
+      "tf_ck_06",
+      "tf_ck_09",
+      "tf_ck_10",
+      "tf_ck_11",
+      "tf_ck_12",
+      "tf_in_01",
+      "tf_in_02",
+      "tf_in_03",
+      "tf_in_05"
+    ],
+    "note": "probe uses the real evaluate_evidence with adapter-shaped evidence; document evidence has version=None and observed_at=None"
+  },
+  "cases": [
+    {
+      "id": "tf_ck_01",
+      "question": "目前公司的弹性到岗时间是几点到几点？",
+      "markers": [
+        "目前"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "freshness_requested",
+        "default_document"
+      ],
+      "planner_marker_hits": [
+        "目前"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ck_02",
+      "question": "当前的报销时限是费用发生后多少天内？",
+      "markers": [
+        "当前"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [
+        "当前"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ck_03",
+      "question": "现在公司规定每周最多能远程办公几天？",
+      "markers": [
+        "现在"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "document_policy_context",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [
+        "现在"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ck_04",
+      "question": "最新的年假规定里，工作满三年有几天年假？",
+      "markers": [
+        "最新"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "document_policy_context",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [
+        "最新"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ck_05",
+      "question": "现行的差旅审批流程是怎样的？境外出差要谁批？",
+      "markers": [
+        "现行"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": false,
+      "freshness_outcome": "TN",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "document_policy_context",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [],
+      "refused_for_freshness_without_system": false
+    },
+    {
+      "id": "tf_ck_06",
+      "question": "截至目前，公司的培训预算上限是每年多少钱？",
+      "markers": [
+        "截至目前"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [
+        "目前",
+        "截至"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ck_07",
+      "question": "我今天漏打卡了，按规定最晚什么时候要补卡？",
+      "markers": [
+        "今天"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": false,
+      "freshness_outcome": "TN",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_policy_context"
+      ],
+      "planner_marker_hits": [],
+      "refused_for_freshness_without_system": false
+    },
+    {
+      "id": "tf_ck_08",
+      "question": "最近调整后的加班调休有效期是几个月？",
+      "markers": [
+        "最近"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": false,
+      "freshness_outcome": "TN",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [],
+      "refused_for_freshness_without_system": false
+    },
+    {
+      "id": "tf_ck_09",
+      "question": "简单介绍一下目前的信息安全要求。",
+      "markers": [
+        "目前"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "wiki_only",
+      "predicted_route": "wiki_only",
+      "route_match": true,
+      "steps": [
+        "wiki_query"
+      ],
+      "reason_codes": [
+        "wiki_overview",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "目前"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ck_10",
+      "question": "当下公司的高权限账号多久复核一次？",
+      "markers": [
+        "当下"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [
+        "当下"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ck_11",
+      "question": "目前生效的保密制度对离职后有什么要求？",
+      "markers": [
+        "目前"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_policy_context",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "目前"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ck_12",
+      "question": "眼下这版考勤制度，每月迟到几次以内不扣款？",
+      "markers": [
+        "眼下"
+      ],
+      "temporal_intent": "current_knowledge",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "document_policy_context",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [
+        "眼下"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ls_01",
+      "question": "SKU-A100 目前还有多少库存？",
+      "markers": [
+        "目前"
+      ],
+      "temporal_intent": "live_state",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "system_only",
+      "predicted_route": "system_only",
+      "route_match": true,
+      "steps": [
+        "system_query"
+      ],
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "目前"
+      ],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_ls_02",
+      "question": "SKU-B200 现在有货吗？",
+      "markers": [
+        "现在"
+      ],
+      "temporal_intent": "live_state",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "system_only",
+      "predicted_route": "system_only",
+      "route_match": true,
+      "steps": [
+        "system_query"
+      ],
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "现在"
+      ],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_ls_03",
+      "question": "今天 SKU-C300 的库存是多少？",
+      "markers": [
+        "今天"
+      ],
+      "temporal_intent": "live_state",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": false,
+      "freshness_outcome": "FN",
+      "expected_route": "system_only",
+      "predicted_route": "system_only",
+      "route_match": true,
+      "steps": [
+        "system_query"
+      ],
+      "reason_codes": [
+        "system_current_state"
+      ],
+      "planner_marker_hits": [],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_ls_04",
+      "question": "给我 SKU-A100 最新的库存数字。",
+      "markers": [
+        "最新"
+      ],
+      "temporal_intent": "live_state",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "system_only",
+      "predicted_route": "system_only",
+      "route_match": true,
+      "steps": [
+        "system_query"
+      ],
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "最新"
+      ],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_ls_05",
+      "question": "截至目前我的年假还剩几天？",
+      "markers": [
+        "截至目前"
+      ],
+      "temporal_intent": "live_state",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "system_only",
+      "predicted_route": "document_only",
+      "route_match": false,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [
+        "目前",
+        "截至"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_ls_06",
+      "question": "我最近一次的报销申请审批到哪一步了？",
+      "markers": [
+        "最近"
+      ],
+      "temporal_intent": "live_state",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": false,
+      "freshness_outcome": "FN",
+      "expected_route": "system_only",
+      "predicted_route": "system_only",
+      "route_match": true,
+      "steps": [
+        "system_query"
+      ],
+      "reason_codes": [
+        "system_current_state"
+      ],
+      "planner_marker_hits": [],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_ls_07",
+      "question": "我当前的调休余额还有多少小时？",
+      "markers": [
+        "当前"
+      ],
+      "temporal_intent": "live_state",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "system_only",
+      "predicted_route": "system_only",
+      "route_match": true,
+      "steps": [
+        "system_query"
+      ],
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "当前"
+      ],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_ls_08",
+      "question": "SKU-B200 的实时库存给我看一下。",
+      "markers": [
+        "实时"
+      ],
+      "temporal_intent": "live_state",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "system_only",
+      "predicted_route": "system_only",
+      "route_match": true,
+      "steps": [
+        "system_query"
+      ],
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "实时"
+      ],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_ls_09",
+      "question": "此刻 SKU-C300 库存够不够发 20 件？",
+      "markers": [
+        "此刻"
+      ],
+      "temporal_intent": "live_state",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "system_only",
+      "predicted_route": "system_only",
+      "route_match": true,
+      "steps": [
+        "system_query"
+      ],
+      "reason_codes": [
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "此刻"
+      ],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_mx_01",
+      "question": "现行的年假规定是几天？另外我目前还剩几天年假？",
+      "markers": [
+        "现行",
+        "目前"
+      ],
+      "temporal_intent": "mixed",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "document_system",
+      "predicted_route": "document_only",
+      "route_match": false,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "document_policy_context",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [
+        "目前"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_mx_02",
+      "question": "库存盘点口径现在是怎么规定的？顺便查一下 SKU-A100 当前库存。",
+      "markers": [
+        "现在",
+        "当前"
+      ],
+      "temporal_intent": "mixed",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "document_system",
+      "predicted_route": "document_system",
+      "route_match": true,
+      "steps": [
+        "document_search",
+        "system_query"
+      ],
+      "reason_codes": [
+        "document_policy_context",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "当前",
+        "现在"
+      ],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_mx_03",
+      "question": "先简单介绍下目前的差旅政策，再看下我当前的差旅额度。",
+      "markers": [
+        "目前",
+        "当前"
+      ],
+      "temporal_intent": "mixed",
+      "expected_requires_freshness": true,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "TP",
+      "expected_route": "wiki_system",
+      "predicted_route": "wiki_system",
+      "route_match": true,
+      "steps": [
+        "wiki_query",
+        "system_query"
+      ],
+      "reason_codes": [
+        "wiki_overview",
+        "system_current_state",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "当前",
+        "目前"
+      ],
+      "refused_for_freshness_without_system": null
+    },
+    {
+      "id": "tf_in_01",
+      "question": "年假截至每年什么时候必须休完？",
+      "markers": [
+        "截至"
+      ],
+      "temporal_intent": "incidental",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "freshness_requested",
+        "default_document"
+      ],
+      "planner_marker_hits": [
+        "截至"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_in_02",
+      "question": "我现在就要出差，差旅申请需要填写哪些内容？",
+      "markers": [
+        "现在"
+      ],
+      "temporal_intent": "incidental",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "freshness_requested",
+        "default_document"
+      ],
+      "planner_marker_hits": [
+        "现在"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_in_03",
+      "question": "公司对安装实时通讯软件有什么规定？",
+      "markers": [
+        "实时"
+      ],
+      "temporal_intent": "incidental",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_policy_context",
+        "freshness_requested"
+      ],
+      "planner_marker_hits": [
+        "实时"
+      ],
+      "refused_for_freshness_without_system": true
+    },
+    {
+      "id": "tf_in_04",
+      "question": "工资遇到法定节假日会提前到最近的工作日吗？",
+      "markers": [
+        "最近"
+      ],
+      "temporal_intent": "incidental",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": false,
+      "freshness_outcome": "TN",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "default_document"
+      ],
+      "planner_marker_hits": [],
+      "refused_for_freshness_without_system": false
+    },
+    {
+      "id": "tf_in_05",
+      "question": "我当前还在试用期，转正总结要提前多久提交？",
+      "markers": [
+        "当前"
+      ],
+      "temporal_intent": "incidental",
+      "expected_requires_freshness": false,
+      "predicted_requires_freshness": true,
+      "freshness_outcome": "FP",
+      "expected_route": "document_only",
+      "predicted_route": "document_only",
+      "route_match": true,
+      "steps": [
+        "document_search"
+      ],
+      "reason_codes": [
+        "document_exact",
+        "freshness_requested",
+        "exact_citation_requested"
+      ],
+      "planner_marker_hits": [
+        "当前"
+      ],
+      "refused_for_freshness_without_system": true
+    }
+  ]
+}

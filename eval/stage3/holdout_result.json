@@ -1,0 +1,1104 @@
+{
+  "stage": "3",
+  "kind": "sealed holdout, opened once",
+  "dataset": "eval_temporal_freshness_holdout.json",
+  "dataset_sha256": "b24d326eb3040b9b9690d51c270ed2b5aeece41676871faaffe422df75940cfb",
+  "seal_commit": "7cc5abee5dd85ff63c23c3a91d29603f7d42a7f9",
+  "scored_commit": "1aaffb715133e17000ee90137e3977c5f3ef0410",
+  "main_commit": "224f2e7ea6d1c5a630e61fa848f54b155c0c4c67",
+  "main_planner": {
+    "n": 24,
+    "accuracy": 0.625,
+    "tp": 6,
+    "fp": 5,
+    "fn": 4,
+    "tn": 9,
+    "precision": 0.5455,
+    "recall": 0.6,
+    "false_positive_rate": 0.3571,
+    "false_negative_rate": 0.4,
+    "route_accuracy": 0.8333,
+    "by_intent": {
+      "current_knowledge": {
+        "TN": 5,
+        "route_match": 7,
+        "n": 8,
+        "FP": 3
+      },
+      "incidental": {
+        "TN": 4,
+        "route_match": 6,
+        "n": 6,
+        "FP": 2
+      },
+      "live_state": {
+        "TP": 3,
+        "route_match": 5,
+        "n": 7,
+        "FN": 4
+      },
+      "mixed": {
+        "TP": 3,
+        "route_match": 2,
+        "n": 3
+      }
+    },
+    "cases": [
+      {
+        "id": "tfh_001",
+        "question": "如今公司的远程办公政策是怎么规定的？每周最多能远程几天？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "如今"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "document_policy_context",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_002",
+        "question": "sku-c300 眼下还剩多少箱？",
+        "temporal_intent": "live_state",
+        "markers": [
+          "眼下"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_003",
+        "question": "我这阵子要去新加坡出差，境外出差除了部门负责人之外还需要谁审批？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "这阵子"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_004",
+        "question": "帮我查查我最近一次提交的报销单审批到哪个环节了",
+        "temporal_intent": "live_state",
+        "markers": [
+          "最近一次"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "FN",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state"
+        ]
+      },
+      {
+        "id": "tfh_005",
+        "question": "现行的费用报销制度中，单笔金额超过多少需要部门负责人审批？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "现行"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_system",
+        "route_match": false,
+        "steps": [
+          "document_search",
+          "system_query"
+        ],
+        "reason_codes": [
+          "document_policy_context",
+          "system_current_state"
+        ]
+      },
+      {
+        "id": "tfh_006",
+        "question": "笔记本电脑丢了，是不是要立刻上报？手册规定多长时间内必须报告给谁？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "立刻"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "document_policy_context",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_007",
+        "question": "按目前的年假规定，入职满三年一年有几天带薪年假？另外帮我看下系统里我今年的年假还剩几天没休。",
+        "temporal_intent": "mixed",
+        "markers": [
+          "目前",
+          "今年"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "document_system",
+        "predicted_route": "document_system",
+        "route_match": true,
+        "steps": [
+          "document_search",
+          "system_query"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "document_policy_context",
+          "system_current_state",
+          "freshness_requested",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_008",
+        "question": "订单 ord-1002 我刚刚付过款了，它的状态更新了没有？",
+        "temporal_intent": "live_state",
+        "markers": [
+          "刚刚"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "FN",
+        "expected_route": "system_only",
+        "predicted_route": "document_only",
+        "route_match": false,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "default_document"
+        ]
+      },
+      {
+        "id": "tfh_009",
+        "question": "最新一版员工手册里，加班转调休是按什么比例折算的？调休多久内要用掉？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "最新一版"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "FP",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "document_policy_context",
+          "freshness_requested",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_010",
+        "question": "我想在办公电脑上装一个实时翻译插件，需要走什么申请流程？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "实时"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "FP",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_policy_context",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_011",
+        "question": "查一下 sku-b200 的最新库存数量。",
+        "temporal_intent": "live_state",
+        "markers": [
+          "最新"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_012",
+        "question": "能不能简单介绍一下公司当今实行的考勤制度大概是什么样的？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "当今"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "wiki_only",
+        "predicted_route": "wiki_only",
+        "route_match": true,
+        "steps": [
+          "wiki_query"
+        ],
+        "reason_codes": [
+          "wiki_overview"
+        ]
+      },
+      {
+        "id": "tfh_013",
+        "question": "手册上说每月 10 日发放上一个自然月的工资，那本月 10 号发的是哪个月的工资？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "本月"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_policy_context"
+        ]
+      },
+      {
+        "id": "tfh_014",
+        "question": "截止到现在，我的调休余额还有多少小时？",
+        "temporal_intent": "live_state",
+        "markers": [
+          "截止到现在"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_015",
+        "question": "时下公司对于将内部资料上传至外部人工智能服务持何种态度？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "时下"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "default_document"
+        ]
+      },
+      {
+        "id": "tfh_016",
+        "question": "境外出差按现在的流程需要哪些人审批？我上周提交的出差申请 apr-3001 此时卡在哪一步了？",
+        "temporal_intent": "mixed",
+        "markers": [
+          "现在",
+          "上周",
+          "此时"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "document_system",
+        "predicted_route": "document_system",
+        "route_match": true,
+        "steps": [
+          "document_search",
+          "system_query"
+        ],
+        "reason_codes": [
+          "document_policy_context",
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_017",
+        "question": "季度绩效结果今天公布了，我对结果有异议，最晚几个工作日内要申请复核？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "今天"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_018",
+        "question": "sku-a100 还有货吗？够不够发 50 件？",
+        "temporal_intent": "live_state",
+        "markers": [],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "FN",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state"
+        ]
+      },
+      {
+        "id": "tfh_019",
+        "question": "目下公司每年的岗位培训预算上限是多少？实习生能不能申请？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "目下"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_020",
+        "question": "我目前还在试用期，转正总结需要在期满前多少个工作日提交？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "目前"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "FP",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "freshness_requested",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_021",
+        "question": "我本周提交的远程办公申请，主管批了没有？",
+        "temporal_intent": "live_state",
+        "markers": [
+          "本周"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "FN",
+        "expected_route": "system_only",
+        "predicted_route": "document_only",
+        "route_match": false,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "default_document"
+        ]
+      },
+      {
+        "id": "tfh_022",
+        "question": "当前公司对访客进入办公区域有哪些要求？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "当前"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "FP",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_policy_context",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_023",
+        "question": "现在报销单笔超过 2000 块要几级审批？顺便帮我实时查一下我那笔报销审批到哪了。",
+        "temporal_intent": "mixed",
+        "markers": [
+          "现在",
+          "实时"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "document_system",
+        "predicted_route": "system_only",
+        "route_match": false,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_024",
+        "question": "截至目前，公司关于员工离职交接的规定包括哪些方面？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "截至目前"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "FP",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_policy_context",
+          "freshness_requested"
+        ]
+      }
+    ]
+  },
+  "working_planner": {
+    "n": 24,
+    "accuracy": 0.7917,
+    "tp": 5,
+    "fp": 0,
+    "fn": 5,
+    "tn": 14,
+    "precision": 1.0,
+    "recall": 0.5,
+    "false_positive_rate": 0.0,
+    "false_negative_rate": 0.5,
+    "route_accuracy": 0.8333,
+    "by_intent": {
+      "current_knowledge": {
+        "TN": 8,
+        "route_match": 7,
+        "n": 8
+      },
+      "incidental": {
+        "TN": 6,
+        "route_match": 6,
+        "n": 6
+      },
+      "live_state": {
+        "TP": 3,
+        "route_match": 5,
+        "n": 7,
+        "FN": 4
+      },
+      "mixed": {
+        "FN": 1,
+        "route_match": 2,
+        "n": 3,
+        "TP": 2
+      }
+    },
+    "cases": [
+      {
+        "id": "tfh_001",
+        "question": "如今公司的远程办公政策是怎么规定的？每周最多能远程几天？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "如今"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "document_policy_context",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_002",
+        "question": "sku-c300 眼下还剩多少箱？",
+        "temporal_intent": "live_state",
+        "markers": [
+          "眼下"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_003",
+        "question": "我这阵子要去新加坡出差，境外出差除了部门负责人之外还需要谁审批？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "这阵子"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_004",
+        "question": "帮我查查我最近一次提交的报销单审批到哪个环节了",
+        "temporal_intent": "live_state",
+        "markers": [
+          "最近一次"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_005",
+        "question": "现行的费用报销制度中，单笔金额超过多少需要部门负责人审批？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "现行"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_system",
+        "route_match": false,
+        "steps": [
+          "document_search",
+          "system_query"
+        ],
+        "reason_codes": [
+          "document_policy_context",
+          "system_current_state"
+        ]
+      },
+      {
+        "id": "tfh_006",
+        "question": "笔记本电脑丢了，是不是要立刻上报？手册规定多长时间内必须报告给谁？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "立刻"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "document_policy_context",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_007",
+        "question": "按目前的年假规定，入职满三年一年有几天带薪年假？另外帮我看下系统里我今年的年假还剩几天没休。",
+        "temporal_intent": "mixed",
+        "markers": [
+          "目前",
+          "今年"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "FN",
+        "expected_route": "document_system",
+        "predicted_route": "document_system",
+        "route_match": true,
+        "steps": [
+          "document_search",
+          "system_query"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "document_policy_context",
+          "system_current_state",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_008",
+        "question": "订单 ord-1002 我刚刚付过款了，它的状态更新了没有？",
+        "temporal_intent": "live_state",
+        "markers": [
+          "刚刚"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "FN",
+        "expected_route": "system_only",
+        "predicted_route": "document_only",
+        "route_match": false,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "default_document"
+        ]
+      },
+      {
+        "id": "tfh_009",
+        "question": "最新一版员工手册里，加班转调休是按什么比例折算的？调休多久内要用掉？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "最新一版"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "document_policy_context",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_010",
+        "question": "我想在办公电脑上装一个实时翻译插件，需要走什么申请流程？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "实时"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_policy_context"
+        ]
+      },
+      {
+        "id": "tfh_011",
+        "question": "查一下 sku-b200 的最新库存数量。",
+        "temporal_intent": "live_state",
+        "markers": [
+          "最新"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_012",
+        "question": "能不能简单介绍一下公司当今实行的考勤制度大概是什么样的？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "当今"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "wiki_only",
+        "predicted_route": "wiki_only",
+        "route_match": true,
+        "steps": [
+          "wiki_query"
+        ],
+        "reason_codes": [
+          "wiki_overview"
+        ]
+      },
+      {
+        "id": "tfh_013",
+        "question": "手册上说每月 10 日发放上一个自然月的工资，那本月 10 号发的是哪个月的工资？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "本月"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_policy_context"
+        ]
+      },
+      {
+        "id": "tfh_014",
+        "question": "截止到现在，我的调休余额还有多少小时？",
+        "temporal_intent": "live_state",
+        "markers": [
+          "截止到现在"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "FN",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state"
+        ]
+      },
+      {
+        "id": "tfh_015",
+        "question": "时下公司对于将内部资料上传至外部人工智能服务持何种态度？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "时下"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "default_document"
+        ]
+      },
+      {
+        "id": "tfh_016",
+        "question": "境外出差按现在的流程需要哪些人审批？我上周提交的出差申请 apr-3001 此时卡在哪一步了？",
+        "temporal_intent": "mixed",
+        "markers": [
+          "现在",
+          "上周",
+          "此时"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "document_system",
+        "predicted_route": "document_system",
+        "route_match": true,
+        "steps": [
+          "document_search",
+          "system_query"
+        ],
+        "reason_codes": [
+          "document_policy_context",
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_017",
+        "question": "季度绩效结果今天公布了，我对结果有异议，最晚几个工作日内要申请复核？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "今天"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_018",
+        "question": "sku-a100 还有货吗？够不够发 50 件？",
+        "temporal_intent": "live_state",
+        "markers": [],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "FN",
+        "expected_route": "system_only",
+        "predicted_route": "system_only",
+        "route_match": true,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state"
+        ]
+      },
+      {
+        "id": "tfh_019",
+        "question": "目下公司每年的岗位培训预算上限是多少？实习生能不能申请？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "目下"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_020",
+        "question": "我目前还在试用期，转正总结需要在期满前多少个工作日提交？",
+        "temporal_intent": "incidental",
+        "markers": [
+          "目前"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_exact",
+          "exact_citation_requested"
+        ]
+      },
+      {
+        "id": "tfh_021",
+        "question": "我本周提交的远程办公申请，主管批了没有？",
+        "temporal_intent": "live_state",
+        "markers": [
+          "本周"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "FN",
+        "expected_route": "system_only",
+        "predicted_route": "document_only",
+        "route_match": false,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "default_document"
+        ]
+      },
+      {
+        "id": "tfh_022",
+        "question": "当前公司对访客进入办公区域有哪些要求？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "当前"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_policy_context"
+        ]
+      },
+      {
+        "id": "tfh_023",
+        "question": "现在报销单笔超过 2000 块要几级审批？顺便帮我实时查一下我那笔报销审批到哪了。",
+        "temporal_intent": "mixed",
+        "markers": [
+          "现在",
+          "实时"
+        ],
+        "expected_requires_freshness": true,
+        "predicted_requires_freshness": true,
+        "freshness_outcome": "TP",
+        "expected_route": "document_system",
+        "predicted_route": "system_only",
+        "route_match": false,
+        "steps": [
+          "system_query"
+        ],
+        "reason_codes": [
+          "system_current_state",
+          "freshness_requested"
+        ]
+      },
+      {
+        "id": "tfh_024",
+        "question": "截至目前，公司关于员工离职交接的规定包括哪些方面？",
+        "temporal_intent": "current_knowledge",
+        "markers": [
+          "截至目前"
+        ],
+        "expected_requires_freshness": false,
+        "predicted_requires_freshness": false,
+        "freshness_outcome": "TN",
+        "expected_route": "document_only",
+        "predicted_route": "document_only",
+        "route_match": true,
+        "steps": [
+          "document_search"
+        ],
+        "reason_codes": [
+          "document_policy_context"
+        ]
+      }
+    ]
+  }
+}

@@ -429,11 +429,36 @@ SYSTEM_STATE_PHRASES = (
     "是否到账", "是否通过", "我当前是否符合", "到哪一步了", "办到哪了",
 )
 
+# "As of now" words. On their own they only say *when*, not *what*: in
+# `目前的制度里核心协作时间是几点` the word pins the policy to its current
+# version, which the knowledge base already is (superseded documents are
+# retired), while in `SKU-A100 目前还有多少库存` it pins a live value. So these
+# words request freshness only inside a clause that asks for live state - see
+# `_clause_requires_freshness`. They also feed `weak_state_intent`, unchanged.
 FRESHNESS_MARKERS = (
     "当前", "现在", "实时", "目前", "最新", "截至",
     # `此时`/`眼下`/`这会儿` are the same "as of now" the others name.
     "此时", "此刻", "眼下", "这会儿", "当下",
 )
+
+# Time words that pin a *live* reading to now, but are too common in policy
+# questions to act as state cues: `今天 SKU-C300 的库存` wants today's stock,
+# while `我今天漏打卡了，按规定最晚什么时候补卡` asks a rule. They only count
+# towards freshness, and only in a live-state clause; they never select System.
+LIVE_TIME_MARKERS = (
+    "今天", "今日", "最近", "近期", "这几天",
+)
+
+# A remaining balance of the caller's own: `截至目前我的年假还剩几天`. The
+# clause may name no System object (`年假` is a policy noun, so routing stays on
+# the document path), but it is still a live personal value, so a time word in
+# it keeps requesting freshness. This affects the freshness flag only - it does
+# not select System - so such a question keeps refusing on freshness rather than
+# being answered from the policy text.
+PERSONAL_REMAINING_MARKERS = (
+    "还剩", "剩余", "余额", "还有多少", "剩多少", "剩几",
+)
+FIRST_PERSON_PATTERN = re.compile(r"我|本人")
 
 # Exposed for introspection, including the vocabulary-hygiene test.
 MARKER_TABLES: dict[str, tuple[str, ...]] = {
@@ -466,6 +491,8 @@ MARKER_TABLES: dict[str, tuple[str, ...]] = {
     "SYSTEM_OBJECT_MARKERS": SYSTEM_OBJECT_MARKERS,
     "SYSTEM_STATE_PHRASES": SYSTEM_STATE_PHRASES,
     "FRESHNESS_MARKERS": FRESHNESS_MARKERS,
+    "LIVE_TIME_MARKERS": LIVE_TIME_MARKERS,
+    "PERSONAL_REMAINING_MARKERS": PERSONAL_REMAINING_MARKERS,
 }
 
 # `总结` is a verb *and* a noun, and only the verb asks for an overview.
@@ -826,6 +853,26 @@ def _precision_describes_stock(clause: str) -> bool:
     return False
 
 
+def _clause_requires_freshness(clause: str, needs_system: bool) -> bool:
+    """Does this clause need a value read as of now?
+
+    Only when it both names the time (`FRESHNESS_MARKERS` or
+    `LIVE_TIME_MARKERS`) and asks for live state: a System read, or the caller's
+    own remaining balance. A time word describing a policy, a deadline
+    (`截至每年`), urgency (`我现在就要出差`) or part of a noun (`实时通讯软件`)
+    asks for no live value, and flagging it would make the Evidence Policy
+    refuse an answerable question - document evidence carries no observation
+    time, so freshness can only be attested by a live System record.
+    """
+    names_time = _contains_any(clause, FRESHNESS_MARKERS) or _contains_any(clause, LIVE_TIME_MARKERS)
+    if not names_time:
+        return False
+    personal_remaining = bool(FIRST_PERSON_PATTERN.search(clause)) and _contains_any(
+        clause, PERSONAL_REMAINING_MARKERS
+    )
+    return needs_system or personal_remaining
+
+
 def _clause_signals(clause: str) -> _ClauseSignals:
     version_change = _contains_any_unnegated(clause, VERSION_CHANGE_MARKERS)
 
@@ -917,7 +964,7 @@ def _clause_signals(clause: str) -> _ClauseSignals:
         exact_document=exact_document,
         policy_forces_document=policy_forces_document,
         needs_system=needs_system,
-        requires_freshness=_contains_any(clause, FRESHNESS_MARKERS),
+        requires_freshness=_clause_requires_freshness(clause, needs_system),
     )
 
 

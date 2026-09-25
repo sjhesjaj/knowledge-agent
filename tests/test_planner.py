@@ -248,12 +248,15 @@ class BlankInputTests(unittest.TestCase):
 
 
 class SignalFlagTests(unittest.TestCase):
-    def test_freshness_without_system_for_latest_announcement(self):
+    def test_latest_document_is_not_a_freshness_request(self):
+        # Stage 3: `最新` here names the newest published document, which the
+        # knowledge base already is. Flagging freshness made the Evidence Policy
+        # refuse, because document evidence carries no observation time.
         plan = plan_request("最新公告是什么")
-        self.assertTrue(plan.signals.requires_freshness)
+        self.assertFalse(plan.signals.requires_freshness)
         self.assertFalse(plan.signals.needs_system)
         self.assertTrue(plan.signals.needs_document)
-        self.assertIn(REASON_FRESHNESS_REQUESTED, plan.reason_codes)
+        self.assertNotIn(REASON_FRESHNESS_REQUESTED, plan.reason_codes)
 
     def test_exact_citation_for_quantity_question(self):
         plan = plan_request("年假最多可以休多少天")
@@ -339,7 +342,8 @@ class SystemIntentTests(unittest.TestCase):
         plan = plan_request("现在的订单管理制度怎么规定")
         self.assertFalse(plan.signals.needs_system)
         self.assertTrue(plan.signals.needs_document)
-        self.assertTrue(plan.signals.requires_freshness)
+        # Stage 3: the time word describes the policy, not a live value.
+        self.assertFalse(plan.signals.requires_freshness)
         self.assertEqual(plan.route, Route.DOCUMENT_ONLY)
 
     def test_time_marker_plus_object_without_policy_selects_system(self):
@@ -566,3 +570,59 @@ class PurityTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FreshnessScopeTests(unittest.TestCase):
+    """Stage 3: a time word requests freshness only in a live-state clause."""
+
+    def test_time_word_on_a_policy_does_not_request_freshness(self):
+        for question in ("现行的远程办公规定每周能申请几天", "目前的报销流程需要谁审批",
+                         "当前版本的保密条款怎么写的", "眼下这版制度对补卡的时限是多久"):
+            with self.subTest(question=question):
+                plan = plan_request(question)
+                self.assertFalse(plan.signals.requires_freshness)
+                self.assertFalse(plan.signals.needs_system)
+
+    def test_time_word_that_is_not_about_currency(self):
+        for question in ("试用期截至什么时候结束", "我现在就要报销，需要准备哪些材料",
+                         "公司允许安装实时协作软件吗"):
+            with self.subTest(question=question):
+                self.assertFalse(plan_request(question).signals.requires_freshness)
+
+    def test_live_value_with_a_time_word_requests_freshness(self):
+        for question in ("SKU-A100 目前还剩多少", "今天 SKU-B200 的库存是多少",
+                         "我最近一次的审批到哪一步了", "我的积分现在是多少"):
+            with self.subTest(question=question):
+                plan = plan_request(question)
+                self.assertTrue(plan.signals.needs_system)
+                self.assertTrue(plan.signals.requires_freshness)
+
+    def test_live_only_time_words_never_select_system(self):
+        plan = plan_request("我今天迟到了，按规定会扣款吗")
+        self.assertFalse(plan.signals.needs_system)
+        self.assertFalse(plan.signals.requires_freshness)
+
+    def test_personal_remaining_balance_keeps_freshness_without_system(self):
+        # `年假` is a policy noun, so routing stays on documents; the question is
+        # still a live personal value, and keeping freshness makes it refuse
+        # instead of answering a balance question from the policy text.
+        plan = plan_request("截至目前我的年假还剩几天")
+        self.assertFalse(plan.signals.needs_system)
+        self.assertTrue(plan.signals.requires_freshness)
+
+    def test_mixed_request_takes_freshness_from_the_live_clause(self):
+        plan = plan_request("现行的库存管理办法怎么规定的？另外 SKU-A100 当前库存多少")
+        self.assertTrue(plan.signals.needs_document)
+        self.assertTrue(plan.signals.needs_system)
+        self.assertTrue(plan.signals.requires_freshness)
+
+    def test_policy_question_with_a_time_word_passes_the_freshness_check(self):
+        from orchestration.contracts import Evidence, SourceType, ToolResult, ToolStatus
+        from orchestration.evidence_policy import REASON_FRESHNESS_UNSUPPORTED, evaluate_evidence
+
+        plan = plan_request("目前的制度里，每周最多远程办公几天？")
+        evidence = Evidence(content="员工每周最多申请 2 天远程办公。", source_type=SourceType.DOCUMENT,
+                            source="sample_company_rules.md", locator="chunk:5", authority=80)
+        decision = evaluate_evidence(plan, {ToolName.DOCUMENT_SEARCH: ToolResult(
+            tool_name=ToolName.DOCUMENT_SEARCH.value, status=ToolStatus.OK, evidence=(evidence,))})
+        self.assertNotIn(REASON_FRESHNESS_UNSUPPORTED, decision.reason_codes)
