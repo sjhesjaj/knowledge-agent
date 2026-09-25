@@ -555,18 +555,41 @@ class IntegrationTests(unittest.TestCase):
         self.assertEqual({name: r.status for name, r in diagnosis.stages.items()},
                          {s: dx.PASS for s in dx.STAGES})
 
+    def pre_stage3_freshness(self):
+        """Reproduce the planner rule before Stage 3: any time word requests freshness.
+
+        Stage 3 fixed this in the planner, so the real planner no longer makes
+        the mistake these tests diagnose; patching the one rule back keeps the
+        rest of the orchestration real.
+        """
+        from orchestration import planner
+
+        return patch.object(planner, "_clause_requires_freshness",
+                            lambda clause, needs_system: planner._contains_any(clause, planner.FRESHNESS_MARKERS))
+
     def test_real_planner_freshness_signal_is_diagnosed_as_planning(self):
         question = "目前的制度里，核心协作时间是几点到几点？"
-        run_id = self.run_real(question, "unused")
+        with self.pre_stage3_freshness():
+            run_id = self.run_real(question, "unused")
         labels = labels_for(case(question=question), plan_constraints={"requires_freshness": False})
         diagnosis = dx.diagnose(labels, {"run": 1, "passed": False, "trace_run_id": run_id},
                                 agent_trace.load_trace(self.db, run_id))
         self.assertEqual(diagnosis.primary_error, "planning_error")
         self.assertEqual([e["category"] for e in diagnosis.secondary_effects], ["evidence_error"])
 
+    def test_h008_passes_every_stage_with_the_stage3_planner(self):
+        question = "目前的制度里，核心协作时间是几点到几点？"
+        run_id = self.run_real(question, "10:00-12:00、14:00-17:00。[来源 1]")
+        labels = labels_for(case(question=question), plan_constraints={"requires_freshness": False})
+        diagnosis = dx.diagnose(labels, {"run": 1, "passed": True, "trace_run_id": run_id},
+                                agent_trace.load_trace(self.db, run_id))
+        self.assertEqual({name: r.status for name, r in diagnosis.stages.items()},
+                         {s: dx.PASS for s in dx.STAGES})
+
     def test_end_to_end_report(self):
         question = "目前的制度里，核心协作时间是几点到几点？"
-        run_id = self.run_real(question, "unused")
+        with self.pre_stage3_freshness():
+            run_id = self.run_real(question, "unused")
         dataset = json.loads(DATASET.read_text(encoding="utf-8"))
         eval_json = {
             "dataset": DATASET.name, "dataset_sha256": None, "trace_db": str(self.db),
