@@ -20,6 +20,18 @@
 
 以下契约对 Planner、全部标签和 Diagnostic Eval 都适用。
 
+**定位：`requires_freshness` 是一个显式时效证据约束，不是"这是不是一个实时数据查询"的标记。**
+
+- **它的作用：** 当 flag 为 True 时，Evidence Policy 会额外要求：至少有一条证据能证明答案是当前时点的值，也就是带 `observed_at` 的系统证据，或者带版本 / 观测时间的文档证据。如果找不到，就以 `freshness_unsupported` 拒答。
+- **它不决定是否读系统。** 路由由 `needs_system` 决定，与 freshness 无关。
+- **普通系统查询即使 flag 为 False，用的也是带 `observed_at` 的系统证据：**
+  - `system_provider` 总是把记录自身的 `updated_at` 写进 `observed_at`，不会用查询时间代替。
+  - Evidence Policy 对**每一条**系统证据都会检查 `observed_at`，这一步不看 flag。缺少 `observed_at` 会触发 `system_evidence_missing_observed_at`，这是阻断性原因，会直接拒答（见 `orchestration/evidence_policy.py`）。
+  - 所以"SKU-A100 还有货吗"这类不带时间词的系统问题，flag 为 False，答案仍然来自带 `observed_at` 的实时记录。flag 为 True 时，只是**再显式要求一次**这种证据必须存在。
+- **因此两种错误的代价不对称：**
+  - **误报**（把制度问题标为 True）会给一个只有文档证据的请求加上无法满足的约束，这个问题必然被拒答。
+  - **漏报**（实时请求被标为 False）只是少了一次显式约束。只要路由正确，系统证据本来就带 `observed_at`，回答不受影响。
+
 **定义：** 当且仅当请求要求一个**实时业务状态的值**，并且用时间表达把这个值限定在**当前时点**时，`requires_freshness = True`。
 
 - **实时业务状态**指业务系统里一条记录此刻的值，比如库存、订单状态、审批进度，或者本人的余额、额度、排班。它会随时间变化，只能从业务系统读取。制度、规定、流程的内容都**不算**，即使前面有"目前 / 现行 / 最新"这样的修饰。
