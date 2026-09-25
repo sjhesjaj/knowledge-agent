@@ -1,5 +1,7 @@
 # Stage 3 · sealed holdout review
 
+> **这份 holdout 已开封，不能再作为 holdout。** 它在 `c786cf4` 打开过一次，内容已经被看过、做过逐条分析，以后只能当作已见过的回归集使用。开封脚本发现结果已存在时会拒绝再次运行。标注语义以 `LABELING.md` 的「requires_freshness 语义契约」为准；按契约，tfh_018 应该标 False，但结果按原标签如实记录，不重新打分。
+
 ## 这个 holdout 是怎么隔离的
 
 - **作者：** holdout 由一个全新上下文的子 agent 编写。它只能读三样东西：`LABELING.md` 里的语义定义、`sample_company_rules.md` 和业务 fixture。它看不到 Planner 代码、dev 集和候选方案，也没有运行 Planner。
@@ -48,7 +50,7 @@
 - tfh_008 和 tfh_021 的问题出在路由，改 freshness 解决不了。
 - 相比之下，每一个误报都会让一个本来能回答的问题被拒答。
 
-## 后续候选（本阶段不做，也不会用这个 holdout 来调）
+## 后续候选（Stage 3 决定不做，理由见 HANDOFF §15）
 
 - **A″：** 时间词和实时状态请求落在同一个请求的不同子句里，也算 freshness。这样能覆盖 tfh_014 和 tfh_007 这类情况。另外补充"刚刚、本周、今年、本月"一类词，但只在实时状态子句里生效。
 - **标注语义：** 明确 freshness 是否等同于"需要实时读取"，如果是，就与 `needs_system` 对齐。这需要同时修订冻结数据集里的标签，属于单独的决策。

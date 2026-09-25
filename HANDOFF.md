@@ -1,6 +1,6 @@
-# 交接文档：Stage 0（LLMProvider）· Stage 1（Agent Trace）· Stage 2（Diagnostic Eval）· Stage 2.1（Eval Environment）· Stage 2.5（Qwen vs DeepSeek）· Integration Milestone（合入 main M10）
+# 交接文档：Stage 0（LLMProvider）· Stage 1（Agent Trace）· Stage 2（Diagnostic Eval）· Stage 2.1（Eval Environment）· Stage 2.5（Qwen vs DeepSeek）· Integration Milestone（合入 main M10）· Stage 3（Freshness planning）
 
-> 本文件按阶段累积。**Integration Milestone — 合入 origin/main@bac4d69 见 §14**（merge `f784f3e`，结果 commit `9f16680`，post-main-integration baseline）；**Stage 2.5 — Qwen vs DeepSeek 见 §13**（结果 commit `75cce92`）；**Stage 2.1 — Eval Environment 见 §12**（环境 `eval-env-v1`，baseline commit `ffdac42`）；**Stage 2 — Diagnostic Eval 见 §11**（实现 commit `3f1ff97`）；**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
+> 本文件按阶段累积。**Stage 3 — Freshness planning 见 §15**（A′ `307a12b`，validation `5f0ff42`，h008 已修复）；**Integration Milestone — 合入 origin/main@bac4d69 见 §14**（merge `f784f3e`，结果 commit `9f16680`，post-main-integration baseline）；**Stage 2.5 — Qwen vs DeepSeek 见 §13**（结果 commit `75cce92`）；**Stage 2.1 — Eval Environment 见 §12**（环境 `eval-env-v1`，baseline commit `ffdac42`）；**Stage 2 — Diagnostic Eval 见 §11**（实现 commit `3f1ff97`）；**Stage 1 — Agent Trace 见 §10**（实现 commit `8899d66`）。§0–§9 是 Stage 0 和它的 housekeeping 部分，保留当时的原文。§0–§9 里说"没有进入 Trace 阶段"，指的是 Stage 0 结束时的状态。
 
 # Stage 0 交接：统一 LLMProvider（本地 Ollama/Qwen + DeepSeek API）
 
@@ -1374,3 +1374,126 @@ OK
   - `/api/chat` 基本没变（+19.4 → +20.9 ms，两个置信区间重叠）。
   - 流式接口从 +19.6 ms 增加到 +23.9 ms，置信区间不重叠。可能与 main 的缓冲流式输出有关，但没有深挖。
   - README 的第一屏不再展示开销；当前数字放在 Trace 小节和 Current metrics 里，Stage 1 的 +0.7% 标为历史测量。
+
+## 15. Stage 3 — Freshness planning（h008 这一类问题）
+
+> 目标：修复 Trace 和 Diagnostic Eval 定位出来的 freshness 规划错误，也就是 h008 这一类问题。
+>
+> 分支 `stage3-freshness-planning`，从 `main@224f2e7`（PR #5 合入后）建立。
+>
+> 顺序：先提交标签，再跑 baseline，然后准备隔离的 holdout，再实现 A′、跑 dev，最后一次性打开 holdout、跑 validation 回归。
+>
+> 本阶段不进入 Tool Use Stage。
+
+### 15.1 问题的根因
+
+- **Planner：** `_clause_signals` 只要子句里出现 `FRESHNESS_MARKERS` 中的词，就判为 freshness。这是纯子串匹配，不看这个词修饰的是什么。
+- **Evidence Policy：** freshness 只能由带 `version` 或 `observed_at` 的文档证据，或者带 `observed_at` 的系统证据来满足。但 `document_adapter` 固定写 `version=None`、`observed_at=None`，Wiki 的页面版本又被明确排除在外。
+- **结果：** 任何被标了 freshness、计划里又没有系统步骤的请求，都必然以 `freshness_unsupported` 拒答，而且不调用模型。
+- **这不是个例：** 除了 validation_v1 的 h008，dev answerability 集里的 `answer_document_008` 从 8 月起就以同样的方式失败。
+
+### 15.2 专项开发集与 baseline（Planner 未改动）
+
+- **标签：** `eval_temporal_freshness_dev.json`，共 29 条：当前有效知识 12 条、实时业务状态 9 条、混合 3 条、时间词另有含义 5 条。
+  - 在 `e74ee62` 提交，早于任何 Planner 修改。写标签时没有运行 Planner。
+  - 标注规则见 `eval/stage3/LABELING.md`。`48fa696` 只修正了覆盖范围的措辞，标签没有变。
+- **baseline：** 评分脚本在 `9751c10`，结果在 `cb5bdae`，工作区干净。
+
+| 指标 | 值 |
+|---|---|
+| freshness accuracy | 0.483（14/29） |
+| TP / FP / FN / TN | 10 / 13 / 2 / 4 |
+| 应该能回答、却会被拒答 | 13/17（用真实的 `evaluate_evidence` 逐条核实） |
+
+- **错误模式：**
+  - **P1：** 只要出现时间词就判 freshness，不看它修饰什么。共 13 个误报，全部会导致拒答。
+  - **P2：** 词表缺"今天 / 最近"，造成 2 个漏报。
+  - **P3：** 有 3 条判对了，但原因是那几个词恰好不在词表里，所以单纯扩充词表会让结果变差。
+  - **P4：** "我的年假还剩几天"被路由成了 document_only。
+
+  详见 `eval/stage3/BASELINE_REVIEW.md`。
+
+### 15.3 隔离的 holdout
+
+- **作者：** 由一个全新上下文的子 agent 编写，共 24 条，在 `7cc5abe` 提交，sha256 `b24d326e…`。
+  - 它只能读三样东西：`LABELING.md` 的语义部分、`sample_company_rules.md` 和业务 fixture。
+  - 它不能读 Planner、dev 集和候选方案，也没有运行 Planner。
+  - 它的报告里只有条数和分布。在打开之前，实现者没有读过内容。
+- **开封规程先于实现提交：** `eval/stage3_freshness_holdout.py` 在 `d53ab34` 提交，早于 A′ 的实现。
+  - 它只能运行一次。运行前要校验 sha256、要求工作区干净、要求文件在封存之后没有被改过。
+  - 它在同一批 case 上同时给 `main` 的旧 Planner 和新 Planner 打分。
+
+### 15.4 A′ 的实现（`307a12b`）
+
+- **新规则：** `_clause_requires_freshness`。时间词只有出现在实时状态子句里，才判为 freshness。
+  - 实时状态子句指 `needs_system` 为真的子句，或者"第一人称 + 还剩 / 剩余 / 余额 / 还有多少"这类个人余额。
+- **新增词表：** `LIVE_TIME_MARKERS`（今天、今日、最近、近期、这几天）。这些词只在实时状态子句里计入 freshness，永远不会触发系统查询。
+- **不改的部分：** 路由逻辑和 `weak_state_intent` 都没有动。
+- **测试改动：**
+  - Planner 有 2 条旧测试写的是旧语义（"最新公告是什么"、"现在的订单管理制度怎么规定"都断言为 True），已改为 False 并注明原因。
+  - 新增 7 条 `FreshnessScopeTests`，其中包括一条与 Evidence Policy 的联动检查。
+  - Stage 2 有 2 条诊断测试原来拿真实的 h008 bug 当夹具。现在改为用 patch 精确还原 main 的旧规则来复现误判，这样诊断归因能力仍然被测到。
+  - 新增 1 条对照测试：用新 Planner 跑 h008，每个阶段都通过。
+
+### 15.5 dev、holdout 与 validation 结果
+
+| | 修改前 | A′ |
+|---|---|---|
+| dev freshness（29 条，`1aaffb7`） | 0.483 | **1.000**；路由 27/29，没有变化；误拒 13/17 → 0/17 |
+| holdout freshness（24 条，只开封一次，`c786cf4`） | 0.625；FP 5 / FN 4 | **0.792**；FP **0** / FN 5；precision 0.545 → 1.000；recall 0.600 → 0.500；路由 0.833，没有变化 |
+| 全量测试 | 1129 | **1140**（新增 8 条 Planner 和诊断测试，3 条 label revision 测试） |
+| 路由评测 validation_v1 / dev（原标签） | 路由 1.0 / 1.0；freshness 80/80、80/80 | 路由 1.0 / 1.0；freshness **79/80、79/80**（只差冲突的 2 条） |
+| 同上，应用 label revision overlay | – | freshness 80/80、80/80 |
+| Qwen eval-env-v1 × 3 轮（`5f0ff42`） | 39/40 × 3（pmi） | **40/40 × 3**；7 项 gate 全部通过；误拒率 0% |
+| Diagnostic Eval | h008：planning_error ×3 | 主错误、连带影响、潜在问题和 unattributed 全部为 0 |
+
+- **h008：** 从 0/3 变成 3/3，答案是"核心协作时间为上午 10:00 至 12:00、下午 14:00 至 17:00。[来源 1]"。其余 39 个 case 的通过情况和行为都没有变化。
+- **dev 上的 1.000 有拟合成分：** 这些标签是看过失败模式之后写的，规则也是对着它设计的。泛化能力以 holdout 为准：误报 5 → 0 说明 A′ 针对的问题确实泛化了，但 recall 没有提高。
+
+### 15.6 冻结标签的修订（overlay，不修改原数据集）
+
+- **修订文件：** `eval/label_revisions/stage3_freshness_contract.revisions.json`，修订了 2 条：
+  - dev 的 `route_document_only_004`（"现在这版考勤制度……"）
+  - validation_v1 的 `route_document_only_h005`（"目前生效的这版保密制度……"）
+  - 两条都是 `expected_requires_freshness` 从 True 改为 False，理由写在文件里。
+- **哈希：** 同时记录评测脚本看到的哈希（工作区 CRLF）和 LF 规范化后的哈希。后者在不同检出之间是稳定的。
+- **重新打分：** `eval/apply_label_revisions.py` 把原标签分数和修订后分数并列报告，结果在 `eval/stage3/route_eval_with_revisions.json`。这两条永远不算作 Planner 的改进。
+- **测试：** `tests/test_label_revisions.py` 校验修订文件：数据集的 LF 哈希必须一致，旧值必须与原数据集一致，并且不允许指向 blind 或 holdout 数据集。
+
+### 15.7 语义契约
+
+- **定义：** 当且仅当请求要求一个实时业务状态的值，并且用时间表达把它限定在当前时点时，`requires_freshness` 才是 True。
+  - 制度内容不算，即使前面有"目前 / 现行 / 最新"。
+  - 只有实时状态请求、没有时间表达的，也不算。这与冻结数据集的标注一致；在运行时也没有区别，因为系统证据总带 `observed_at`。
+- **完整定义**见 `eval/stage3/LABELING.md` 的「`requires_freshness` 语义契约」。
+- **holdout 的偏差：** tfh_018 没有时间表达却被标为 True，按契约应该是 False。holdout 已经开封，按原标签如实记录，不重新打分。
+
+### 15.8 已知漏报（均已接受，不再继续修）
+
+| holdout case | 原因 | 运行时影响 |
+|---|---|---|
+| tfh_014 "截止到现在，我的调休余额还有多少小时？" | 逗号把时间词切成了单独一个子句（A′ 新引入） | 无。路由是 system_only，系统证据带 `observed_at` |
+| tfh_007 "按目前的年假规定……系统里我今年的年假还剩几天" | 时间词在制度子句里，实时子句只有"今年"（A′ 新引入） | 无。计划里有系统步骤 |
+| tfh_018 "sku-a100 还有货吗？够不够发 50 件？" | 没有时间表达（main 也漏）；按契约应为 False | 无 |
+| tfh_008 "订单 ord-1002 我刚刚付过款了，它的状态更新了没有？" | "刚刚"不在词表里，路由也错了（main 也漏） | 问题在路由，不在 freshness |
+| tfh_021 "我本周提交的远程办公申请，主管批了没有？" | "本周"不在词表里，路由也错了（main 也漏） | 问题在路由，不在 freshness |
+
+另外还有两条漏报，但 A′ 故意保留：dev 的 tfh_ls_05 和 tfh_mx_01（"我的年假还剩几天"）的路由缺口没有修。A′ 让它们继续判为 freshness，从而安全地拒答，而不是用制度条文回答个人余额问题。
+
+### 15.9 为什么不继续做 A″
+
+A″ 的思路是：时间词和实时请求在同一个请求的不同子句里也算 freshness，同时补充"刚刚、本周、今年"一类词。不做的理由：
+
+1. **没有运行时收益。** `requires_freshness` 在运行时只有 Evidence Policy 在用。A″ 能修的只有路由正确、有系统步骤的漏报（tfh_014、tfh_007），而这类请求的系统证据一定带 `observed_at`，freshness 检查本来就会通过。所以 A″ 不会改变任何一个回答。
+2. **没有干净的衡量手段。** holdout 已经开封，任何继续调整都只能在见过的数据上评估，得出的数字说明不了泛化能力。按要求本阶段不重新生成 holdout。
+3. **真正影响回答的问题在路由，不在 freshness。** 例如逗号把记录号和状态词拆开、"申请"没被识别为系统对象、个人年假余额没被识别为系统请求。这些都会改变路由，超出 Stage 3 的范围。
+4. **风险不对称。** 误报会直接造成误拒答，漏报在当前架构下没有影响。A′ 以 precision 1.000 为代价换来了较低的 recall，这符合这个信号在运行时的实际作用。
+
+### 15.10 已知限制与后续
+
+- 以后如果要继续改进 freshness，必须先在 dev 上开发，再用一份**新的**隔离 holdout 来衡量。
+- 路由缺口需要单独立项。
+- README 的 Current metrics 里写的还是 post-main-integration 的数字（39/40 × 3、h008 未修复），本阶段没有改 README。
+- 本阶段没有重跑 DeepSeek 对照。A′ 只改变 freshness 标记，不改变路由和生成，而且 h008 的失败本来就与模型无关。
+
+按要求在这里停止：Planner 在 A′ 之后没有再修改；没有重新生成 holdout；没有进入 Tool Use Stage。
